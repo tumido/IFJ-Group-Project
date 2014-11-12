@@ -13,6 +13,38 @@
  */
 // #include ...
 
+
+// 1 - chyba v programu v rámci lexikální analýzy (chybná struktura aktuálního lexému).
+// 2 - chyba v programu v rámci syntaktické analýzy (chybná syntaxe struktury programu).
+// 3 - sémantická chyba v programu – nedefinovaná funkce/promˇenná, pokus o redefinici
+// funkce/promˇenné, atd.
+// 4 - sémantická chyba typové kompatibility v aritmetických, ˇretˇezcových a relaˇcních
+// výrazech, pˇríp. špatný poˇcet ˇci typ parametr°u u volání funkce.
+// 5 - ostatní sémantické chyby.
+// 6 - bˇehová chyba pˇri naˇcítání ˇcíselné hodnoty ze vstupu.
+// 7 - bˇehová chyba pˇri práci s neinicializovanou promˇennou.
+// 8 - bˇehová chyba dˇelení nulou.
+// 9 - ostatní bˇehové chyby.
+// 99 - interní chyba interpretu tj. neovlivnˇená vstupním programem (napˇr. chyba alokace
+// pamˇeti, chyba pˇri otvírání souboru s ˇrídicím programem, špatné parametry
+// pˇríkazové ˇrádky atd.).
+
+/*
+ * Chybove kody
+ */
+#define LEX_ERR 1
+#define SYN_ERR 2
+#define SEM_PROG_ERR 3
+#define SEM_TYPE_ERR 4
+#define O_SEM_ERR 5
+#define LOAD_NUM_ERR 6
+#define VAR_ERR 7
+#define DIV_ERR 8
+#define O_RUN_ERR 9
+#define INTER_ERR 99
+ // toto cele asi do nejakeho hlavickoveho souboru?
+
+
 int main (int argc, char** argv)
 {
   FILE *f;
@@ -20,13 +52,13 @@ int main (int argc, char** argv)
   if (argc != 2)
   {
     fprintf(stderr, "Spatny pocet parametru.\n");
-    return 99; // 99 je kod pro interni chybu, asi bude fajn si to nekde vsechno sepsat do struktury?;
+    return INTER_ERR; 
   }
   
   if (!(f = fopen(argv[1], "r")))
   {
     printf("Soubor se nepodarilo otevrit.\n");
-    return 99;
+    return INTER_ERR;
   }   
 
    // Inicializujeme tabulku symbolu
