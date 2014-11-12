@@ -8,6 +8,11 @@
  * =====================================================================
  */
 
+/*
+ * Hlavickove soubory
+ */
+// #include ...
+
 int main (int argc, char** argv)
 {
   FILE *f;
@@ -23,6 +28,13 @@ int main (int argc, char** argv)
     printf("Soubor se nepodarilo otevrit.\n");
     return 99;
   }   
+
+   // Inicializujeme tabulku symbolu
+   // Zavolame syntakticky analyzator
+   // Kdyz se neco rozbije (chyba v prubehu prekladu), volame funkce:
+     // uklid - uvolneni pameti, zavreni souboru
+     // vratime error
+   // jinak interpretujeme kod a nasledne po sobe zase uklidime a zavreme soubor
 
 return 0;
 }
