@@ -12,25 +12,9 @@
  * Hlavickove soubory
  */
 // #include ...
-
-/*
- * Chybove kody
- */
-#define LEX_ERR 1        // chyba v programu v ramci lexikalni analyzy (chybna struktura aktualniho lexemu)
-#define SYN_ERR 2        // chyba v programu v ramci syntakticke analyzy (chybna syntaxe struktury programu)
-#define SEM_PROG_ERR 3   // semanticka chyba - nedefinovana fce, promenna, pokud o redefinici fce/promenne, atd
-#define SEM_TYPE_ERR 4   // semanticka chyba typove kompatibility v aritmetickych, retezcovych a relacnich vyrazech
-                         // pripadne spatny pocet nebo typ parametru u volani fce
-#define O_SEM_ERR 5      // ostatni semantice chyby
-#define LOAD_NUM_ERR 6   // behova chyba pri nacitani ciselne hodnoty ze vstupu
-#define VAR_ERR 7        // behova chyba pri praci s neinicializovanou promennou
-#define DIV_ERR 8        // behova chyba deleni nulou
-#define O_RUN_ERR 9      // ostatni behove chyby
-#define INTER_ERR 99     // interni chyba interpretu, tedy neovlivnitelna vstupnim programem (napriklad chyba
-                         // alokace pameti, chyba pri otevirani souboru s ridicim programem, spatne parametry 
-                         // prikazove radky, atd)
-
- // toto cele asi do nejakeho hlavickoveho souboru?
+#include <stdio.h>
+#include <stdlib.h>
+#include "io.h"
 
 
 int main (int argc, char** argv)
@@ -39,14 +23,14 @@ int main (int argc, char** argv)
 
   if (argc != 2)
   {
-    fprintf(stderr, "Spatny pocet parametru.\n");
-    return INTER_ERR; 
+    printErr("Spatny pocet parametru.");
+    return EXIT_INTERNAL_ERROR;
   }
   
   if (!(f = fopen(argv[1], "r")))
   {
     printf("Soubor se nepodarilo otevrit.\n");
-    return INTER_ERR;
+    return EXIT_INTERNAL_ERROR;
   }   
 
    // Inicializujeme tabulku symbolu
