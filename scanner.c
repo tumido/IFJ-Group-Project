@@ -13,4 +13,5 @@
 void test
 {
     printf ("test");
+    printf ("pokracovani v testu");
 }
