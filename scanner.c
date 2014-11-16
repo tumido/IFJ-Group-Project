@@ -15,6 +15,7 @@
 #define DETAIL_LENGHT 8             //konstatna, kterou urcuji po kolika bytech bude provadena alokace pameti pro detail dokenu
 #define ERROR 1
 #define SUCCES 0
+int test;
 
 FILE *Code;
 
