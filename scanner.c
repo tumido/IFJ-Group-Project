@@ -162,6 +162,11 @@ token_detail_init(&detail_tokenu);
             {
                 add_string_to_char(&detail_tokenu, z);
             }
+            else if(z == 'E' || z == 'e')
+            {
+                add_string_to_char(&detail_tokenu, z);
+                state = s_real_exp;
+            }
             else
             {
                state = s_lex_end;
