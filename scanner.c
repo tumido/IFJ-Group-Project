@@ -9,6 +9,7 @@
  */
 #include <stdio.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "scanner.h"
 
 
@@ -40,7 +41,7 @@ void token_detail_free(tDetail *str)
 
 void token_detail_clean(tDetail *str)
 {
-    str->detail[0] = '\0'
+    str->detail[0] = '\0';
     str->detail_lenght = 0;
 }
 
@@ -54,7 +55,8 @@ int add_string_to_char(tDetail *str, char z)
     }
     str->detail[str->detail_lenght] = z;                    //pridani znaku do retezce
     str->detail_lenght++;                                   //zvetseni velikosti retezce
-    str->detail[str->detail_lenght] = '\0'                  //pridani znaku 0 na konec
+    str->detail[str->detail_lenght] = '\0';                 //pridani znaku 0 na konec
+    return 0;
 }
 
 
@@ -62,7 +64,7 @@ void fill_Token()               //funkce, ktera naplni token
 {
 
 tDetail detail_tokenu;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
-tState state = s_begin         //nastavim pocatecni stav automatu
+tState state = s_begin;        //nastavim pocatecni stav automatu
 bool read = true;              //bool pro zastaveni automatu
 int z;                         //promenna pro nacitani pismen/znaku
 
@@ -91,7 +93,7 @@ token_detail_init(&detail_tokenu);
            {
               state = s_lex_err;                                            //nastala chyba
            }
-           add_string_to_char(detail_tokenu, z);                            //ulozeni nacteneho znaku
+           add_string_to_char(&detail_tokenu, z);                            //ulozeni nacteneho znaku
            break;
          }
 
@@ -105,41 +107,205 @@ token_detail_init(&detail_tokenu);
            break;
          }
 
-         case s_id;
+         case s_id:
          {
-           if (isalnum(z) || z == '_')          //dentifikator dale muze obahovat jakekoli cislo ci pismeno a znak "_"
+           if (isalnum(z) || z == '_')                         //dentifikator dale muze obahovat jakekoli cislo ci pismeno a znak "_"
            {
-             add_string_to_char(z);             //zapisu dalsi znak a pokracuju
+             add_string_to_char(&detail_tokenu, z);             //zapisu dalsi znak a pokracuju
            }
            else
            {
              state = s_lex_end;
-             ungetc(z);
+             ungetc(z, Code);
            }
            break;
          }
 
-         case s_integer:                        //nacitam cislo
+         case s_integer:                                   //nacitam cislo
          {
-            if (isdigit(z))                     //pokracuje cislo
-                add_string_to_char(z);
-            if (z == 'E' || z == 'e')            //nacetl jsem exponent
+            if (isdigit(z))                               //pokracuje cislo
+                add_string_to_char(&detail_tokenu, z);
+            if (z == 'E' || z == 'e')                      //nacetl jsem exponent
             {
-               add_string_to_char(z);
+               add_string_to_char(&detail_tokenu, z);
                state = s_real_exp;
             }
-            if (z == '.')
+            if (z == '.')                                 //nacetl jsem desetinnou carku
             {
-               add_string_to_char(z);
+               add_string_to_char(&detail_tokenu, z);
                state = s_real;
             }
             else
             {
                state = s_lex_end;
-               ungetc(z);
+               ungetc(z, Code);
             }
             break;
          }
+
+         case s_real:                               //yatim mam nacteno nejake cislo a tecku
+         {
+            if (isdigit(z))
+            {
+               add_string_to_char(&detail_tokenu, z);
+            }
+            else
+            {
+               state = s_lex_err;           // koncim analyzu po znamenku '.' musi nasledovat cislice ..... nejsem si jist, zdali musim provadet ungetc, nebot analyza konci
+            }
+            break;
+         }
+
+         case s_real_ok:                            //zde uz mam nactene cislo tecku i desetinnou cast, cekam na konec cisla
+         {
+            if (isdigit(z))
+            {
+                add_string_to_char(&detail_tokenu, z);
+            }
+            else
+            {
+               state = s_lex_end;
+               ungetc(z, Code);
+            }
+            break;
+         }
+
+         case s_real_exp:                     //zde mam posledni nactene e (exponent) tudiz pokud prijde neco jine nez cislice nebo znamenka + nebo - vracim chybu a ukoncim automat
+         {
+            if (isdigit(z))
+            {
+               add_string_to_char(&detail_tokenu, z);
+               state = s_real_exp_all;
+            }
+            else if (z == '+' || z == '-')
+            {
+               add_string_to_char(&detail_tokenu, z);
+               state = s_real_exp_ok;
+            }
+            else
+            {
+               state = s_lex_err;
+            }
+            break;
+         }
+
+         case s_real_exp_ok:                    //mam nacteny exponent i pripadne znamenko, cekam pouze cislici
+            {
+               if(isdigit(z))
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_real_exp_all;
+               }
+               else
+               {
+                  state = s_lex_err;
+               }
+               break;
+            }
+
+         case s_real_exp_all:                   //cislo je spravne, pouze ho doctu do konce
+         {
+            if (isdigit(z))
+            {
+               add_string_to_char(&detail_tokenu, z);
+            }
+            else
+            {
+               state = s_lex_end;
+               ungetc(z, Code);
+            }
+            break;
+         }
+
+         case s_string:                         //nacitam retezec ohraniceny apostrofy
+            {
+               if (z == 39)
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_string_check;
+               }
+               else
+               {
+                  add_string_to_char(&detail_tokenu, z);
+               }
+               break;
+            }
+
+         case s_string_check:                   //nacetl jsem jeden apostrof, pokud nactu druhy, jsem stale v retezci, pokud ne, retezec konci
+            {
+               if(z == 39)
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_string;
+               }
+               else
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_lex_end;
+                  ungetc(z, Code);
+               }
+               break;
+            }
+
+         case s_less:           //nacetl jsem < .... je mensi
+            {
+               if (z == '=')    //jeste muze prijit =
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_less_or;
+               }
+               else
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_lex_end;
+                  ungetc(z, Code);
+               }
+               break;
+            }
+
+         case s_bigger:
+            {
+               if (z == '=')
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_bigger_or;
+               }
+               else
+               {
+                  add_string_to_char(&detail_tokenu, z);
+                  state = s_lex_end;
+                  ungetc(z, Code);
+               }
+               break;
+            }
+
+
+         case s_add_num:                                //nevetvici se/konecne stavy automatu
+         case s_sub_num:
+         case s_mul_num:
+         case s_div_num:
+         case s_semicolon:
+         case s_same:
+         case s_less_or:
+         case s_bigger_or:
+            {
+               add_string_to_char(&detail_tokenu, z);
+               state = s_lex_end;
+               ungetc(z, Code);
+               break;
+            }
+         case s_lex_end:                            //automat konci
+            {
+                ungetc(z, Code);
+                read = false;
+                break;
+            }
+
+         case s_lex_err:                    //chyba pri lexikalni analyze
+            {
+
+
+            }
 
 
 
