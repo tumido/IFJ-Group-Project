@@ -21,7 +21,7 @@ aneb to, na cem jsme se dohodli a sere se na to:
 - pojmenovavani funkci a promennych - anglicky: randomFunction() (ne Cammel_Back() ani nic dalsiho)
 - ukazka
 
-`
+```
 /*   Funkce uplne na houby
  * -----------------------------------------------------
  * - ma parametry, ale nic nedela, to je co?
@@ -34,7 +34,7 @@ void ThisIsFunction(int parameterOne, ...)
   }
   return; // vraci houby, fakt!
 }
-`
+```
 
 Progress
 --------
