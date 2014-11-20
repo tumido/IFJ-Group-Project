@@ -39,10 +39,10 @@ void ThisIsFunction(int parameterOne, ...)
 Progress
 --------
 
-Kuba napsal lexikalni analyzu, interpret
-Tom nenapsal to co mel, vysral se na to, do zitra to dopise, jinak bude lyncovani + za odmenu semanticka analyza
-Roman se pusti do psani ukazkovych programu, testsuite + upravi main, aby kod nacetl a vypsal tokeny
-Jura napise syntaktickou analyzu
+- Kuba napsal lexikalni analyzu, ted ho bude cekat interpret
+- Tom nenapsal to co mel, vysral se na to, do zitra to dopise, jinak bude lyncovani + za odmenu semanticka analyza, revize Kubova kodu (jsou to spagety)
+- Roman se pusti do psani ukazkovych programu, testsuite + upravi main, aby kod nacetl a vypsal tokeny
+- Jura napise syntaktickou analyzu
 
 Konzultace
 ----------
