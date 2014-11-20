@@ -41,8 +41,7 @@ typedef enum            //seznam vsech stavu automatu
   s_lex_err,           //18 chyba, ktera vznikla pri lex analyze
   s_real_exp,          //19 pokracovani desetinneho cisla ..... 10e-2
   s_real_exp_all       //20 pokracovani desetinneho cisla ..... 10.41e-2
-
-}tState;
+} tState;
 
 typedef struct
 {
