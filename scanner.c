@@ -9,7 +9,7 @@
  */
 #include "scanner.h"
 
-int tokenDetailInit(tDetail *str)
+int tokenDetailInit(token *str)
 {
   if ((str->detail = (char*) malloc (DETAIL_LENGHT)) == NULL)
     return EXIT_INTERNAL_ERROR;
@@ -19,18 +19,18 @@ int tokenDetailInit(tDetail *str)
   return EXIT_SUCCESS;
 }
 
-void tokenDetailFree(tDetail *str)
+void tokenDetailFree(token *str)
 {
   free(str->detail);
 }
 
-void tokenDetailClean(tDetail *str)
+void tokenDetailClean(token *str)
 {
   str->detail[0] = '\0';
   str->detailLenght = 0;
 }
 
-int addCharToString(tDetail *str, char z)
+int addCharToString(token *str, char z)
 {
   if(str->detailLenght + 1 >= str->allocatedMemory)
   {
@@ -46,7 +46,7 @@ int addCharToString(tDetail *str, char z)
 
 void fillToken()               //funkce, ktera naplni token
 {
-  tDetail detailTokenu;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
+  token detailTokenu;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
   tState state = s_begin;        //nastavim pocatecni stav automatu
   bool read = true;              //bool pro zastaveni automatu
   int z;                         //promenna pro nacitani pismen/znaku

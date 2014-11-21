@@ -49,13 +49,13 @@ typedef struct
   int detailLenght;       //delka retezece (detailu)
   int allocatedMemory;    //velikost allokovane pameti
 
-} tDetail;
+} token;
 
 
 void fillToken();                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
-int tokenDetailInit(tDetail *str);                    //inicializace detailu k ID
-void tokenDetailFree(tDetail *str);                   //uvolneni pameti
-void tokenDetailClean(tDetail *str);                  //promazani detailu
-int addCharToString(tDetail *str, char z);           //prida znak do existujiciho retezce
+int tokenDetailInit(token *str);                    //inicializace detailu k ID
+void tokenDetailFree(token *str);                   //uvolneni pameti
+void tokenDetailClean(token *str);                  //promazani detailu
+int addCharToString(token *str, char z);           //prida znak do existujiciho retezce
 
 #endif
