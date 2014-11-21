@@ -7,9 +7,6 @@
  *        Projekt:  IFJ
  * =====================================================================
  */
-#include <stdio.h>
-#include <ctype.h>
-#include <stdbool.h>
 #include "scanner.h"
 
 int tokenDetailInit(tDetail *str)

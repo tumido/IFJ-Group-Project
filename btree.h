@@ -12,20 +12,29 @@
 #define BTREE_INCLUDED
 #include <stdlib.h>
 #include <stdio.h>
+#include "io.h"
 
 /*  Struktura pro binarni strom
  * --------------------------------------------------------------------
- * - (??)
+ * - obsahuje klic, podle ktereho je ve stromu razena, odkaz na
+ *   podstromy a dalsi data...
  */
-typedef int btree;
+
+struct node
+{
+  int keyValue;
+  // dalsi data v uzlu
+  struct node * leftNode;
+  struct node * rightNode;
+};
+
 
 /*   Vytvoreni tabulky symbolu
  * ---------------------------------------------------------------------
- * - vytvori zakladni strukturu tabulky pomoci binarniho vyhledavaciho
- *   stromu
- * - vraci ukazatel na strukturu btree
+ * - lze provest jednoduchym, lec ucinnym
+ *   struct node * root = NULL;
  */
-btree * SymbolTableInit();
+
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
@@ -33,19 +42,19 @@ btree * SymbolTableInit();
  * - vstupnimy parametry funkce jsou tabulka symbolu a prvek, ktery ma
  *   byt vlozen
  */
-void SymbolTableInsert(btree * table, ...);
+int SymbolTableInsert(struct node ** leaf, int key);
 
 /*   Zruseni tabulky symbolu
  * ---------------------------------------------------------------------
  * - zrusi tabulku symbolu (nerekurzivne z duvodu rychlosti)
  */
-void SymbolTableDispose(btree * table);
+int SymbolTableDispose(struct node * leaf);
 
 /*   Vyhledani prvku v tabulce symbolu
  * ---------------------------------------------------------------------
  * - prohleda tabulku, nejspis bude rozhodovat jestli pre/in/postorder
  * - vraci index do tabulky (??)
  */
-int SymbolTableSearch(btree * table);
+struct node * SymbolTableSearch(struct node * leaf, int key);
 
 #endif
