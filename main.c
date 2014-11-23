@@ -30,8 +30,9 @@ int main(int argc, char *argv[])
   }
 
   token printToken = fillToken(code);
-  printf("%s", printToken.detail);
-  //pridat printy vlstnosti
+  printf("%s\n", printToken.detail);
+  printf("%d\n", printToken.detailLenght);
+  printf("%d\n", printToken.allocatedMemory);
 
   // Inicializujeme tabulku symbolu
   // Inicializace seznamu instrukci
