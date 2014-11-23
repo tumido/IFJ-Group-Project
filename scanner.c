@@ -50,7 +50,6 @@ int addCharToString(token *str, char z)
  */
 int keyWordCheck(token *str)
 {
-  int result;
   if((strcmp(str->detail, "begin")) == 0)             str->tokenMain = l_keyWord;
   else if((strcmp(str->detail, "boolean")) == 0)      str->tokenMain = l_bool;
   else if((strcmp(str->detail, "do")) == 0)           str->tokenMain = l_keyWord;
@@ -78,7 +77,7 @@ int keyWordCheck(token *str)
   return 0;
 }
 
-void fillToken(FILE *Code)               //funkce, ktera naplni token
+token fillToken(FILE *Code)               //funkce, ktera naplni token
 {
   token detailTokenu;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
   tState state = s_begin;        //nastavim pocatecni stav automatu
@@ -86,7 +85,7 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
   int z;                         //promenna pro nacitani pismen/znaku
   tokenDetailInit(&detailTokenu);
 
-  while (read && (z = getc(*Code)))      //start automatu
+  while (read && (z = fgetc(Code)))      //start automatu
   {
     switch(state)
     {
@@ -99,34 +98,34 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         else if (z == '+')
         {
           state = s_add_num;                                             //scitani
-          detailTokenu->tokenMain = l_add;
+          detailTokenu.tokenMain = l_add;
         }
         else if (z == '-')
         {
           state = s_sub_num;                                             //odcitani
-          detailTokenu->tokenMain = l_sub;
+          detailTokenu.tokenMain = l_sub;
         }
         else if (z == '*')
         {
           state = s_mul_num;                                             //nasobeni
-          detailTokenu->tokenMain = l_mul;
+          detailTokenu.tokenMain = l_mul;
         }
         else if (z == '/')
         {
           state = s_div_num;                                             //deleni
-          detailTokenu->tokenMain = l_div;
+          detailTokenu.tokenMain = l_div;
         }
         else if (z == '<')                       state = s_less;         //je mensi
         else if (z == '>')                       state = s_bigger;       //je vetsi
         else if (z == '=')
         {
           state = s_same;                                                //je rovno
-          detailTokenu->tokenMain = l_same;
+          detailTokenu.tokenMain = l_same;
         }
         else if (z == ';')
         {
           state = s_semicolon;                                           //strednik
-          detailTokenu->tokenMain = l_semicolon;
+          detailTokenu.tokenMain = l_semicolon;
         }
         else
         {
@@ -150,7 +149,7 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         {
           keyWordCheck(&detailTokenu);
           state = s_lex_end;
-          ungetc(z);
+          ungetc(z, Code);
         }
         break;
       case s_integer:                        //nacitam cislo
@@ -168,9 +167,9 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         }
         else
         {
-          detailTokenu->tokenMain = l_integer;
+          detailTokenu.tokenMain = l_integer;
           state = s_lex_end;
-          ungetc(z);
+          ungetc(z, Code);
         }
         break;
       case s_real:                               //yatim mam nacteno nejake cislo a tecku
@@ -195,7 +194,7 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         }
         else
         {
-          detailTokenu->tokenMain = l_real;
+          detailTokenu.tokenMain = l_real;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -234,7 +233,7 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         }
         else
         {
-          detailTokenu->tokenMain = l_real;
+          detailTokenu.tokenMain = l_real;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -254,7 +253,7 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         }
         else
         {
-          detailTokenu->tokenMain = l_string;
+          detailTokenu.tokenMain = l_string;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -263,17 +262,17 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         addCharToString(&detailTokenu, z);
         if (z == '=')    //jeste muze prijit = nebo >
         {
-          detailTokenu->tokenMain = l_lessOr;
+          detailTokenu.tokenMain = l_lessOr;
           state = s_less_or;
         }
         else if(z == '>')
         {
           state = s_not_same;
-          detailTokenu->tokenMain = l_notSame:
+          detailTokenu.tokenMain = l_notSame;
         }
         else
         {
-          detailTokenu->tokenMain = l_less;
+          detailTokenu.tokenMain = l_less;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -282,12 +281,12 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         addCharToString(&detailTokenu, z);
         if (z == '=')
         {
-          detailTokenu->tokenMain = l_biggerOr;
+          detailTokenu.tokenMain = l_biggerOr;
           state = s_bigger_or;
         }
         else
         {
-          detailTokenu->tokenMain = l_bigger;
+          detailTokenu.tokenMain = l_bigger;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -309,7 +308,9 @@ void fillToken(FILE *Code)               //funkce, ktera naplni token
         read = false;
         break;
       case s_lex_err:                    //chyba pri lexikalni analyze
-        return EXIT_LEXICAL_ERROR;
+        //return EXIT_LEXICAL_ERROR;
+        break;
     }
   }
+  return detailTokenu;
 }

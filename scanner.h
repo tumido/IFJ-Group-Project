@@ -41,7 +41,10 @@ typedef enum            //seznam vsech stavu automatu
   s_lex_end,           //17 konec tvorby tokenu
   s_lex_err,           //18 chyba, ktera vznikla pri lex analyze
   s_real_exp,          //19 pokracovani desetinneho cisla ..... 10e-2
-  s_real_exp_all       //20 pokracovani desetinneho cisla ..... 10.41e-2
+  s_real_exp_all,      //20 pokracovani desetinneho cisla ..... 10.41e-2
+  s_real_ok,           //21 kontrolni bod cisla real
+  s_real_exp_ok,       //22 Kontrolni bod cisla real s exponentem
+  s_string_check       //23 Kontrolni stav pro nacitani retezce
 } tState;
 
 typedef enum           //Pomoci tohoto enumerate budu ukladat informaci o lexemu do tokenu ---zdali se jedna o indetifikator,integer,etc
@@ -75,7 +78,7 @@ typedef struct            //Samotny token, jeho struktura
 } token;
 
 
-void fillToken(FILE *Code);                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
+token fillToken(FILE *Code);                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
 int tokenDetailInit(token *str);                    //inicializace detailu k ID
 void tokenDetailFree(token *str);                   //uvolneni pameti
 void tokenDetailClean(token *str);                  //promazani detailu
