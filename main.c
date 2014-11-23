@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "io.h"
-#include "io.c"
 #include "scanner.h"
 
 int main(int argc, char *argv[])
@@ -23,27 +22,16 @@ int main(int argc, char *argv[])
     printErr("Spatny pocet parametru.\n");
     return EXIT_INTERNAL_ERROR;
   }
-  
+
   if (!(code = fopen(argv[1], "r")))
   {
     printf("Soubor se nepodarilo otevrit.\n");
     return EXIT_INTERNAL_ERROR;
-  } 
+  }
 
-/*
- * Zde bude volání funkce vypisujici tokeny na stdout (kontrola funkce scanneru).
- * Je treba vypisovat tokeny, dokud mi scanner nerekne konec.
- * Jsem z toho na prasky, nic nefunguje jak bych ocekaval, merlin ani eva se mnou
- * nemluvi, jdu se zaobirat aspon tim hloupym interpretem, s nim bude taky sposta
- * zabavy.
- *
- * Btw prikaz make na prelozeni celeho projektu mi dela neplechu, a nechci se v
- * Makefile hrabat, kdyz tomu poradne nerozumim.
- * Naincludovane "io.c" je samozrejme prasarna, ale jinak prekladac rve, ze nechape,
- * co sakra myslim volanim fce "printErr". Dekuji za pochopeni.
- */
-
-  printToken(token);
+  token printToken = fillToken(code);
+  printf("%s", printToken.detail);
+  //pridat printy vlstnosti
 
   // Inicializujeme tabulku symbolu
   // Inicializace seznamu instrukci
@@ -53,7 +41,7 @@ int main(int argc, char *argv[])
     // vratime error code
   // Jinak interpretujeme kod a nasledne po sobe zase uklidime a zavreme soubor
 
-  fclose(code); 
+  fclose(code);
 
   return 0;
 }

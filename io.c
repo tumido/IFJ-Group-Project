@@ -15,10 +15,3 @@ void printErr(const char * msg)
   fprintf(stderr,"\x1B[31m%s\033[0m\n",  msg);
   return;
 }
-
-void printToken(token)
-{
-  fillToken(code);
-  return;
-}
-

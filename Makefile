@@ -24,7 +24,7 @@ CFLAGS = -std=c99 -pedantic -Wall -Werror
 #  ---------------------------------------------------------------------
 all: ifj14
 
-ifj14: ifj14.c io.o
+ifj14: main.c io.o scanner.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 #    Ostatni objekty
