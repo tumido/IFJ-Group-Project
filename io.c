@@ -16,3 +16,9 @@ void printErr(const char * msg)
   return;
 }
 
+void printToken(token)
+{
+  fillToken(code);
+  return;
+}
+
