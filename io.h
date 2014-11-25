@@ -12,6 +12,7 @@
 #define IO_INCLUDED
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define EXIT_SUCCESS 0
 #define EXIT_LEXICAL_ERROR 1
@@ -25,6 +26,6 @@
 #define EXIT_RUNTIME_ERROR 9
 #define EXIT_INTERNAL_ERROR 99
 
-void printErr(const char * msg);
+void printErr(const char * msg, ...);
 
 #endif

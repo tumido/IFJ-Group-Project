@@ -74,13 +74,12 @@ typedef struct            //Samotny token, jeho struktura
   char * detail;          //detaily k lexemu
   int detailLenght;       //delka retezece (detailu)
   int allocatedMemory;    //velikost allokovane pameti
-
 } token;
 
 
-token fillToken(FILE *Code);                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
-int tokenDetailInit(token *str);                    //inicializace detailu k ID
-void tokenDetailFree(token *str);                   //uvolneni pameti
+token * fillToken(FILE *Code);                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
+int tokenInit(token ** str);                    //inicializace detailu k ID
+void tokenFree(token *str);                   //uvolneni pameti
 void tokenDetailClean(token *str);                  //promazani detailu
 int addCharToString(token *str, char z);           //prida znak do existujiciho retezce
 int keyWordCheck(token *str);

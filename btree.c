@@ -11,29 +11,33 @@
 #include "btree.h"
 
 
+btree SymbolTableInit()
+{
+  btree table;
+  table.root = table.last = NULL;
+  return table;
+}
+
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
  * - zapoji novy prvek do tabulky symbolu na spravne misto
  * - vstupnimy parametry funkce jsou tabulka symbolu a prvek, ktery ma
  *   byt vlozen
  */
-int SymbolTableInsert(struct node ** leaf, int key)
+int SymbolTableInsert(struct node ** leaf, struct node * insert)
 {
   if (*leaf == NULL)
   {
-    if ((*leaf = (struct node *) malloc (sizeof(struct node))) == NULL) { return EXIT_INTERNAL_ERROR; }
-    (*leaf)->keyValue = key;
-    // dalsi data v uzlu?
-    (*leaf)->leftNode = (*leaf)->rightNode = NULL;
+    *leaf = insert;
     return EXIT_SUCCESS;
   }
-  else if (key > (*leaf)->keyValue)
+  else if (insert->keyValue > (*leaf)->keyValue)
   {
-    return SymbolTableInsert(&(*leaf)->rightNode, key);
+    return SymbolTableInsert(&(*leaf)->rightNode, insert);
   }
-  else if (key < (*leaf)->keyValue)
+  else if (insert->keyValue < (*leaf)->keyValue)
   {
-    return SymbolTableInsert(&(*leaf)->leftNode, key);
+    return SymbolTableInsert(&(*leaf)->leftNode, insert);
   }
   else
     return EXIT_INTERNAL_ERROR;
@@ -57,7 +61,7 @@ int SymbolTableDispose(struct node * leaf)
 /*   Vyhledani prvku v tabulce symbolu
  * ---------------------------------------------------------------------
  * - prohleda tabulku, nejspis bude rozhodovat jestli pre/in/postorder
- * - vraci index do tabulky (??)
+ * - vraci ukazatel na uzel pokud je hledany prvek nalezen nebo NULL
  */
 struct node * SymbolTableSearch(struct node * leaf, int key)
 {

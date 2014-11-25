@@ -10,8 +10,12 @@
 
 #include "io.h"
 
-void printErr(const char * msg)
+void printErr(const char *msg, ...)
 {
-  fprintf(stderr,"\x1B[31m%s\033[0m\n",  msg);
+  va_list args;
+  va_start(args, msg);
+  fprintf(stderr,"\x1B[31mError: \033[0m");
+  vfprintf(stderr, msg, args);
+  va_end(args);
   return;
 }

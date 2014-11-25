@@ -9,19 +9,22 @@
  */
 #include "scanner.h"
 
-int tokenDetailInit(token *str)
+int tokenInit(token ** str)
 {
-  if ((str->detail = (char*) malloc (DETAIL_LENGHT)) == NULL)
+  if ((*str = malloc(sizeof(token))) == NULL)
     return EXIT_INTERNAL_ERROR;
-  str->detail[0] = '\0';
-  str->detailLenght = 0;
-  str->allocatedMemory = DETAIL_LENGHT;
+  if (((*str)->detail = (char*) malloc(DETAIL_LENGHT)) == NULL)
+    return EXIT_INTERNAL_ERROR;
+  (*str)->detail[0] = '\0';
+  (*str)->detailLenght = 0;
+  (*str)->allocatedMemory = DETAIL_LENGHT;
   return EXIT_SUCCESS;
 }
 
-void tokenDetailFree(token *str)
+void tokenFree(token *str)
 {
   free(str->detail);
+  free(str);
 }
 
 void tokenDetailClean(token *str)
@@ -77,13 +80,13 @@ int keyWordCheck(token *str)
   return 0;
 }
 
-token fillToken(FILE *Code)               //funkce, ktera naplni token
+token * fillToken(FILE *Code)               //funkce, ktera naplni token
 {
-  token detailTokenu;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
+  token * detailTokenu = NULL;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
   tState state = s_begin;        //nastavim pocatecni stav automatu
   bool read = true;              //bool pro zastaveni automatu
   int z;                         //promenna pro nacitani pismen/znaku
-  tokenDetailInit(&detailTokenu);
+  if (tokenInit(&detailTokenu) != EXIT_SUCCESS) { return NULL; }
 
   while (read && (z = fgetc(Code)))      //start automatu
   {
@@ -98,40 +101,40 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
         else if (z == '+')
         {
           state = s_add_num;                                             //scitani
-          detailTokenu.tokenMain = l_add;
+          detailTokenu->tokenMain = l_add;
         }
         else if (z == '-')
         {
           state = s_sub_num;                                             //odcitani
-          detailTokenu.tokenMain = l_sub;
+          detailTokenu->tokenMain = l_sub;
         }
         else if (z == '*')
         {
           state = s_mul_num;                                             //nasobeni
-          detailTokenu.tokenMain = l_mul;
+          detailTokenu->tokenMain = l_mul;
         }
         else if (z == '/')
         {
           state = s_div_num;                                             //deleni
-          detailTokenu.tokenMain = l_div;
+          detailTokenu->tokenMain = l_div;
         }
         else if (z == '<')                       state = s_less;         //je mensi
         else if (z == '>')                       state = s_bigger;       //je vetsi
         else if (z == '=')
         {
           state = s_same;                                                //je rovno
-          detailTokenu.tokenMain = l_same;
+          detailTokenu->tokenMain = l_same;
         }
         else if (z == ';')
         {
           state = s_semicolon;                                           //strednik
-          detailTokenu.tokenMain = l_semicolon;
+          detailTokenu->tokenMain = l_semicolon;
         }
         else
         {
           state = s_lex_err;                                            //nastala chyba
         }
-        addCharToString(&detailTokenu, z);                            //ulozeni nacteneho znaku
+        addCharToString(detailTokenu, z);                            //ulozeni nacteneho znaku
         break;
       case s_coment:                     //nacitam komentare, nic nedelam
         if (z != '}');
@@ -143,31 +146,31 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_id:
         if (isalnum(z) || z == '_')          //dentifikator dale muze obahovat jakekoli cislo ci pismeno a znak "_"
         {
-          addCharToString(&detailTokenu, z);             //zapisu dalsi znak a pokracuju
+          addCharToString(detailTokenu, z);             //zapisu dalsi znak a pokracuju
         }
         else
         {
-          keyWordCheck(&detailTokenu);
+          keyWordCheck(detailTokenu);
           state = s_lex_end;
           ungetc(z, Code);
         }
         break;
       case s_integer:                        //nacitam cislo
         if (isdigit(z))                     //pokracuje cislo
-            addCharToString(&detailTokenu, z);
+            addCharToString(detailTokenu, z);
         else if (z == 'E' || z == 'e')            //nacetl jsem exponent
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real_exp;
         }
         else if (z == '.')
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real;
         }
         else
         {
-          detailTokenu.tokenMain = l_integer;
+          detailTokenu->tokenMain = l_integer;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -175,7 +178,7 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_real:                               //yatim mam nacteno nejake cislo a tecku
         if (isdigit(z))
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
         }
         else
         {
@@ -185,16 +188,16 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_real_ok:                            //zde uz mam nactene cislo tecku i desetinnou cast, cekam na konec cisla
         if (isdigit(z))
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
         }
         else if(z == 'E' || z == 'e')
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real_exp;
         }
         else
         {
-          detailTokenu.tokenMain = l_real;
+          detailTokenu->tokenMain = l_real;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -202,12 +205,12 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_real_exp:     //zde mam posledni nactene e (exponent) tudiz pokud prijde neco jine nez cislice nebo znamenka + nebo - vracim chybu a ukoncim automat
         if (isdigit(z))
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real_exp_all;
         }
         else if (z == '+' || z == '-')
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real_exp_ok;
         }
         else
@@ -218,7 +221,7 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_real_exp_ok:                    //mam nacteny exponent i pripadne znamenko, cekam pouze cislici
         if(isdigit(z))
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
           state = s_real_exp_all;
         }
         else
@@ -229,17 +232,17 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
       case s_real_exp_all:                   //cislo je spravne, pouze ho doctu do konce
         if (isdigit(z))
         {
-          addCharToString(&detailTokenu, z);
+          addCharToString(detailTokenu, z);
         }
         else
         {
-          detailTokenu.tokenMain = l_real;
+          detailTokenu->tokenMain = l_real;
           state = s_lex_end;
           ungetc(z, Code);
         }
         break;
       case s_string:                         //nacitam retezec ohraniceny apostrofy
-        addCharToString(&detailTokenu, z);
+        addCharToString(detailTokenu, z);
         if (z == '\'')
         {
           state = s_string_check;
@@ -253,40 +256,40 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
         }
         else
         {
-          detailTokenu.tokenMain = l_string;
+          detailTokenu->tokenMain = l_string;
           state = s_lex_end;
           ungetc(z, Code);
         }
         break;
       case s_less:           //nacetl jsem < .... je mensi
-        addCharToString(&detailTokenu, z);
+        addCharToString(detailTokenu, z);
         if (z == '=')    //jeste muze prijit = nebo >
         {
-          detailTokenu.tokenMain = l_lessOr;
+          detailTokenu->tokenMain = l_lessOr;
           state = s_less_or;
         }
         else if(z == '>')
         {
           state = s_not_same;
-          detailTokenu.tokenMain = l_notSame;
+          detailTokenu->tokenMain = l_notSame;
         }
         else
         {
-          detailTokenu.tokenMain = l_less;
+          detailTokenu->tokenMain = l_less;
           state = s_lex_end;
           ungetc(z, Code);
         }
         break;
       case s_bigger:
-        addCharToString(&detailTokenu, z);
+        addCharToString(detailTokenu, z);
         if (z == '=')
         {
-          detailTokenu.tokenMain = l_biggerOr;
+          detailTokenu->tokenMain = l_biggerOr;
           state = s_bigger_or;
         }
         else
         {
-          detailTokenu.tokenMain = l_bigger;
+          detailTokenu->tokenMain = l_bigger;
           state = s_lex_end;
           ungetc(z, Code);
         }
@@ -308,7 +311,9 @@ token fillToken(FILE *Code)               //funkce, ktera naplni token
         read = false;
         break;
       case s_lex_err:                    //chyba pri lexikalni analyze
-        //return EXIT_LEXICAL_ERROR;
+        printErr("Lexical error: %s\n", detailTokenu->detail);
+        tokenFree(detailTokenu);
+        return NULL;//EXIT_LEXICAL_ERROR;
         break;
     }
   }
