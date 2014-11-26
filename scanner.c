@@ -9,313 +9,198 @@
  */
 #include "scanner.h"
 
-int tokenInit(token ** str)
+/*   Inicializace tokenu
+ * ---------------------------------------------------------------------
+ * - inicializuje token: hodnoty jeho parametru a prostor pro jeho data
+ */
+int tokenInit(token * str)
 {
-  if ((*str = malloc(sizeof(token))) == NULL)
+  if ((str->data = (char*) malloc(sizeof(char) * DETAIL_LENGHT)) == NULL)
     return EXIT_INTERNAL_ERROR;
-  if (((*str)->detail = (char*) malloc(DETAIL_LENGHT)) == NULL)
-    return EXIT_INTERNAL_ERROR;
-  (*str)->detail[0] = '\0';
-  (*str)->detailLenght = 0;
-  (*str)->allocatedMemory = DETAIL_LENGHT;
+  str->type = l_reset;
+  str->data[0] = '\0';
+  str->length = 0;
+  str->allocatedMemory = DETAIL_LENGHT;
   return EXIT_SUCCESS;
 }
 
+/*   vraceni pameti allokovane tokenem
+ * ---------------------------------------------------------------------
+ */
 void tokenFree(token *str)
 {
-  free(str->detail);
-  free(str);
+  free(str->data);
 }
 
-void tokenDetailClean(token *str)
+/*   Vycisteni tokenu
+ * ---------------------------------------------------------------------
+ * - provede vymazani dat tokenu - vymazani retezce
+ */
+void tokenClean(token *str)
 {
-  str->detail[0] = '\0';
-  str->detailLenght = 0;
+  tokenFree(str);
+  tokenInit(str);
 }
 
+/*   Pridat charu do retezce
+ * ---------------------------------------------------------------------
+ * - prida znak na konec retezce (data) v tokenu a zvisi pocitadlo delky
+ *   retezce s tim, ze soucasne misto inicializuje \0 hodnotou
+ */
 int addCharToString(token *str, char z)
 {
-  if(str->detailLenght + 1 >= str->allocatedMemory)
+  if(str->length + 1 >= str->allocatedMemory)
   {
-    if((str->detail = (char*) realloc(str->detail, str->detailLenght + DETAIL_LENGHT)) == NULL)            //realokace pameti
+    if((str->data = (char*) realloc(str->data, str->length + sizeof(char) * DETAIL_LENGHT)) == NULL)
       return EXIT_INTERNAL_ERROR;
-    str->allocatedMemory = str->detailLenght + DETAIL_LENGHT;
+    str->allocatedMemory = str->length + DETAIL_LENGHT;
   }
-  str->detail[str->detailLenght] = z;                    //pridani znaku do retezce
-  str->detailLenght++;                                   //zvetseni velikosti retezce
-  str->detail[str->detailLenght] = '\0';                 //pridani znaku 0 na konec
+  str->data[str->length] = z;
+  str->length++;
+  str->data[str->length] = '\0';
   return EXIT_SUCCESS;
 }
 
-/* Funkce pro kontrolu klicovych slov, jako parametr predavam ukazatel na token (strukturu)
- * Pomoci strmp() a vetveni if else se rozhodnu, zdali se jedna o identifikator ci klicove slovo
- * a vysledek zapisu do tokenu
+/*   Kontrola klicovych slov
+ * ---------------------------------------------------------------------
+ * - kontroluje token, pokud je to identifikator, zda-li neni klicovym
+ *   slovem, pokud ano, zmeni typ tokenu na l_key
  */
-int keyWordCheck(token *str)
+int keyWordCheck(token * lex)
 {
-  if((strcmp(str->detail, "begin")) == 0)             str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "boolean")) == 0)      str->tokenMain = l_bool;
-  else if((strcmp(str->detail, "do")) == 0)           str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "else")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "end")) == 0)          str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "false")) == 0)        str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "find")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "forward")) == 0)      str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "function")) == 0)     str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "if")) == 0)           str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "integer")) == 0)      str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "readln")) == 0)       str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "real")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "sort")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "string")) == 0)       str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "then")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "true")) == 0)         str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "var")) == 0)          str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "while")) == 0)        str->tokenMain = l_keyWord;
-  else if((strcmp(str->detail, "write")) == 0)        str->tokenMain = l_keyWord;
-  else                                                // nejedna se o klicove slovo
+  const int KEYWORDS_COUNT =  20;
+  const char * KEYWORDS[] ={ "begin", "boolean", "do", "else", "end", "false", "find", "forward", "function", "if", "integer", "readln", "real", "sort", "string", "then", "true", "var", "while", "write" };
+  for (int i = 0; i < KEYWORDS_COUNT; i++)
   {
-    str->tokenMain = l_id;
-  }
-  return 0;
-}
-
-token * fillToken(FILE *Code)               //funkce, ktera naplni token
-{
-  token * detailTokenu = NULL;         //promena, do ktere budu ukladat jak se danny identifikator jmenuje
-  tState state = s_begin;        //nastavim pocatecni stav automatu
-  bool read = true;              //bool pro zastaveni automatu
-  int z;                         //promenna pro nacitani pismen/znaku
-  if (tokenInit(&detailTokenu) != EXIT_SUCCESS) { return NULL; }
-
-  while (read && (z = fgetc(Code)))      //start automatu
-  {
-    switch(state)
+    if (strcmp(KEYWORDS[i], lex->data) == EXIT_SUCCESS)
     {
-      case s_begin:                                          //pocatecni stav automatu, samotny switch bude v ramci moznosti formou seznamu, za ucelem zprehledneni
-        if (isspace(z))                          state = s_begin;        //bile znaky preskocit
-        else if (z == '{')                       state = s_coment;       //narazil jsem na "{" -> zacina komentar
-        else if (isalpha(z) || z == '_')         state = s_id;           //pismeno nebo podtrzitko znaci zacatek identifikatoru nebo klicoveho slova
-        else if (isdigit(z))                     state = s_integer;      //cele nebo desetinne cislo
-        else if (z == '\'')                      state = s_string;       //zacatek retezce
-        else if (z == '+')
-        {
-          state = s_add_num;                                             //scitani
-          detailTokenu->tokenMain = l_add;
-        }
-        else if (z == '-')
-        {
-          state = s_sub_num;                                             //odcitani
-          detailTokenu->tokenMain = l_sub;
-        }
-        else if (z == '*')
-        {
-          state = s_mul_num;                                             //nasobeni
-          detailTokenu->tokenMain = l_mul;
-        }
-        else if (z == '/')
-        {
-          state = s_div_num;                                             //deleni
-          detailTokenu->tokenMain = l_div;
-        }
-        else if (z == '<')                       state = s_less;         //je mensi
-        else if (z == '>')                       state = s_bigger;       //je vetsi
-        else if (z == '=')
-        {
-          state = s_same;                                                //je rovno
-          detailTokenu->tokenMain = l_same;
-        }
-        else if (z == ';')
-        {
-          state = s_semicolon;                                           //strednik
-          detailTokenu->tokenMain = l_semicolon;
-        }
-        else
-        {
-          state = s_lex_err;                                            //nastala chyba
-        }
-        addCharToString(detailTokenu, z);                            //ulozeni nacteneho znaku
-        break;
-      case s_coment:                     //nacitam komentare, nic nedelam
-        if (z != '}');
-        else
-        {
-          state = s_begin;               //konec komentare
-        }
-        break;
-      case s_id:
-        if (isalnum(z) || z == '_')          //dentifikator dale muze obahovat jakekoli cislo ci pismeno a znak "_"
-        {
-          addCharToString(detailTokenu, z);             //zapisu dalsi znak a pokracuju
-        }
-        else
-        {
-          keyWordCheck(detailTokenu);
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_integer:                        //nacitam cislo
-        if (isdigit(z))                     //pokracuje cislo
-            addCharToString(detailTokenu, z);
-        else if (z == 'E' || z == 'e')            //nacetl jsem exponent
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real_exp;
-        }
-        else if (z == '.')
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real;
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_integer;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_real:                               //yatim mam nacteno nejake cislo a tecku
-        if (isdigit(z))
-        {
-          addCharToString(detailTokenu, z);
-        }
-        else
-        {
-          state = s_lex_err;           // koncim analyzu po znamenku '.' musi nasledovat cislice ..... nejsem si jist, zdali musim provadet ungetc, nebot analyza konci
-        }
-        break;
-      case s_real_ok:                            //zde uz mam nactene cislo tecku i desetinnou cast, cekam na konec cisla
-        if (isdigit(z))
-        {
-          addCharToString(detailTokenu, z);
-        }
-        else if(z == 'E' || z == 'e')
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real_exp;
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_real;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_real_exp:     //zde mam posledni nactene e (exponent) tudiz pokud prijde neco jine nez cislice nebo znamenka + nebo - vracim chybu a ukoncim automat
-        if (isdigit(z))
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real_exp_all;
-        }
-        else if (z == '+' || z == '-')
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real_exp_ok;
-        }
-        else
-        {
-          state = s_lex_err;
-        }
-        break;
-      case s_real_exp_ok:                    //mam nacteny exponent i pripadne znamenko, cekam pouze cislici
-        if(isdigit(z))
-        {
-          addCharToString(detailTokenu, z);
-          state = s_real_exp_all;
-        }
-        else
-        {
-          state = s_lex_err;
-        }
-        break;
-      case s_real_exp_all:                   //cislo je spravne, pouze ho doctu do konce
-        if (isdigit(z))
-        {
-          addCharToString(detailTokenu, z);
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_real;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_string:                         //nacitam retezec ohraniceny apostrofy
-        addCharToString(detailTokenu, z);
-        if (z == '\'')
-        {
-          state = s_string_check;
-        }
-
-        break;
-      case s_string_check:                   //nacetl jsem jeden apostrof, pokud nactu druhy, jsem stale v retezci, pokud ne, retezec konci. Zaroven dalsi apostrof neukladam
-        if(z == '\'')
-        {
-          state = s_string;
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_string;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_less:           //nacetl jsem < .... je mensi
-        addCharToString(detailTokenu, z);
-        if (z == '=')    //jeste muze prijit = nebo >
-        {
-          detailTokenu->tokenMain = l_lessOr;
-          state = s_less_or;
-        }
-        else if(z == '>')
-        {
-          state = s_not_same;
-          detailTokenu->tokenMain = l_notSame;
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_less;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_bigger:
-        addCharToString(detailTokenu, z);
-        if (z == '=')
-        {
-          detailTokenu->tokenMain = l_biggerOr;
-          state = s_bigger_or;
-        }
-        else
-        {
-          detailTokenu->tokenMain = l_bigger;
-          state = s_lex_end;
-          ungetc(z, Code);
-        }
-        break;
-      case s_add_num:                                //nevetvici se/konecne stavy automatu
-      case s_sub_num:
-      case s_mul_num:
-      case s_div_num:
-      case s_semicolon:
-      case s_same:
-      case s_not_same:
-      case s_less_or:
-      case s_bigger_or:
-        state = s_lex_end;
-        ungetc(z, Code);
-        break;
-      case s_lex_end:                            //automat konci
-        ungetc(z, Code);
-        read = false;
-        break;
-      case s_lex_err:                    //chyba pri lexikalni analyze
-        printErr("Lexical error: %s\n", detailTokenu->detail);
-        tokenFree(detailTokenu);
-        return NULL;//EXIT_LEXICAL_ERROR;
-        break;
+      lex->type = l_key;
+      break;
     }
   }
-  return detailTokenu;
+  return EXIT_SUCCESS;
+}
+
+/*   Nacitani tokenu
+ * ---------------------------------------------------------------------
+ * - funkce zodpovedna za nacteni casti zdrojoveho textu a prevedeni jej
+ *   na lexem (token)
+ * - rozlisi spravny typ tokenu a pokud zadnemu neodpovida vrati
+ *   EXIT_LEXICAL_ERROR
+ */
+int fillToken(FILE * Code, token * lex)
+{
+  tState state = s_begin;
+  bool read = true;
+  int z;
+  lex->type = l_reset;
+  int retVal = EXIT_SUCCESS;
+
+  while (read)
+  {
+    z = fgetc(Code);
+    switch(state)
+    {
+      case s_begin: // zakladni stav automatu, za zaklade pismene rozhodne co by to mohlo byt za lexem
+        if (isspace(z)) {}
+        else if (isalpha(z) || z == '_') { state = s_id; lex->type = l_id; addCharToString(lex, z); }
+        else if (isdigit(z)) { state = s_integer; lex->type = l_int; addCharToString(lex, z); }
+        else
+        {
+          switch (z)
+          {
+            case EOF: // jediny spravny EOF je pri zacatku lexemu
+              lex->type = l_eof;
+              read = false;
+              retVal = EOF;
+            case '{': state = s_comment; break;
+            case '\'': state = s_string; break;
+            case '+': read = false; lex->type = l_add; break;
+            case '-': read = false; lex->type = l_sub; break;
+            case '*': read = false; lex->type = l_mul; break;
+            case '/': read = false; lex->type = l_div; break;
+            case '=': read = false; lex->type = l_equal; break;
+            case ';': read = false; lex->type = l_endl; break;
+            case '<': state = s_less; break;
+            case '>': state = s_greater; break;
+            case ':': state = s_colon; break;
+            case '(': read = false; lex->type = l_lparenth; break;
+            case ')': read = false; lex->type = l_rparenth; break;
+            case '[': read = false; lex->type = l_lbracket; break;
+            case ']': read = false; lex->type = l_rbracket; break;
+            default: read = false; retVal = EXIT_LEXICAL_ERROR;
+          }
+        }
+        break;
+      case s_comment: // jsem v komentari
+        if (z == '}') state = s_begin;
+        break;
+      case s_id: // nacitam identifikator
+        if (isalnum(z) || z == '_') { addCharToString(lex, z); }
+        else { read = false; ungetc(z, Code); }
+        break;
+      case s_colon: // je to dvojtecka nebo prirazeni
+        if ( z == '=') { lex->type = l_assign; }
+        else { lex->type = l_colon; ungetc(z, Code); }
+        read = false;
+        break;
+      case s_less: // rozhoduji < <= <>
+        if ( z == '=') { lex->type = l_lequal; }
+        else if ( z == '>') { lex->type = l_not; }
+        else { lex->type = l_less; ungetc(z, Code); }
+        read = false;
+        break;
+      case s_greater: // rozhoduji > >=
+        if ( z == '=') { lex->type = l_gequal; }
+        else { lex->type = l_greater; ungetc(z, Code); }
+        read = false;
+        break;
+      case s_string: // zpracovani retezce
+        if (z == '\'') { state = s_string_check; }
+        else { addCharToString(lex, z); }
+        break;
+      case s_string_check: // je to escape sekvence nebo konec?
+        if (z == '\'') { state = s_string; addCharToString(lex, z); }
+        else if (z =='#' ){ state = s_string_escape; }
+        else { lex->type = l_str; read = false; ungetc(z, Code); }
+        break;
+      case s_string_escape: // u escape sekvence potrebuj alespon jedno cislo
+        if (isdigit(z)) { addCharToString(lex, z - '0'); state = s_string_escape_check; }
+        else { read = false; retVal = EXIT_LEXICAL_ERROR; }
+        break;
+      case s_string_escape_check: // zpracovani escape sekvence s ord. hodnotou vetsi nez 9
+        if (isdigit(z)) { lex->data[lex->length - 1] =  lex->data[lex->length - 1] * 10 + z - '0'; }
+        else if (z == '\'') { state = s_string; }
+        else { read = false; retVal = EXIT_LEXICAL_ERROR; }
+        break;
+      case s_integer: // nacitani integeru
+        if (isdigit(z)) { addCharToString(lex, z); }
+        else if (z == 'E' || z == 'e') { addCharToString(lex, z); state = s_real_exp; }
+        else if (z == '.') { addCharToString(lex, z); state = s_real; }
+        else { lex->type = l_int; read = false; ungetc(z, Code); }
+        break;
+      case s_real: // integer skoncil teckou, je to tedy realne cislo
+        if (isdigit(z)) { addCharToString(lex, z); }
+        else if(z == 'E' || z == 'e') { addCharToString(lex, z); state = s_real_exp; }
+        else { lex->type = l_real; read = false; ungetc(z, Code); }
+        break;
+      case s_real_exp: // dostal jsem se k exponentu
+        if (isdigit(z)) { addCharToString(lex, z); state = s_real_exp_all; }
+        else if (z == '+' || z == '-') { addCharToString(lex, z); state = s_real_exp_ok; }
+        else { ungetc(z, Code); read = false; retVal = EXIT_LEXICAL_ERROR; }
+        break;
+      case s_real_exp_ok: // je specifikovane znamenko, potrebuji cislici
+        if (isdigit(z)) { addCharToString(lex, z); state = s_real_exp_all; }
+        else { ungetc(z, Code); read = false; retVal = EXIT_LEXICAL_ERROR; }
+        break;
+      case s_real_exp_all: // nacitam cislice exponentu
+        if (isdigit(z)) { addCharToString(lex, z); }
+        else { lex->type = l_real; read = false; ungetc(z, Code); }
+        break;
+      default: read = false; retVal = EXIT_LEXICAL_ERROR;
+    }
+  }
+  // doslo-li k problemu behem nacitani vypisu hlaseni
+  if (retVal == EXIT_LEXICAL_ERROR) { printErr("What did you mean by \"%s%c\"\n", lex->data, z);}
+  return retVal;
 }

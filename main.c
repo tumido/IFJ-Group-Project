@@ -29,13 +29,20 @@ int main(int argc, char *argv[])
     return EXIT_INTERNAL_ERROR;
   }
 
-  token * printToken = fillToken(code);
-  while (printToken != NULL)
+  token printToken;
+  tokenInit(&printToken);
+  int retVal;
+  while ((retVal = fillToken(code, &printToken)) != EOF)
   {
-    printf("Token \"%s\"  of length %d (memory allocated %d)\n", printToken->detail,  printToken->detailLenght,  printToken->allocatedMemory);
-    tokenFree(printToken);
-    printToken = fillToken(code);
+    if (retVal != EXIT_INTERNAL_ERROR && retVal != EXIT_LEXICAL_ERROR)
+    {
+      keyWordCheck(&printToken);
+      // dulezity je typ tokenu, obsah (retezec je ukladan jen u stringu, identifikatoru, klicoveho slova)
+      printf("Token \"%s\"  of length %d (token of %d type)\n", printToken.data,  printToken.length,  printToken.type);
+    }
+    tokenClean(&printToken);
   }
+  tokenFree(&printToken);
 
   // Inicializujeme tabulku symbolu
   // Inicializace seznamu instrukci

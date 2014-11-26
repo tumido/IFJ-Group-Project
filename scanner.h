@@ -2,7 +2,7 @@
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  11/12/2014 04:23:21 PM
- *         Autori:  Tom·ö Coufal, Roman HalÌk, Yurij Hladyuk, Jakub JochlÌk
+ *         Autori:  Tom√°≈°Coufal, Roman Hal√≠k, Yurij Hladyuk, Jakub Jochl√≠k
  *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
  *        Projekt:  IFJ
  * =====================================================================
@@ -17,71 +17,89 @@
 #include <string.h>
 #include "io.h"
 
-#define DETAIL_LENGHT 8             //konstatna, kterou urcuji po kolika bytech bude provadena alokace pameti pro detail dokenu
+#define DETAIL_LENGHT 8 // relikt Kubovy spravy pameti, je treba predelat
 
-typedef enum            //seznam vsech stavu automatu
+/*   Typ pro stavovy automat
+ * --------------------------------------------------------------------
+ * - obsahuje vsechny stavy stavoveho automatu
+ */
+typedef enum
 {
-  s_begin,             // 0 pocatecni stav automatu
-  s_coment,            // 1 komentare
-  s_id,                // 2 identifikator
-  s_integer,           // 3 cislo
-  s_real,              // 4 desetinne cislo
-  s_string,            // 5 retezec
-  s_add_num,           // 6 operator +
-  s_sub_num,           // 7 operator -
-  s_mul_num,           // 8 operator *
-  s_div_num,           // 9 operator /, vysledek je vzdy typu real!
-  s_less,              //10 operator <
-  s_bigger,            //11 operator >
-  s_less_or,           //12 operator <=
-  s_bigger_or,         //13 operator >=
-  s_same,              //14 operator =
-  s_not_same,          //15 operator <>
-  s_semicolon,         //16 strednik ;
-  s_lex_end,           //17 konec tvorby tokenu
-  s_lex_err,           //18 chyba, ktera vznikla pri lex analyze
-  s_real_exp,          //19 pokracovani desetinneho cisla ..... 10e-2
-  s_real_exp_all,      //20 pokracovani desetinneho cisla ..... 10.41e-2
-  s_real_ok,           //21 kontrolni bod cisla real
-  s_real_exp_ok,       //22 Kontrolni bod cisla real s exponentem
-  s_string_check       //23 Kontrolni stav pro nacitani retezce
+  s_begin, s_comment, s_id,
+  s_colon, s_less, s_greater,
+  s_string, s_string_escape, s_string_escape_check, s_string_check,
+  s_integer, s_real,
+  s_real_exp, s_real_exp_all, s_real_exp_ok
 } tState;
 
-typedef enum           //Pomoci tohoto enumerate budu ukladat informaci o lexemu do tokenu ---zdali se jedna o indetifikator,integer,etc
+/*   Typ pro lexemy
+ * ---------------------------------------------------------------------
+ * - urcuje typ lexemu, resp. tokenu
+ */
+typedef enum
 {
-  l_id,                 // 0 nacetl jsem identifikator
-  l_keyWord,            // 1 nacetl jsem klicove slovo
-  l_integer,            // 2 nacetl jsem integer
-  l_real,               // 3 nacetl jsem real
-  l_string,             // 4 nacetl jsem retezcovy literal
-  l_bool,               // 5 nacetl jsem boolovsky literal
-  l_add,                // 6 nacetl jsem scitani
-  l_sub,                // 7 nacetl jsem odcitani
-  l_mul,                // 8 nacetl jsem nasobeni
-  l_div,                // 9 nacetl jsem deleni
-  l_less,               //10 nacetl jsem mensi
-  l_lessOr,             //11 nacetl jsem mensi rovno
-  l_bigger,             //12 nacetl jsem vetsi
-  l_biggerOr,           //13 nacetl jsem vetsi rovno
-  l_same,               //14 nacetl jsem rovna se
-  l_notSame,            //15 nacetl jsem nerovna se
-  l_semicolon,          //16 nacetl jsem strednik
+  l_id, l_key, l_assign,          // identifikator   klicove slovo   :=
+  l_colon, l_int,                 // :   integer
+  l_real, l_str, l_bool,          // float   string   bool
+  l_add, l_sub, l_mul, l_div,     // +   -   *   /
+  l_less, l_lequal, l_greater,    // <   <=   >
+  l_gequal, l_equal, l_not,       // >=  =   <>
+  l_lparenth, l_rparenth,         // (   )
+  l_lbracket, l_rbracket,         // [   ]
+  l_endl, l_eof, l_reset = 99     // ;   EOF   chyba
 } lexType;
 
-typedef struct            //Samotny token, jeho struktura
+/*   Struktura tokenu
+ * ---------------------------------------------------------------------
+ * - obsahuje typ lexemu a data
+ */
+typedef struct
 {
-  lexType tokenMain;      //Hlavni cast tokenu, yde ukladam, co jsem vlastne nacetl za typ lexemu
-  char * detail;          //detaily k lexemu
-  int detailLenght;       //delka retezece (detailu)
-  int allocatedMemory;    //velikost allokovane pameti
+  lexType type;
+  char * data;
+  unsigned int length;
+  unsigned int allocatedMemory;
 } token;
 
 
-token * fillToken(FILE *Code);                //predpokladam, ze budu dostavat adresu, kde bude prazdny token(formou struktury?) k vyplneni
-int tokenInit(token ** str);                    //inicializace detailu k ID
-void tokenFree(token *str);                   //uvolneni pameti
-void tokenDetailClean(token *str);                  //promazani detailu
-int addCharToString(token *str, char z);           //prida znak do existujiciho retezce
+/*   Nacitani tokenu
+ * ---------------------------------------------------------------------
+ * - funkce zodpovedna za nacteni casti zdrojoveho textu a prevedeni jej
+ *   na lexem (token)
+ * - rozlisi spravny typ tokenu a pokud zadnemu neodpovida vrati
+ *   EXIT_LEXICAL_ERROR
+ */
+int fillToken(FILE *Code, token * lex);
+
+/*   Inicializace tokenu
+ * ---------------------------------------------------------------------
+ * - inicializuje token: hodnoty jeho parametru a prostor pro jeho data
+ */
+int tokenInit(token * str);
+
+/*   vraceni pameti allokovane tokenem
+ * ---------------------------------------------------------------------
+ */
+void tokenFree(token *str);
+
+/*   Pridat charu do retezce
+ * ---------------------------------------------------------------------
+ * - prida znak na konec retezce (data) v tokenu a zvisi pocitadlo delky
+ *   retezce s tim, ze soucasne misto inicializuje \0 hodnotou
+ */
+int addCharToString(token *str, char z);
+
+/*   Kontrola klicovych slov
+ * ---------------------------------------------------------------------
+ * - kontroluje token, pokud je to identifikator, zda-li neni klicovym
+ *   slovem, pokud ano, zmeni typ tokenu na l_key
+ */
 int keyWordCheck(token *str);
+
+/*   Vycisteni tokenu
+ * ---------------------------------------------------------------------
+ * - provede vymazani dat tokenu - vymazani retezce
+ */
+void tokenClean(token *str);
 
 #endif
