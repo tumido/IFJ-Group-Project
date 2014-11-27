@@ -11,7 +11,9 @@
 #include "io.h"
 
 /*
- * Funkce na klasifikaci datového typu
+ * Klasifikace datového typu
+ * -----------------------------------------------------------------------------
+ * - integer, real, boolean, string, null
  */
 int returnValue()
 {
@@ -25,20 +27,31 @@ int returnValue()
     break;
     case T_STRING: 
     break;
+    case T_NULL;
+    break;
   }
   return INT_SUCCESS;
 }
 
 /*
- * Funkce interpretujici konkretni instrukci
+ * Interpretace konkretni instrukce
+ * -----------------------------------------------------------------------------
+ * - specialni instrukce
+ * - aritmeticke instrukce
+ * - instrukce porovnani
+ * - instrukce navraceni datoveho typu
+ * - instrukce vestavenych funkci
  */
 int instruction()
 {    
   switch (I->instType)
   {
-    /*
-     * Specialni instrukce
-     */ 
+
+/*
+ * Specialni instrukce
+ * -----------------------------------------------------------------------------
+ * - stop, read, write, if, if_end, jump, assign, substr, call_fuction, do_while
+ */ 
     case I_STOP: // pro zastaveni provadeni cyklu
     break;
     case I_READ: // cteni ze stdin
@@ -51,18 +64,24 @@ int instruction()
     break;
     case I_JUMP: // skaceme
     break;
+    case I_LABEl: // navesti, kam skaceme
+    break;
     case I_ASSIGN: // intrukce prirazeni, operator =
     break;
     case I_SUBSTR: // intrukce ulozi nekam podretezec v zadanem retezci
     break;
     case I_CALL_FUNCTION: // instrukce volani uzivatelskych funkci
     break;
+    case I_RETURN; // instrukce navratu z volane funkce
+    break;
     case I_DO_WHILE: // instrukce cyklu do-while
     break;
 
-    /*
-     * Aritmeticke instrukce
-     */
+/*
+ * Aritmeticke instrukce
+ * -----------------------------------------------------------------------------
+ * - mul, div, add, sub, con, inc, dec, neg
+ */
     case I_MUL: // nasobeni
     break;
     case I_DIV: // deleni
@@ -80,76 +99,93 @@ int instruction()
     case I_NEG; // negace, bude vubec potreba?
     break;
 
-    /*
-     * Instrukce porovnani
-     */
+/*
+ * Instrukce porovnani
+ * -----------------------------------------------------------------------------
+ * - cmp, less, greater, les_equal, greater_equal, equal, not_equal
+ */
     case I_CMP; // porovnavani
     break;
     case I_LESS; // je mensi nez
     break;
-    case I_MORE; // je vetsi nez
+    case I_GREATER; // je vetsi nez
     break;
     case I_LESS_EQUAL: // je mensi nebo rovno
     break;
-    case I_MORE_EQUAL; // je vetsi nebo rovno
+    case I_GREATER_EQUAL; // je vetsi nebo rovno
     break;
     case I_EQUAL; // rovnaji se
     break;
     case I_NOT_EQUAL: // nerovnaji se
     break;
 
-    /*
-     * intrukce na vraceni datoveho typu, tomu teda moc neorzumim..
-     * je v ni dalsi switch a pripady pro kazdy ty, zatim nepisu
-     */
+/*
+ * Intrukce na vraceni datoveho typu
+ * -----------------------------------------------------------------------------
+ * tomu teda moc nerozumim..
+ * je v ni dalsi switch a pripady pro kazdy ty, zatim nepisu
+ */
     case I_TYPE: 
     break;
 
-    /*
-     * Instrukce implenetujici vestavene funkce:
-     * copy(s : string; i : integer; n : integer) : string
-     *   - vrati podretezec zadaneho retezce 's'
-     *   - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
-     *   - 'n' urcuje delku podretezce
-     * length(s : string) : integer
-     *   - vrati delku retezce zadaneho parametrem 's'
-     * find(s : string; search : string) : integer
-     *   - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' 
-     *     a vrati jeho pozici (pocitano od 1)
-     *   - pokud neni podretezec nalezen, vraci 0
-     * sort(s : string) : string
-     *   - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
-     *     hodnout vzdy predchazel znaku s vyssi ordinarni hodnotou
-     *   - vraci retezec obsahujici serazene znaky  
-     */
-    case I_COPY: // implemetuje vestavenou funcki copy
+/*
+ * Instrukce implenetujici vestavene funkce
+ * -----------------------------------------------------------------------------
+ * copy(s : string; i : integer; n : integer) : string
+ *   - vrati podretezec zadaneho retezce 's'
+ *   - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
+ *   - 'n' urcuje delku podretezce
+ * length(s : string) : integer
+ *   - vrati delku retezce zadaneho parametrem 's'
+ * find(s : string; search : string) : integer
+ *   - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' 
+ *     a vrati jeho pozici (pocitano od 1)
+ *   - pokud neni podretezec nalezen, vraci 0
+ * sort(s : string) : string
+ *   - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
+ *     hodnout vzdy predchazel znaku s vyssi ordinarni hodnotou
+ *   - vraci retezec obsahujici serazene znaky  
+ */
+    case I_COPY: // implemetuje vestavenou funkci copy
     break;
-    case I_LENGHT: // Implementuje vestavenou funcki lenght
+    case I_LENGHT: // Implementuje vestavenou funkci lenght
     break;
     case I_FIND: // implementuje vestavenou funkci find
     break;
     case I_SORT: // implementuje vestavenou funkci sort
     break;
-
-    // jeste pribudou instrukce pro do while cykly a vlastni uzivatelske funkce :(
   }
   return 0; 
 }
 
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
+ * -----------------------------------------------------------------------------
  */
 int interpreter()
 {
   // ...
 }
 
-/* Zajimava myslenka jest ukladat triadresny kod jako vektor (tedy asi jednorozmerne pole)
- * pak si zrejme prochazim jeden vektor po druhem, a zpracovavam jeho prvky naimplementovanymi instrukcemi
+/* Zajimava myslenka jest ukladat triadresny kod jako vektor 
+ * (tedy asi jednorozmerne pole)
+ * pak si zrejme prochazim jeden vektor po druhem, a zpracovavam jeho prvky
+ * naimplementovanymi instrukcemi
  * pricemz se pokazde posunu dal o jednu instrukci = vektor!!
  *
- * jeste se tam na neco pouziva zasobnik, zatim o tom moc nevim
+ * jeste se tam na neco pouziva zasobnik, a sice na to, ze si do nej ukladam
+ * mezivysledky operaci. Sikovna to vecicka! :) Je to vlastne metodika, jak 
+ * zpracovavat slozite programove kontrukce.
+ * Takze bude potreba si naimplementovat zasobnik - IAL? A nejakym zpusobem
+ * ho narvat do intepretu a pak hlavne odzkouset - musi umet vkladat, cist,
+ * mazat a mozna jeste neco.
+ * Takze spousta srandy prede mnou..
  * 
  * TODO:
  * Nastudovat rozhrani interpetu, system vykonavani instrukci (tabulka, seznam?)
+ * System predavani 3AK - no asi ten vektor ne? Davat to jako string je blbost
+ * ma entou, bych si to zas musel rozkouskovavat a stejne bych to pak ukladal 
+ * nejakych lokalnich promennych nebo do pole. 
+ * Mozna ale bych si to z toho pole vzdycky mohl rozkouskovat do promennych, 
+ * ale mozna je to taky pekna zbytecnost. Uvidime, jak se s tim bude pracovat.
  */
