@@ -18,6 +18,7 @@
 #include "io.h"
 
 #define DETAIL_LENGHT 8 // relikt Kubovy spravy pameti, je treba predelat
+#define BASE 10
 
 /*   Typ pro stavovy automat
  * --------------------------------------------------------------------
@@ -49,6 +50,13 @@ typedef enum
   l_endl, l_eof, l_reset = 99     // ;   EOF   chyba
 } lexType;
 
+typedef struct
+{
+  char * str;
+  unsigned int length;
+  unsigned int alloc;
+} string;
+
 /*   Struktura tokenu
  * ---------------------------------------------------------------------
  * - obsahuje typ lexemu a data
@@ -56,9 +64,7 @@ typedef enum
 typedef struct
 {
   lexType type;
-  char * data;
-  unsigned int length;
-  unsigned int allocatedMemory;
+  void * data;
 } token;
 
 
@@ -101,5 +107,19 @@ int keyWordCheck(token *str);
  * - provede vymazani dat tokenu - vymazani retezce
  */
 void tokenClean(token *str);
+
+/*   Prevod na integer
+ * ---------------------------------------------------------------------
+ * - pokud bzl nacten integer je treba prevest string ve kterem je
+ *   ulozeny na integer
+ * - provdede vymenu stringu za integer v lex->data a string dealokuje
+ */
+int strToInt(token * lex);
+
+/*   Prevod na double
+ * ---------------------------------------------------------------------
+ * - analogicka funkce k prevodu na integer
+ */
+int strToDouble(token * lex);
 
 #endif

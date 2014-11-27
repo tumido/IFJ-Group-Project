@@ -13,14 +13,15 @@
  * ---------------------------------------------------------------------
  * - inicializuje token: hodnoty jeho parametru a prostor pro jeho data
  */
-int tokenInit(token * str)
+int tokenInit(token * lex)
 {
-  if ((str->data = (char*) malloc(sizeof(char) * DETAIL_LENGHT)) == NULL)
+  if (((lex->data = (string *) malloc(sizeof(string))) == NULL) ||
+     ((((string *) lex->data)->str = malloc(sizeof(char) * DETAIL_LENGHT)) == NULL ))
     return EXIT_INTERNAL_ERROR;
-  str->type = l_reset;
-  str->data[0] = '\0';
-  str->length = 0;
-  str->allocatedMemory = DETAIL_LENGHT;
+  lex->type = l_reset;
+  ((string *) lex->data)->str[0] = '\0';
+  ((string *) lex->data)->length = 0;
+  ((string *) lex->data)->alloc = DETAIL_LENGHT;
   return EXIT_SUCCESS;
 }
 
@@ -29,6 +30,7 @@ int tokenInit(token * str)
  */
 void tokenFree(token *str)
 {
+  if (str->type != l_int && str->type != l_real) { free(((string *) str->data)->str); }
   free(str->data);
 }
 
@@ -47,18 +49,56 @@ void tokenClean(token *str)
  * - prida znak na konec retezce (data) v tokenu a zvisi pocitadlo delky
  *   retezce s tim, ze soucasne misto inicializuje \0 hodnotou
  */
-int addCharToString(token *str, char z)
+int addCharToString(token *lex, char z)
 {
-  if(str->length + 1 >= str->allocatedMemory)
+  if(((string *) lex->data)->length + 1 >= ((string *) lex->data)->alloc)
   {
-    if((str->data = (char*) realloc(str->data, str->length + sizeof(char) * DETAIL_LENGHT)) == NULL)
+    if((((string *) lex->data)->str = (char *) realloc(((string *) lex->data)->str, ((string *) lex->data)->length + sizeof(char) * DETAIL_LENGHT)) == NULL)
       return EXIT_INTERNAL_ERROR;
-    str->allocatedMemory = str->length + DETAIL_LENGHT;
+    ((string *) lex->data)->alloc = ((string *) lex->data)->length + DETAIL_LENGHT;
   }
-  str->data[str->length] = z;
-  str->length++;
-  str->data[str->length] = '\0';
+  ((string *) lex->data)->str[((string *) lex->data)->length] = z;
+  ((string *) lex->data)->length++;
+  ((string *) lex->data)->str[((string *) lex->data)->length] = '\0';
   return EXIT_SUCCESS;
+}
+
+/*   Prevod na integer
+ * ---------------------------------------------------------------------
+ * - pokud bzl nacten integer je treba prevest string ve kterem je
+ *   ulozeny na integer
+ * - provdede vymenu stringu za integer v lex->data a string dealokuje
+ */
+int strToInt(token * lex)
+{
+  string * oldData = lex->data;
+  char * tail = oldData->str;
+  if ((lex->data= (long int *) malloc (sizeof(long int))) == NULL )
+    return EXIT_INTERNAL_ERROR;
+  *(((long int *) lex->data)) = strtol(oldData->str, &tail, BASE);
+  free(oldData->str);
+  free(oldData);
+  if (strcmp(tail, "") == EXIT_SUCCESS)
+    return EXIT_SUCCESS;
+  return EXIT_INTERNAL_ERROR;
+}
+
+/*   Prevod na double
+ * ---------------------------------------------------------------------
+ * - analogicka funkce k prevodu na integer
+ */
+int strToDouble(token * lex)
+{
+  string * oldData = lex->data;
+  char * tail = oldData->str;
+  if ((lex->data= (double *) malloc (sizeof(double))) == NULL )
+    return EXIT_INTERNAL_ERROR;
+  *(((double *) lex->data)) = strtod(oldData->str, &tail);
+  free(oldData->str);
+  free(oldData);
+  if (strcmp(tail, "") == EXIT_SUCCESS)
+    return EXIT_SUCCESS;
+  return EXIT_INTERNAL_ERROR;
 }
 
 /*   Kontrola klicovych slov
@@ -72,10 +112,10 @@ int keyWordCheck(token * lex)
   const char * KEYWORDS[] ={ "begin", "boolean", "do", "else", "end", "false", "find", "forward", "function", "if", "integer", "readln", "real", "sort", "string", "then", "true", "var", "while", "write" };
   for (int i = 0; i < KEYWORDS_COUNT; i++)
   {
-    if (strcmp(KEYWORDS[i], lex->data) == EXIT_SUCCESS)
+    if (strcmp(KEYWORDS[i], ((string *) lex->data)->str) == EXIT_SUCCESS)
     {
       lex->type = l_key;
-      break;
+      return EXIT_SUCCESS;
     }
   }
   return EXIT_SUCCESS;
@@ -169,7 +209,7 @@ int fillToken(FILE * Code, token * lex)
         else { read = false; retVal = EXIT_LEXICAL_ERROR; }
         break;
       case s_string_escape_check: // zpracovani escape sekvence s ord. hodnotou vetsi nez 9
-        if (isdigit(z)) { lex->data[lex->length - 1] =  lex->data[lex->length - 1] * 10 + z - '0'; }
+        if (isdigit(z)) { ((string *) lex->data)->str[((string *) lex->data)->length - 1] = ((string *) lex->data)->str[((string *) lex->data)->length - 1] * 10 + z - '0'; }
         else if (z == '\'') { state = s_string; }
         else { read = false; retVal = EXIT_LEXICAL_ERROR; }
         break;
@@ -201,6 +241,9 @@ int fillToken(FILE * Code, token * lex)
     }
   }
   // doslo-li k problemu behem nacitani vypisu hlaseni
-  if (retVal == EXIT_LEXICAL_ERROR) { printErr("What did you mean by \"%s%c\"\n", lex->data, z);}
+  if (retVal == EXIT_LEXICAL_ERROR) { printErr("What did you mean by \"%s%c\"\n", ((string *) lex->data)->str, z);}
+  else if (lex->type == l_int) { strToInt(lex); }
+  else if (lex->type == l_real) { strToDouble(lex); }
+  else if (lex->type == l_id) { keyWordCheck(lex); }
   return retVal;
 }

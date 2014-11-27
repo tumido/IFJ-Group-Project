@@ -36,9 +36,13 @@ int main(int argc, char *argv[])
   {
     if (retVal != EXIT_INTERNAL_ERROR && retVal != EXIT_LEXICAL_ERROR)
     {
-      keyWordCheck(&printToken);
       // dulezity je typ tokenu, obsah (retezec je ukladan jen u stringu, identifikatoru, klicoveho slova)
-      printf("Token \"%s\"  of length %d (token of %d type)\n", printToken.data,  printToken.length,  printToken.type);
+      printf("Token type %d", printToken.type);
+      if (printToken.type == l_int) { printf(" of value: %d", *((int *)printToken.data) ); }
+      else if (printToken.type == l_real) { printf(" of value: %f", *((double *)printToken.data) ); }
+      else if ((printToken.type == l_id) || (printToken.type == l_key) || (printToken.type == l_str))
+        { printf(" of value: \"%s\" (memory allocated %d)", ((string *)printToken.data)->str, ((string *)printToken.data)->alloc ); }
+      printf("\n");
     }
     tokenClean(&printToken);
   }
