@@ -91,7 +91,7 @@ int declList()
 
      // pozadam uz jen o dalsi token a zavolam znova dec.list
      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-     return declList();
+     return result=declList();
     }
     else return SYNTAX_OK;
   }
@@ -113,14 +113,14 @@ function()
 
       // Dalsi token musi byt ID, ktere si musim zatim zalohovat
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-      if (token.lexType != l_id) return SYNTAX_ERROR;
+      if (Token.lexType != l_id) return SYNTAX_ERROR;
 
        tokenInit(Zaloh);
        Zaloh=Token;
 
       // dalsi token musi byt "("
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (result = fillToken(source,Token)!= l_lparenth)  return SYNTAX_ERROR;
+      if (Token.lexType!= l_lparenth)  return SYNTAX_ERROR;
 
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       // dalsi token by mel byt parametr
@@ -129,7 +129,7 @@ function()
 
       // dalsi token musi byt ")" a pak ":"
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (result = fillToken(source,Token)!= l_colon)  return SYNTAX_ERROR;
+      if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
 
       // Dalsi token musi byt datovy typ
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR){ tokenFree(Zaloh); return LEX_ERROR;}
@@ -155,7 +155,7 @@ function()
       }
       // dalsi co by mi melo prijit je strednik
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (result = fillToken(source,Token)!= l_endl)  return SYNTAX_ERROR;
+      if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
 
       // Ted je vice moznosti co mi muze dojit
       // 1. forward 2. var (deklarace lokalnich promennych)
@@ -170,7 +170,7 @@ function()
       {
          // jestli to byl forward, tak poslu dalsi token kterej musi byt ;
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (result = fillToken(source,Token)!= l_endl)  return SYNTAX_ERROR;
+         if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
          // musim ulozit ze je to pouze prototyp boolean nastavit true napr.
          //+++++++++++++++++++++ DOPLNIM
          // zavolam rekurzivne fci pro dalsi deklarace fci
@@ -189,7 +189,7 @@ function()
           if (result != SYNTAX_OK) return result;
         //++++++++++++++++ NEVIM JESTLI VOLAT DALSI TOKEN NEBO UZ BUDE ZAVOLAN
           // funkce musi koncit ;
-        if (result = fillToken(source,Token)!= l_endl)  return SYNTAX_ERROR;
+        if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
       }
       else return SEM_ERROR;
       // zavolame si o dalsi token a zavolame rekurzivne funkci
@@ -213,13 +213,13 @@ int Param()
 
    // dalsi token musi byt ID
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (result = fillToken(source,Token)!= l_id)  return SYNTAX_ERROR;
+   if (Token.lexType!= l_id)  return SYNTAX_ERROR;
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    //  meli bychom si ulozit k te funkci parametry ale tady jeste nevime typ
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    // dalsi token je :
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (result = fillToken(source,Token)!= l_colon)  return SYNTAX_ERROR;
+   if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
 
    // Dalsi token musi byt typ
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -258,13 +258,13 @@ int NextParam()
 
    // dalsi token musi byt ID
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (result = fillToken(source,Token)!= l_id)  return SYNTAX_ERROR;
+   if (Token.lexType!= l_id)  return SYNTAX_ERROR;
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    //  meli bychom si ulozit k te funkci parametry ale tady jeste nevime typ
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    // dalsi token je :
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (result = fillToken(source,Token)!= l_colon)  return SYNTAX_ERROR;
+   if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
 
    // Dalsi token musi byt typ
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -298,6 +298,109 @@ int NextParam()
 //=================================================
 int state()
 {
+  int result;
+
+  switch (Token.lexType)
+  {
+    // pokud token je id
+    // <stat> -> id := <expression>
+    // <stat> -> id := <term>
+    case (l_id):
+    // musim si ulozit data, kam se bude nacitat
+    // ++++++++++++ doplnit
+    // ++++++++++++ prohledat strom, jestli identifikator neexistuje
+    // ++++++++++++ tak je to sem. chyba
+
+    // dalsi znak musi byt :=
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+    if (Token.lexType!=l_assign) return SYNTAX_ERROR;
+
+    // dalsi token je budto expression nebo id funkce
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+    // pokud je to id
+    // vestavene funkce by bylo asi nejlepsi hned vlozit do stromu
+    // +++++++++++++++++++++++++++++
+    // zatim to neresim, pak doplnim
+    if (Token.lexType==l_id || Token.lexType==l_key )
+    {
+       // vim ze dalsi token musi byt zavorka
+       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+       if (Token.lexType!= l_lparenth) return SYNTAX_ERROR;
+
+       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+       // ++++++++++++++++++++++++
+       // ted ocekavame TERM, funkci dopisu pak ji sem dam
+
+    }
+    else
+    {
+    // ted co?? Zdola nahoru SA zkontrolovat expression ?
+    // pak generovat kod?
+    // +++++++++++++ musime doplnit
+
+    }
+    return result;
+    break;
+
+    // nacetly jsme klicove slovo
+    // tzn ze by to melo byt cyklus while nebo if
+    // nebo readln nebo write
+    case (l_key):
+    // pokud se jedna o cyklus if
+     if (strcmp("if",Token.data.str)==0)
+     { //++++++++++++++++++++++++++++++++++++
+       // dalsi musi byt expression
+       // tady to musim doplnit, ukladani do tab.symbolu
+       // generovat vyraz
+       // vysledek vyrazu si musim ulozit
+       //  ++++++++++++++++++++++++++++++
+
+       // zkontrolovat dalsi token musi byt then
+       // nactu dalsi token
+       // ted zavolam body
+       // tady se musi resit skoky atd.
+       // KURVAAAAA boli me uz hlava
+       // generovat a srat se se skokama
+       //dalsi token else
+       //++++++++++++++++++++++++++++++++++++++++++
+     }
+     else if (strcmp ("while",Token.data.str)==0)
+     {
+         //+++++++++++++++++++++++++++++++
+         // PODOVNY JAKO IF
+         // MUSIM TO JESTE VYMYSLET
+         //+++++++++++++++++++++++++++++++
+     }
+     else if (strcmp ("readln",Token.data.str)==0)
+     {
+         // vim ze dalsi token je zavorka (
+         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (Token.lexType != l_lparenth) return SYNTAX_ERROR;
+
+         // nacteme dalsi token
+         // vime ze podle pravidla tady musi byt typ
+         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         // to musim jeste nejdriv dopsat ten type..
+         //return type();
+     }
+     else if (strcmp ("write",Token.data.str)==0)
+     {
+         // vim ze dalsi token je zavorka (
+         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (Token.lexType != l_lparenth) return SYNTAX_ERROR;
+
+         // nacteme dalsi token
+         // vime ze podle pravidla tady musi byt <term>
+         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         // to musim jeste nejdriv dopsat ten type..
+         //return term();
+     }
+     else return SYNTAX_ERROR;
+     break;
+     default break;
+
+  }
+
 
 }
 
@@ -353,7 +456,7 @@ return result;
 // Program zacina deklaraci, def. funkci nebo begin
 // Zavolam deklaracni list pak function dec. list
 // Nakonec bychom meli narazit na Begin -> zac.programu
-// <program> -> <decList> <funciton> <body> .
+// <program> -> <decList> <funciton> <body> . <EOF>
 // ====================================================
 int program()
 {
