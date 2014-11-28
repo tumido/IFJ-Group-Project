@@ -12,7 +12,6 @@
  #include "btree.h"
  #include "parser.h"
  #include "scanner.h"
- #include "str.h"
 
 
 
@@ -100,11 +99,11 @@ int declList()
 
 // ==================================================================
 // deklarace funkci
-// <function> -> ID ( <param>): typ ; <forward> <declList> <body> end;
+// <function> -> ID ( <param>): typ ; <forward> <declList> <body>; <function>
 // fce kontroluje gramatiku podle deklaraci funkci
 // (musi se doplnit ukladani funkci ID parametry atd.)
 // ===================================================================
-funDecList()
+function()
 {
     int result;
     token Zaloh;
@@ -166,7 +165,7 @@ funDecList()
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       // nejdrive zkontrolujeme jestli to neni forward a pak var
       // protoze to predchazi begin
-      //  <forward> -> ; <funDecList>
+      //  <forward> -> ; <function>
       if (strcmp("forward",Token.data.str)==0)
       {
          // jestli to byl forward, tak poslu dalsi token kterej musi byt ;
@@ -175,7 +174,7 @@ funDecList()
          // musim ulozit ze je to pouze prototyp boolean nastavit true napr.
          //+++++++++++++++++++++ DOPLNIM
          // zavolam rekurzivne fci pro dalsi deklarace fci
-         result = funDecList();
+         result = function();
       }
       else if (strcmp("var",Token.data.str)==0)
       {
@@ -186,16 +185,16 @@ funDecList()
       // stejne to zkontrolujeme radsi
       if (strcmp("begin",Token.data.str)!=0)
       {
-          //+++++++++++++++++++++++++++++++++
-          // zde pridam begin funkci
-          //+++++++++++++++++++++++++++++++++
+          result=body();
+          if (result != SYNTAX_OK) return result;
+        //++++++++++++++++ NEVIM JESTLI VOLAT DALSI TOKEN NEBO UZ BUDE ZAVOLAN
           // funkce musi koncit ;
         if (result = fillToken(source,Token)!= l_endl)  return SYNTAX_ERROR;
       }
       else return SEM_ERROR;
       // zavolame si o dalsi token a zavolame rekurzivne funkci
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      return funDecList();
+      return function();
     }
 
   return SYNTAX_OK;
@@ -247,7 +246,7 @@ int Param()
 
 }
 //=======================================================================
-// dalsi parametr <NextParam> -> ; <Nextparam>
+// dalsi parametr <NextParam> -> ; ID: TYP <Nextparam>
 // zkontroluje jestli tam je strednik jestli ano, tak bude dalsi parametr
 // jinak podobna funkci Param
 //========================================================================
@@ -291,13 +290,70 @@ int NextParam()
 
 }
 
+//================================================
+// Tady budou vsechny cykly
+// read, write
+// volani funkci
+// expresions
+//=================================================
+int state()
+{
+
+}
+
+
+
+//===============================================
+// <statements> -> <state> ; <statements>
+// <statements> -> <state>
+//================================================
+
+int statements ()
+{
+  int result;
+  // nebyl to end, to jsme kontrolovali jeste v body
+  // tzn ze tam bude nejaky prikaz
+  // zavolame state
+  result= state();
+  if (result != SYNTAX_OK) return result;
+
+  // pokud dalsi token je strednik tzn ze bude
+  // nasledovat dalsi prikaz
+  if (Token.lexType== l_endl)
+    return statements();
+  // pokud uz strednik nebude
+  // za poslednim prikazem nema byt strednik
+  // tzn ze se vratime do body
+  else return result;
+}
+
+//===============================================
+// <body> -> <statements> end
+//================================================
+int body()
+{
+ int result;
+  // zacatek byl begin
+  // nacteme dalsi token a zkontrolujeme jestli neni end
+  if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+  if (strcmp("end",Token.data.str)==0) return SYNTAX_OK;
+
+  result = statements();
+
+  // pokud za poslednim prikazem nebude end je to chyba
+  if (strcmp("end",Token.data.str)!=0) return SYNTAX_ERROR;
+
+return result;
+
+}
+
 
 
 //====================================================
 // Program zacina deklaraci, def. funkci nebo begin
 // Zavolam deklaracni list pak function dec. list
 // Nakonec bychom meli narazit na Begin -> zac.programu
-// <program> -> <decList> <funDecList> <MainStList>
+// <program> -> <decList> <funciton> <body> .
 // ====================================================
 int program()
 {
@@ -310,11 +366,12 @@ int program()
      result = declList(); //Kontrola deklarace promennych (nemusi byt nic deklarovano)
      if (result != SYNTAX_OK) return result;
 
-     result=funDecList(); // Kontrola funkci deklarace (nemusi byt nic deklarovano)
+     result=function(); // Kontrola funkci deklarace (nemusi byt nic deklarovano)
      if (result != SYNTAX_OK) return result;
 
-     result = mainStList(); // Hlavni program begin
+     result = body(); // Hlavni program begin
      if (result != SYNTAX_OK) return result;
+
 
      //ZDE MUSIM JESTE TESTOVAT KONEC SOUBORU
      // BUDE DOPLNENO
