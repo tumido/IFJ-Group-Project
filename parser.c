@@ -13,6 +13,7 @@ zí¹ /*
  #include "parser.h"
  #include "scanner.h"
  #include "io.h"
+ #include "ilist.h"
 
 
 
@@ -32,6 +33,38 @@ void setSourceFile(FILE *f)
 {
   source = f;
 }
+
+// generuje jedinecne nazvy identifikatoru
+// nazev se sklada ze znaku $ nasledovanym cislem
+// postupne se tu generuji prirozena cisla a do nazvu promenne se ukladaji
+// v reverzovanem poradi - na funkcnost to nema vliv, ale je jednodussi implementace
+int counterVar = 1;
+void generateVariable(string *var)
+{
+  strClear(var);
+  strAddChar(var, '$');
+  int i;
+  i = counterVar;
+  while (i != 0)
+  {
+    strAddChar(var, (char)(i % 10 + '0'));
+    i = i / 10;
+  }
+  counterVar ++;
+}
+
+void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
+// vlozi novou instrukci do seznamu instrukci
+{
+   tInstr I;
+   I.instType = instType;
+   I.addr1 = addr1;
+   I.addr2 = addr2;
+   I.addr3 = addr3;
+   listInsertLast(list, I);
+}
+
+
 //=====================================================
 //      Deklaracni funkce
 //      Pravidlo <DecList> -> var id : typ ; <DecList>

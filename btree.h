@@ -20,16 +20,19 @@
  *   podstromy a dalsi data...
  */
 
+typedef struct
+{
+    int varType;
+    double value;
+
+}tData;
+
 
 struct node
 {
-  int keyValue; // co si dame jako klic?
- /* char Name[80];  // jmenno promenne nebo funkce
-  int dataType=0; // datovy typ promenne nebo navratovy typ funkce
-  int value;    // hodnota promenne, u funkce return value
-  int prototyp=0;  // u funkce pokud 0 neni prototyp jestli 1 tak prototyp
-  parametry par;   // parametry funkce*/
-  // dalsi data v uzlu
+  string keyValue; // klic jmeno funkce, promenne
+  tData data;
+
   struct node * leftNode;
   struct node * rightNode;
 };
