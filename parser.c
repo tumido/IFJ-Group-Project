@@ -39,15 +39,15 @@ void setSourceFile(FILE *f)
 // postupne se tu generuji prirozena cisla a do nazvu promenne se ukladaji
 // v reverzovanem poradi - na funkcnost to nema vliv, ale je jednodussi implementace
 int counterVar = 1;
-void generateVariable(string *var)
+void generateVariable(token *var)
 {
-  strClear(var);
-  strAddChar(var, '$');
+  tokenDetailClean(var);
+  addCharToString(var, '$');
   int i;
   i = counterVar;
   while (i != 0)
   {
-    strAddChar(var, (char)(i % 10 + '0'));
+    addCharToString(var, (char)(i % 10 + '0'));
     i = i / 10;
   }
   counterVar ++;
@@ -61,7 +61,9 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
    I.addr1 = addr1;
    I.addr2 = addr2;
    I.addr3 = addr3;
-   listInsertLast(list, I);
+   if(listInsertLast(list, I))
+    return INTER_ERROR;
+    return 0;
 }
 
 
@@ -90,7 +92,7 @@ int declList()
     }// jestli byla volana rekurzivne znova tato funkce
      // tak identifikator uz bude token tak nesmime nacitat znova
     // zalohujeme si token, zatim nevime jakej je to typ
-    if (i=tokenInit(Zaloh) == EXIT_INTERNAL_ERROR);
+    if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
     return INTER_ERROR;
     //+++++++++++++++++++++++++++++++++
     // tady musim prohledat strom jestli nedeklaruji 2x stejny jmeno id
@@ -155,9 +157,10 @@ function()
       // Dalsi token musi byt ID, ktere si musim zatim zalohovat
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
       if (Token.lexType != l_id) return SYNTAX_ERROR;
-
-       tokenInit(Zaloh);
-       Zaloh=Token;
+     //zalohujeme si token
+      if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
+      return INTER_ERROR;
+      Zaloh=Token;
 
       // dalsi token musi byt "("
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -341,6 +344,9 @@ int state()
 {
   int result;
 
+  tData *varInfo;
+  token zaloh;
+
   switch (Token.lexType)
   {
     // pokud token je id
@@ -405,12 +411,72 @@ int state()
        //dalsi token else
        //++++++++++++++++++++++++++++++++++++++++++
      }
+
+     //<state> -> while <expression> do <body> ;
      else if (strcmp ("while",Token.data)==0)
      {
-         //+++++++++++++++++++++++++++++++
-         // PODOVNY JAKO IF
-         // MUSIM TO JESTE VYMYSLET
-         //+++++++++++++++++++++++++++++++
+
+      // dalsi token co nas ceka je vyraz
+      // to dame pak zpracovat SA zdola nahoru
+      // nejdriv nagenerujeme instrukci navesti
+
+      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+      // vygenerujeme instrukci navesti
+      if(generateInstruction(I_LAB, NULL, NULL, NULL)) return INTER_ERROR;
+      // ted potrebujeme ulozit adresu za WHILE
+      void *addrLab1;
+      addrLab1 = listGetPointerLast (list) ; // vraci nam ukazatel na posledni instukci
+
+      // potrebujeme unikatni nazev promenne
+      if ((result=tokenDetailInit(zaloh))!= EXIT_SUCCESS) return INTER_ERROR;
+      if(generateVariable(&zaloh))   return INTER_ERROR;
+      //++++++++++++++++++++++++++++++
+      // tady bych si mel ulozit promennou
+      // varInfo= tady bych si mel ulozit adresu s daty
+      tokenDetailFree(&zaloh); // uvolnim nazev
+      //
+      // ++++++++++++++++++++++++++++++++++++
+      //ted tu musi byt uz cteni EXPRESSION
+      // Zdola nahoru
+
+      //  Musime si vygenerovat instrukci pod.skoku a ulozit si adresu
+      void *addrIfNotGoto;
+
+      if(generateInstruction(I_IFNOTGOTO, (void*) varInfo, NULL, NULL))return INTER_ERROR;
+      addrIfNotGoto = listGetPointerLast (list);
+
+      //nevim jestli nacitat dalsi token nebo ho dostanu od READEXPRESSION funkce
+      // kazdopadne dalsi token musi byt DO
+      if (strcmp(Token.data, "do")!= 0) return SYNTAX_ERROR;
+
+      // dalsi token musi byt slozeny prikaz, zavolame begin
+      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+      result = body();
+      if (result != SYNTAX_OK) return result;
+      // za end musi byt ;
+      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+      if (token.lexType!=l_endl) return SYNTAX_ERROR;
+
+      // je potreba ted instrukce skoku
+      // skoci za while nad adressu Lab1
+      if (generateInstuction (I_GOTO,NULL,NULL, (void*)addrLab1)) return INTER_ERROR;
+
+      //musime si udelat navesti kam to ma skocit kdyz podminka neplati
+      if(generateInstruction(I_LAB, NULL, NULL, NULL)) return INTER_ERROR;
+
+      void *addrLab2;
+      addrLab2= listGetPointerLast(list); // ukazatel je nyni za posledni instrukci
+
+      // zname adresu 2 navesti
+      // nastavime aktualni instrukci
+
+      listGoto(list,addrIfNotGoto);
+      tInstr *data;
+      data=listGetData(list);
+      data->addr3= addrOfLab2;
+
+      return SYNTAX_OK;
+
      }
      else if (strcmp ("readln",Token.data)==0)
      {
@@ -444,7 +510,6 @@ int state()
 
 
 }
-
 
 
 //===============================================
