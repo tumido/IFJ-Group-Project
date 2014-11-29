@@ -17,7 +17,10 @@
  #define SEMAN_ERROR   3
  #define LEX_ERROR     4
  #define INTER_ERROR   5
-
+ #define dINT 1
+ #define dREAL 2
+ #dedine dSTR 3
+ #define dBOOL 4
 
  //hlavicka syntaktickeho analyzatoru
 

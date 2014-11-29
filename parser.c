@@ -12,6 +12,7 @@
  #include "btree.h"
  #include "parser.h"
  #include "scanner.h"
+ #include "io.h"
 
 
 
@@ -58,6 +59,9 @@ int declList()
     // zalohujeme si token, zatim nevime jakej je to typ
     if (i=tokenInit(Zaloh) == EXIT_INTERNAL_ERROR);
     return INTER_ERROR;
+    //+++++++++++++++++++++++++++++++++
+    // tady musim prohledat strom jestli nedeklaruji 2x stejny jmeno id
+    //++++++++++++++++++++++++++++++++++++++++
     Zaloh=Token;
 
     // Dalsi token musi byt ":"
@@ -72,7 +76,11 @@ int declList()
       // ++++++++++++++++++++++++++++++++++++++++++
        // Tady bych mel vlozit ted ID+TYP do stromu
        //++++++++++++++++++++++++++++++++++++++++++
-       case l_int: tokenFree(Zaloh);
+       case l_int:
+           // nechapu to volani tohoto stromu
+           // SymbolTableInsert( &NODE, )
+
+            tokenFree(Zaloh);
          break;
        case l_real: tokenFree(Zaloh);
          break;
