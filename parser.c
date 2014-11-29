@@ -508,18 +508,18 @@ int Parser(node *TS, tListOfInstr *instrList,){
  if (i=tokenInit (Token)==EXIT_INTERNAL_ERROR)
   return INTER_ERROR;
 
- NODE=TREE;
+ NODE=TS;
  list = instrList;
 
  result=fillToken (source,Token);
 
- if (result==EXIT_LEXICAL_ERROR)
-    result = LEX_ERROR;
- else if (result == EXIT_INTERNAL_ERROR)
-  result = INTER_ERROR;
- else
-  result=program ();
+ if (result==EXIT_LEXICAL_ERROR)return LEX_ERROR;
 
+ else if (result == EXIT_INTERNAL_ERROR) return INTER_ERROR;
+ else
+
+ result=program ();
  tokenFree(Token);
+
  return result;
 }
