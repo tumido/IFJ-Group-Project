@@ -1,4 +1,4 @@
-/*
+zí¹ /*
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  11/12/2014 04:21:52 PM
@@ -45,7 +45,7 @@ int declList()
   token Zaloh; // zaloha tokenu
   // Pokud je to klicove slovo var nebo pak uz jen klicove slovo
   // kdyz budeme volat znova tuto funkci
-  if (strcmp("var",Token.data.str)==0 || Token.lexType== l_id)
+  if (strcmp("var",Token.data)==0 || Token.lexType== l_id)
   {
     // Pokud tuto funkci prochazim poprve udela se i tento krok
     if(Token.lexType!=l_id)
@@ -116,7 +116,7 @@ function()
     int result;
     token Zaloh;
 
-    if (strcmp("function",Token.data.str)==0)
+    if (strcmp("function",Token.data)==0)
     {
 
       // Dalsi token musi byt ID, ktere si musim zatim zalohovat
@@ -174,7 +174,7 @@ function()
       // nejdrive zkontrolujeme jestli to neni forward a pak var
       // protoze to predchazi begin
       //  <forward> -> ; <function>
-      if (strcmp("forward",Token.data.str)==0)
+      if (strcmp("forward",Token.data)==0)
       {
          // jestli to byl forward, tak poslu dalsi token kterej musi byt ;
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -184,14 +184,14 @@ function()
          // zavolam rekurzivne fci pro dalsi deklarace fci
          result = function();
       }
-      else if (strcmp("var",Token.data.str)==0)
+      else if (strcmp("var",Token.data)==0)
       {
         result=decList();
         if (result != SYNTAX_OK) return result;
       }
       // v jinym pripade by se melo jednat o begin
       // stejne to zkontrolujeme radsi
-      if (strcmp("begin",Token.data.str)!=0)
+      if (strcmp("begin",Token.data)!=0)
       {
           result=body();
           if (result != SYNTAX_OK) return result;
@@ -355,7 +355,7 @@ int state()
     // nebo readln nebo write
     case (l_key):
     // pokud se jedna o cyklus if
-     if (strcmp("if",Token.data.str)==0)
+     if (strcmp("if",Token.data)==0)
      { //++++++++++++++++++++++++++++++++++++
        // dalsi musi byt expression
        // tady to musim doplnit, ukladani do tab.symbolu
@@ -372,14 +372,14 @@ int state()
        //dalsi token else
        //++++++++++++++++++++++++++++++++++++++++++
      }
-     else if (strcmp ("while",Token.data.str)==0)
+     else if (strcmp ("while",Token.data)==0)
      {
          //+++++++++++++++++++++++++++++++
          // PODOVNY JAKO IF
          // MUSIM TO JESTE VYMYSLET
          //+++++++++++++++++++++++++++++++
      }
-     else if (strcmp ("readln",Token.data.str)==0)
+     else if (strcmp ("readln",Token.data)==0)
      {
          // vim ze dalsi token je zavorka (
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -391,7 +391,7 @@ int state()
          // to musim jeste nejdriv dopsat ten type..
          //return type();
      }
-     else if (strcmp ("write",Token.data.str)==0)
+     else if (strcmp ("write",Token.data)==0)
      {
          // vim ze dalsi token je zavorka (
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -447,12 +447,12 @@ int body()
   // zacatek byl begin
   // nacteme dalsi token a zkontrolujeme jestli neni end
   if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-  if (strcmp("end",Token.data.str)==0) return SYNTAX_OK;
+  if (strcmp("end",Token.data)==0) return SYNTAX_OK;
 
   result = statements();
 
   // pokud za poslednim prikazem nebude end je to chyba
-  if (strcmp("end",Token.data.str)!=0) return SYNTAX_ERROR;
+  if (strcmp("end",Token.data)!=0) return SYNTAX_ERROR;
 
 return result;
 
