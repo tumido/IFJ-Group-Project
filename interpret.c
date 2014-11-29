@@ -38,16 +38,15 @@
 #define I_INC 21 
 #define I_DEC 22 
 #define I_NEG 23 
-#define I_CMP 24 
-#define I_LESS 25 
-#define I_GREATER 26
-#define I_LESS_EQUAL 27
-#define I_GREATER_EQUAL 28
-#define I_EQUAL 29
-#define I_NOT_EQUAL 30
-#define I_TYPE 31
-#define I_COPY 32 
-#define I_SORT 33 
+#define I_LESS 24 
+#define I_GREATER 25
+#define I_LESS_EQUAL 26
+#define I_GREATER_EQUAL 27
+#define I_EQUAL 28
+#define I_NOT_EQUAL 29
+#define I_TYPE 30
+#define I_COPY 31
+#define I_SORT 32 
 // Toto cele pak do nejakeho hlavickoveho souboru, asi do ilist.h (instruction list)
 
 /*
@@ -146,65 +145,282 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * - mul, div, add, sub, con, inc, dec, neg
  */
-      case I_MUL: // nasobeni
-      // takto nejak by mohla vypadat kazda instrukce
+
+ /*
+ * MULTIPLY
+ * vynasobi operand 1 a operand 2, vysledek ulozi do acc
+ */
+      case I_MUL:
         if (!isIntOrReal) return EXIT_TYPE_ERROR;
         else
         {
-          if((operand1)->type == T_INTEGER) && ((operand2)->type == T_INTEGER) ((accumulator)->type == T_INTEGER)
-          else ((accumulator)->type == T_REAL) // real a real/int da real
+          if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER) accumulator->type == T_INTEGER;
+          else accumulator->type == T_REAL; // real a real/int da real
 
           accumulator->data = operand1->data * operand2->data; 
           return EXIT_SUCCESS; 
         }
         break;
-      case I_DIV: // deleni
+
+/*
+ * DIVIDE
+ * vydeli operand 1 a operand 2, vysledek ulozi do acc
+ */
+      case I_DIV: 
+        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        else
+        {
+          if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER) accumulator->type == T_INTEGER;
+          else accumulator->type == T_REAL; // real a real/int da real
+          
+          if(operand2->data == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
+          else 
+          {
+            accumulator->data = operand1->data / operand2->data;
+            return EXIT_SUCCESS;
+          }          
+        }
+        break;
+
+/*
+ * ADDICTION
+ * secte operand 1 a operand 2, vysledek ulozi do acc
+ */
+      case I_ADD:
+        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        else
+        {
+          if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER) accumulator->type == T_INTEGER;
+          else accumulator->type == T_REAL; // real a real/int da real
+
+          accumulator->data = operand1->data + operand2->data; 
+          return EXIT_SUCCESS; 
+        }
+        break;
+
+/*
+ * SUBTITION
+ * odecte operand 1 a operand 2, vysledek ulozi do acc
+ */
+      case I_SUB:
+        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        else
+        {
+          if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER) accumulator->type == T_INTEGER;
+          else accumulator->type == T_REAL; // real a real/int da real
+
+          accumulator->data = operand1->data - operand2->data; 
+          return EXIT_SUCCESS; 
+        }
+        break;
+
+/*
+ * CONCATENATE
+ * konkatenace (zretezeni) oprandu 1 a operandu 2, vysledek v acc
+ * !DOKONCIT
+ */
+      case I_CON: 
+        if(!(operand1->type == T_STRING) && (operand2->type == T_STRING)) return EXIT_TYPE_ERROR; 
+        else 
+        {
+          accumulator->type = T_STRING;
+          // ...
+        }
         return EXIT_SUCCESS;
         break;
-      case I_ADD: // scitani
-        return EXIT_SUCCESS;
-        break;
-      case I_SUB: // odcitani
-        return EXIT_SUCCESS;
-        break;
-      case I_CON: // konktarenace, zretezeni
-        return EXIT_SUCCESS;
-        break;
+
+/*
+ * INCREMENTATION
+ * inkrementuje operand 2, vysledek v operandu 2
+ */
       case I_INC: // inkrementace
-        return EXIT_SUCCESS;
+        if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
+        else
+        {
+          operand2->data = (operand2->data)++;
+          return EXIT_SUCCESS; 
+          }
         break;
-      case I_DEC: // dekrementace
-        return EXIT_SUCCESS;
+
+/*
+ * DECREMENTATION
+ * inkrementuje operand 2, vysledek v operandu 2
+ */
+      case I_DEC: // inkrementace
+        if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
+        else
+        {
+          operand2->data = (operand2->data)--;
+          return EXIT_SUCCESS; 
+          }
         break;
+
+/*
+ * NEGATION
+ * neguje operand 2, vysledek v operandu 2
+ */
       case I_NEG: // negace, bude vubec potreba?
-        return EXIT_SUCCESS;
+        if(!(operand2->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
+        else
+        {
+          if (operand2->data == TRUE) operand2->data = FALSE;
+          else operand2->data = TRUE;
+          return EXIT_SUCCESS; 
+          }
         break;
 
 /*
  * Instrukce porovnani
  * -----------------------------------------------------------------------------
  * - cmp, less, greater, les_equal, greater_equal, equal, not_equal
+ * 
+ * - nejsem si jisty, zda-li je mozne porovnavat dva rozdilne datove typy, zatim 
+ *   tuto moznost neuvazuji
+ * - stejne tak nevim, jestli lze porovnavat vetsi mensi u stringu, zjistit! 
  */
-      case I_CMP: // porovnavani
-        return EXIT_SUCCESS;
+
+/*
+ * LESS
+ * operand 1 je mensi nez operand 2
+ */
+      case I_LESS: 
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data < operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data < operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
-      case I_LESS: // je mensi nez
-        return EXIT_SUCCESS;
+
+/*
+ * GREATER
+ * operand 1 je vetsi nez operand 2
+ */
+      case I_GREATER: 
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data > operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data > operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
-      case I_GREATER: // je vetsi nez
-        return EXIT_SUCCESS;
-        break;
+
+/*
+ * LESS OR EQUAL
+ * operand 1 je mensi nebo roven operandu 2
+ */
       case I_LESS_EQUAL: // je mensi nebo rovno
-        return EXIT_SUCCESS;       
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
+
+/*
+ * GREATER OR EQUAL
+ * operand 1 je vetsi nebo roven operandu 2
+ */
       case I_GREATER_EQUAL: // je vetsi nebo rovno
-        return EXIT_SUCCESS;
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
+
+/*
+ * EQUAL
+ * operand 1 je roven operandu 2
+ */
       case I_EQUAL: // rovnaji se
-        return EXIT_SUCCESS;
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data == operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data == operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN)
+        {
+          accumulator->type == T_BOOLEAN;
+          accumulator->data = ((operand1->data == operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {
+          accumulator->type == T_STRING;
+          accumulator->data = (strcmp(operand1->data, operand2->data));
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
+
+/*
+ * NOT EQUAL
+ * operand 1 neni roven operandu 2
+ */
       case I_NOT_EQUAL: // nerovnaji se
-        return EXIT_SUCCESS;
+        if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
+        {
+          accumulator->type == T_INTEGER;
+          accumulator->data = ((operand1->data != operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        {
+          accumulator->type == T_REAL;
+          accumulator->data = ((operand1->data != operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN)
+        {
+          accumulator->type == T_BOOLEAN;
+          accumulator->data = ((operand1->data != operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {
+          accumulator->type == T_STRING;
+          accumulator->data = (!(strcmp(operand1->data, operand2->data))); // jde to takle? snaha o negaci vysledku strcmp
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
         break;
 
 /*
@@ -218,7 +434,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
- * Instrukce implenetujici vestavene funkce
+ * Instrukce implenetujici vestavene funkce copy, lenght, find, sort
  * -----------------------------------------------------------------------------
  * copy(s : string; i : integer; n : integer) : string
  *   - vrati podretezec zadaneho retezce 's'
@@ -268,10 +484,10 @@ int interpret(tInstList *)
  */
 bool isIntOrReal(void)
 {
-  if((operand1)->type == T_INTEGER) && ((operand2)->type == T_INTEGER) return TRUE;
-  else if((operand1)->type == T_INTEGER) && ((operand2)->type == T_REAL) return TRUE;
-  else if((operand1)->type == T_REAL) && ((operand2)->type == T_INTEGER) return TRUE;
-  else if((operand1)->type == T_REAL) && ((operand2)->type == T_REAL) return TRUE;
+  if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) return TRUE;
+  else if((operand1->type == T_INTEGER) && (operand2->type == T_REAL)) return TRUE;
+  else if((operand1->type == T_REAL) && (operand2->type == T_INTEGER)) return TRUE;
+  else if((operand1->type == T_REAL) && (operand2->type == T_REAL)) return TRUE;
   else return FALSE;  
 }
 
