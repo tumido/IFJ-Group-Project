@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #define EXIT_SUCCESS 0
 #define EXIT_LEXICAL_ERROR 1

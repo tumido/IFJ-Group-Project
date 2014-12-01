@@ -10,6 +10,7 @@
 
 #include "io.h"
 #include "interpret.h"
+#include "ial.h" // kvuli funkci findSubstring a shellSort
 
 // datove typy
 #define T_INTEGER 0
@@ -116,15 +117,13 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         return EXIT_SUCCESS;
         break;
       case I_IF_END: // toto zas bude znacit konec IFu, nejak
-        return EXIT_SUCCESS;
         break;
       case I_JUMP: // skaceme
-        return EXIT_SUCCESS;
         break;
       case I_LABEL: // navesti, kam skaceme
         return EXIT_SUCCESS;
         break;
-      case I_ASSIGN: // intrukce prirazeni, operator =
+      case I_ASSIGN: // intrukce prirazeni, operator =        
         return EXIT_SUCCESS;
         break;
       case I_SUBSTR: // intrukce ulozi nekam podretezec v zadanem retezci
@@ -239,7 +238,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           operand2->data = (operand2->data)++;
           return EXIT_SUCCESS; 
-          }
+        }
         break;
 
 /*
@@ -252,7 +251,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           operand2->data = (operand2->data)--;
           return EXIT_SUCCESS; 
-          }
+        }
         break;
 
 /*
@@ -265,18 +264,15 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           if (operand2->data == TRUE) operand2->data = FALSE;
           else operand2->data = TRUE;
+
           return EXIT_SUCCESS; 
-          }
+        }
         break;
 
 /*
  * Instrukce porovnani
  * -----------------------------------------------------------------------------
- * - cmp, less, greater, les_equal, greater_equal, equal, not_equal
- * 
- * - nejsem si jisty, zda-li je mozne porovnavat dva rozdilne datove typy, zatim 
- *   tuto moznost neuvazuji
- * - stejne tak nevim, jestli lze porovnavat vetsi mensi u stringu, zjistit! 
+ * - less, greater, les_equal, greater_equal, equal, not_equal
  */
 
 /*
@@ -286,14 +282,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_LESS: 
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data < operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
         {
-          accumulator->type == T_REAL;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data < operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp < 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -306,14 +309,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_GREATER: 
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data > operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
         {
-          accumulator->type == T_REAL;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data > operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp > 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -326,14 +336,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_LESS_EQUAL: // je mensi nebo rovno
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
-        else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
+        else if(operand1->type == T_BOOLEAN) && (operand2->type == T_REAL)
         {
           accumulator->type == T_REAL;
           accumulator->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp <= 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -346,14 +363,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_GREATER_EQUAL: // je vetsi nebo rovno
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
         {
-          accumulator->type == T_REAL;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
+          return EXIT_SUCCESS;
+        }
+        else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp >= 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -366,13 +390,13 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_EQUAL: // rovnaji se
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data == operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
         {
-          accumulator->type == T_REAL;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data == operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
@@ -383,9 +407,10 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
-        {
-          accumulator->type == T_STRING;
-          accumulator->data = (strcmp(operand1->data, operand2->data));
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp == 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -398,13 +423,13 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_NOT_EQUAL: // nerovnaji se
         if(operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)
         {
-          accumulator->type == T_INTEGER;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data != operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_REAL) && (operand2->type == T_REAL)
         {
-          accumulator->type == T_REAL;
+          accumulator->type == T_BOOLEAN;
           accumulator->data = ((operand1->data != operand2->data)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
@@ -415,9 +440,10 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           return EXIT_SUCCESS;
         }
         else if(operand1->type == T_STRING) && (operand2->type == T_STRING)
-        {
-          accumulator->type == T_STRING;
-          accumulator->data = (!(strcmp(operand1->data, operand2->data))); // jde to takle? snaha o negaci vysledku strcmp
+        {  
+          accumulator->type == T_BOOLEAN;
+          int tmp = (strcmp(operand1->data, operand2->data));
+          accumulator->data = ((tmp != 0)? TRUE : FALSE);
           return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
@@ -427,7 +453,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * Intrukce na vraceni datoveho typu
  * -----------------------------------------------------------------------------
  * tomu teda moc nerozumim..
- * je v ni dalsi switch a pripady pro kazdy ty, zatim nepisu
+ * je v ni dalsi switch a pripady pro kazdy typ, zatim nepisu
  */
       case I_TYPE: 
         return EXIT_SUCCESS;
@@ -440,27 +466,62 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  *   - vrati podretezec zadaneho retezce 's'
  *   - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
  *   - 'n' urcuje delku podretezce
+ *
  * length(s : string) : integer
  *   - vrati delku retezce zadaneho parametrem 's'
+ *
  * find(s : string; search : string) : integer
  *   - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' 
  *     a vrati jeho pozici (pocitano od 1)
  *   - pokud neni podretezec nalezen, vraci 0
+ *   - implementovano pomoci Boyer-Moorova algoritmu
+ *
  * sort(s : string) : string
  *   - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
- *     hodnout vzdy predchazel znaku s vyssi ordinarni hodnotou
- *   - vraci retezec obsahujici serazene znaky  
+ *     hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
+ *   - vraci retezec obsahujici serazene znaky 
+ *   - implementovano pomoci algoritmu shell sort  
  */
-      case I_COPY: // implemetuje vestavenou funkci copy
+
+/*
+ * COPY
+ */
+      case I_COPY:
         return EXIT_SUCCESS;
         break;
-      case I_LENGHT: // Implementuje vestavenou funkci lenght
-        return EXIT_SUCCESS;
+
+/*
+ * LENGHT
+ */
+      case I_LENGHT:
+        if (operand2->type == T_STRING)
+        {
+          operand1->type = T_INTEGER;
+          operand1->data = strlen(operand2->data);
+          return EXIT_SUCCESS;  
+        } 
+        else return EXIT_TYPE_ERROR;
         break;
-      case I_FIND: // implementuje vestavenou funkci find
-        return EXIT_SUCCESS;
+
+/*
+ * FIND
+ */
+      case I_FIND:
+        if ((operand1->type == T_STRING) && (operand2->type == T_STRING))
+        {
+          accumulator->type = T_INTEGER;
+          accumulator->data = findSubtring();
+
+          return EXIT_SUCCESS;  
+        } 
+        else return EXIT_TYPE_ERROR;
         break;
-      case I_SORT: // implementuje vestavenou funkci sort
+
+/*
+ * SORT
+ */
+      case I_SORT:
+        shellSort();
         return EXIT_SUCCESS;
         break;
     }

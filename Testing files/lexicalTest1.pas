@@ -22,8 +22,9 @@ begin
 end;
 while	 true	 do 	begin 	var lama := 'lama'; end;;;
 {operatory} +-*/=>=<<>==
-  {cisilka} 1.2e153 1.111 2.0e2 2.0E-2 2.0E+2
+  {cisilka} 1.2e153 1.111 2.0e2 2.0E-2 2.0E+2 00000158 0099.900 001.2e12 
 {vestavene fce} ``	lenght(); copy(); find(); sort();
 {retezcovy literal} 'abc '#90'   a';  'as'###' je apostrof v retezci '' ?'
 
 write "%g"
+end.
