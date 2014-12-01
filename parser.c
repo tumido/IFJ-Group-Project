@@ -69,30 +69,25 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
 
 //=====================================================
 //      Deklaracni funkce
-//      Pravidlo <DecList> -> var id : typ ; <DecList>
+//      Pravidlo <decList> -> var id : typ ; <DecListNext>
 //      Tato funkce kontroluje gramatiku deklarace
 //       (Mela by je ukladat do binarniho stromu)
 //=====================================================
-int declList()
+int decList()
 {
   int result;
-  int i;
   token Zaloh; // zaloha tokenu
-  // Pokud je to klicove slovo var nebo pak uz jen klicove slovo
-  // kdyz budeme volat znova tuto funkci
-  if (strcmp("var",Token.data)==0 || Token.lexType== l_id)
+  // Pokud je to klicove slovo var
+  // pokud ne, nejedna se o deklaraci tak se vratime zpet, kde nas volali
+  if (strcmp("var",Token.data)==0)
   {
-    // Pokud tuto funkci prochazim poprve udela se i tento krok
-    if(Token.lexType!=l_id)
-    {
-     // Pozadame o dalsi token, vime ze to musi byt identifikator
-     // Pokud to neni identifikator l_id, vratim chybu
-     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-     if (token.lexType != l_id) return SYNTAX_ERROR;
-    }// jestli byla volana rekurzivne znova tato funkce
-     // tak identifikator uz bude token tak nesmime nacitat znova
+    // Pozadame o dalsi token, vime ze to musi byt identifikator
+    // Pokud to neni identifikator l_id, vratim chybu
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    if (token.lexType != l_id) return SYNTAX_ERROR;
+
     // zalohujeme si token, zatim nevime jakej je to typ
-    if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
+    if (result=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
     return INTER_ERROR;
     //+++++++++++++++++++++++++++++++++
     // tady musim prohledat strom jestli nedeklaruji 2x stejny jmeno id
@@ -106,13 +101,71 @@ int declList()
     // Dalsi token musi byt datovy typ
     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR){ tokenFree(Zaloh); return LEX_ERROR;}
 
-     switch{ (Token.lexType)
+    switch{ (Token.lexType)
+      // pokud je to integer, real atd.
+      // ++++++++++++++++++++++++++++++++++++++++++
+      // Tady bych mel vlozit ted ID+TYP do stromu
+      //++++++++++++++++++++++++++++++++++++++++++
+      case l_int:
+           // SymbolTableInsert( &NODE, )
+
+      tokenFree(Zaloh);
+      break;
+
+      case l_real: tokenFree(Zaloh);
+      break;
+
+      case l_str: tokenFree(Zaloh);
+      break;
+
+      case l_bool: tokenFree(Zaloh);
+      break;
+
+      default:
+      tokenFree(Zaloh);
+      return SYNTAX_ERROR;
+      break;
+      }
+    // Pozadam o dalsi token ktery musi byt ';'
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    if (Token.lexType != l_endl) return SYNTAX_ERROR;
+
+    // pozadam uz jen o dalsi token a zavolam decListNext
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    return result=declListNext();
+    }
+    else return SYNTAX_OK;
+  }
+
+// pravidlo <decListNext> -> id: typ; <decListNext>
+// <decListNext> -> eps
+int declListNext()
+{
+    int result;
+    token Zaloh;
+    // pokud je dalsi token ID pokracujeme tady
+    // jinak se nejedna uz o deklaraci, pouze se vratime
+    if (Token.lexType==l_id)
+    {
+    if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
+    return INTER_ERROR;
+    //+++++++++++++++++++++++++++++++++
+    // tady musim prohledat strom jestli nedeklaruji 2x stejny jmeno id
+    //++++++++++++++++++++++++++++++++++++++++
+    Zaloh=Token;
+    // dalsi token musi byt dvojtecka
+    if (result=fillTOken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    if (Token.lexType!= l_colon) return SYNTAX_ERROR;
+
+    // dalsi token je typ
+    if (result=fillTOken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+
+    switch{ (Token.lexType)
       // pokud je to integer, real atd.
       // ++++++++++++++++++++++++++++++++++++++++++
        // Tady bych mel vlozit ted ID+TYP do stromu
        //++++++++++++++++++++++++++++++++++++++++++
        case l_int:
-           // nechapu to volani tohoto stromu
            // SymbolTableInsert( &NODE, )
 
             tokenFree(Zaloh);
@@ -128,16 +181,16 @@ int declList()
          return SYNTAX_ERROR;
          break;
       }
-     // Pozadam o dalsi token ktery musi byt ':'
-     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-     if (Token.lexType != l_endl) return SYNTAX_ERROR;
-
-     // pozadam uz jen o dalsi token a zavolam znova dec.list
-     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-     return result=declList();
+    // Pozadam o dalsi token ktery musi byt ';'
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    if (Token.lexType != l_endl) return SYNTAX_ERROR;
+    // pozadam uz jen o dalsi token a zavolam decListNext
+    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
+    return result=declListNext();
     }
-    else return SYNTAX_OK;
-  }
+  // pokud se uz nedeklaruje vracime SYNTAX_OK
+  return SYNTAX_OK;
+}
 
 
 // ==================================================================
@@ -157,7 +210,7 @@ function()
       // Dalsi token musi byt ID, ktere si musim zatim zalohovat
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
       if (Token.lexType != l_id) return SYNTAX_ERROR;
-     //zalohujeme si token
+      //zalohujeme si token
       if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
       return INTER_ERROR;
       Zaloh=Token;
@@ -172,6 +225,7 @@ function()
        if (result != SYNTAX_OK) return;
 
       // dalsi token musi byt ")" a pak ":"
+      if (Token.lexType!= l_rparenth) return SYNTAX_ERROR;
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
 
@@ -339,6 +393,11 @@ int NextParam()
 // read, write
 // volani funkci
 // expresions
+//<state> -> id := <expression>
+//<state> -> id := id (<term>)
+//<state> -> if <expression> then<body> ; else <body> ;
+//<state> -> while <expression> do <body> ;
+//<state> -> readln (<type>)
 //=================================================
 int state()
 {
@@ -453,9 +512,6 @@ int state()
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       result = body();
       if (result != SYNTAX_OK) return result;
-      // za end musi byt ;
-      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (token.lexType!=l_endl) return SYNTAX_ERROR;
 
       // je potreba ted instrukce skoku
       // skoci za while nad adressu Lab1
@@ -548,6 +604,7 @@ int body()
   if (strcmp("end",Token.data)==0) return SYNTAX_OK;
 
   result = statements();
+  if (result != SYNTAX_OK) return result;
 
   // pokud za poslednim prikazem nebude end je to chyba
   if (strcmp("end",Token.data)!=0) return SYNTAX_ERROR;
