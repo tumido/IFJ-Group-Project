@@ -28,3 +28,13 @@ int interpret(tInstList *);
  * Funkce na kontrolu typu integer a real v operandech 3AK
  */
 bool isIntOrReal(void);
+
+/*
+ * Funkce vykonava volani WRITE - zapisuje na stdout
+ */
+int iWrite(tVarValue *source);
+
+/*
+ * Funkce vykonava volani READ - cte ze stdin
+ */
+int iRead();

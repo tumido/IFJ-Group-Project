@@ -106,11 +106,11 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         return EXIT_SUCCESS;
         break;
       case I_READ: // cteni ze stdin
-        // pomocna funkce iRead();
+        iRead(((tVarValue*) operand1->data), ((tVarValue*) operand2->data));
         return EXIT_SUCCESS;
         break;
       case I_WRITE: // vypis na stdout
-        // pomocna funkce iWrite();
+        iWrite((tVarValue*) accumulator->data);
         return EXIT_SUCCESS;
         break;
       case I_IF: // to bude dobre k rozpoznani zacatku IFu
@@ -216,14 +216,14 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * CONCATENATE
  * konkatenace (zretezeni) oprandu 1 a operandu 2, vysledek v acc
- * !DOKONCIT
  */
       case I_CON: 
         if(!(operand1->type == T_STRING) && (operand2->type == T_STRING)) return EXIT_TYPE_ERROR; 
         else 
         {
           accumulator->type = T_STRING;
-          // ...
+          strcat(accumulator->data, operand1->data);
+          strcat(accumulator->data, operand2->data);
         }
         return EXIT_SUCCESS;
         break;
@@ -262,9 +262,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         if(!(operand2->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
         else
         {
-          if (operand2->data == TRUE) operand2->data = FALSE;
-          else operand2->data = TRUE;
-
+          operand2->data = ((operand2->data == FALSE)? TRUE : FALSE);
           return EXIT_SUCCESS; 
         }
         break;
@@ -456,6 +454,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * je v ni dalsi switch a pripady pro kazdy typ, zatim nepisu
  */
       case I_TYPE: 
+        
         return EXIT_SUCCESS;
         break;
 
@@ -487,7 +486,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * COPY
  */
       case I_COPY:
-        return EXIT_SUCCESS;
+        if ((operand1->type == T_STRING) && (operand2->type == T_REAL)
+        {
+          // ...
+          return EXIT_SUCCESS;
+        }
+        else return EXIT_TYPE_ERROR;
+        // vymyslet zpusob, jak v standardne 3 adresnem kodu predat krom instrukce 
+        // jeste 3 dalsi informace 
+        // co takle si cisla 'i' a 'n' dat dohromady a oddelit teckou - udelat z
+        // nich vlastne real, ktery si pak rozkouskuju na dva integery a zahodim 
+        // tecku? :) Momentalne me nanapada nic rozumnejsiho..
         break;
 
 /*
@@ -511,7 +520,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           accumulator->type = T_INTEGER;
           accumulator->data = findSubtring();
-
           return EXIT_SUCCESS;  
         } 
         else return EXIT_TYPE_ERROR;
@@ -550,6 +558,48 @@ bool isIntOrReal(void)
   else if((operand1->type == T_REAL) && (operand2->type == T_INTEGER)) return TRUE;
   else if((operand1->type == T_REAL) && (operand2->type == T_REAL)) return TRUE;
   else return FALSE;  
+}
+
+/*
+ * Funkce vykonava volani WRITE - zapisuje na stdout
+ */
+int iWrite(tVarValue *source)
+{
+  switch(source->type)
+  {
+    case T_INTEGER:
+      printf("%d\n", source->integer);
+      break;
+    case T_REAL;
+      printf("%f\n", source->real);
+      break;
+    case T_STRING
+      printf("%s\n", source->string);
+      break;
+    case T_BOOLEAN:
+    default:
+    return EXIT_TYPE_ERROR;
+  }
+}
+
+/*
+ * Funkce vykonava volani READ - cte ze stdin
+ */
+int iRead();
+{
+  // ... doplnit
+  switch(source->type)
+  {
+    case T_INTEGER:
+      break;
+    case T_REAL;
+      break;
+    case T_STRING
+      break;
+    case T_BOOLEAN:
+    default:
+    return EXIT_TYPE_ERROR;
+  }
 }
 
 /* Zajimava myslenka jest ukladat triadresny kod jako vektor 
