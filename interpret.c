@@ -570,10 +570,10 @@ int iWrite(tVarValue *source)
     case T_INTEGER:
       printf("%d\n", source->integer);
       break;
-    case T_REAL;
+    case T_REAL:
       printf("%f\n", source->real);
       break;
-    case T_STRING
+    case T_STRING:
       printf("%s\n", source->string);
       break;
     case T_BOOLEAN:
@@ -592,9 +592,9 @@ int iRead();
   {
     case T_INTEGER:
       break;
-    case T_REAL;
+    case T_REAL:
       break;
-    case T_STRING
+    case T_STRING:
       break;
     case T_BOOLEAN:
     default:
