@@ -9,7 +9,7 @@ void listInit(tListOfInstr *L)
   L->last   = NULL;
   L->active = NULL;
 }
-  
+
 void listFree(tListOfInstr *L)
 // funkce dealokuje seznam instrukci
 {
@@ -75,4 +75,91 @@ tInstr *listGetData(tListOfInstr *L)
     return NULL;
   }
   else return &(L->active->Instruction);
+}
+
+
+
+
+/*
+ *----------------Cast pro praci se zasobnikem----------------
+ */
+
+void stackInit(stack *S)
+{
+  S->top = NULL;
+  S->numberOfResults = 0;
+  return;
+}
+
+void stackPUSHInt(stack *S, int i)
+{
+  struct stackPtr *push;
+  if ((push = malloc(sizeof(stackElem))) == NULL)
+    return EXIT_INTERNAL_ERROR;
+  push->iResult = i;
+  push->fResult = NULL;
+  push->boolResult = NULL;
+  push->cResult = NULL;
+  push->next = S->top;
+  S->top = push;
+  return;
+}
+
+void stackPUSHReal(stack *S, float f)
+{
+  struct stackPtr *push;
+  if ((push = malloc(sizeof(stackElem))) == NULL)
+    return EXIT_INTERNAL_ERROR;
+  push->iResult = NULL;
+  push->fResult = f;
+  push->boolResult = NULL;
+  push->cResult = NULL;
+  push->next = S->top;
+  S->top = push;
+  return;
+}
+
+void stackPUSHBool(stack *S, int i)
+{
+  struct stackPtr *push;
+  if ((push = malloc(sizeof(stackElem))) == NULL)
+    return EXIT_INTERNAL_ERROR;
+  push->iResult = NULL;
+  push->fResult = NULL;
+  push->boolResult = i;
+  push->cResult = NULL;
+  push->next = S->top;
+  S->top = push;
+  return;
+}
+
+void stackPUSHChar(stack *S, char *c)                // opet, nejsem si jist, jak to ma vypadat
+{
+  struct stackPtr *push;
+  if ((push = malloc(sizeof(stackElem))) == NULL)
+    return EXIT_INTERNAL_ERROR;
+  push->iResult = NULL;
+  push->fResult = NULL;
+  push->boolResult = NULL;
+  push->cResult = *c;
+  push->next = S->top;
+  S->top = push;
+  return;
+}
+
+void stackPOP(stack *S, stackPtr *result)
+{
+  if (S->top == NULL)
+    return EXIT_INTERNAL_ERROR;
+  struct stackPtr *tmp;
+  tmp = S->top;
+  S->top = S->top->next;
+  *result = tmp;
+  free(tmp);
+  return;
+}
+
+int stackEmpty(stack *S)
+{
+  return S->numberOfResults == 0 ? 0 : 1;
 }

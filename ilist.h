@@ -1,3 +1,5 @@
+#include "io.h"
+
 // typy jednotlivych instrukci
 #define I_STOP    0
 #define I_READ    1
@@ -23,7 +25,7 @@ typedef struct listItem
   tInstr Instruction;
   struct listItem *nextItem;
 } tListItem;
-    
+
 typedef struct
 {
   struct listItem *first;  // ukazatel na prvni prvek
@@ -39,3 +41,61 @@ void listNext(tListOfInstr *L);
 void listGoto(tListOfInstr *L, void *gotoInstr);
 void *listGetPointerLast(tListOfInstr *L);
 tInstr *listGetData(tListOfInstr *L);
+
+/*
+ *  -----ZASOBNIK A FUNKCE PRO PRACI S NIM------
+ * momentalnim umistenim si nejsem jist, muzu presunout jinam, treba i do samostatneho souboru (jak .h tak .c)
+ */
+
+ /*
+  * Zasobnik bude formou linearniho seznamu
+  *
+  * vlastni seznam
+  *  |
+  *  |
+  *  V
+  */
+typedef struct
+{
+  struct stackElem top;           // ukazatel na vrchol zasobniku
+  int numberOfResults;            // pocet prvku v zasobniku
+} stack;
+
+/*
+ * samotny prvek seznamu, bude obsahovat vsechnz mozne typy vysledku, nepouzite typy dostanou NULL
+ * promena boolResult nahrazuje typ bool, nebot mi prijde jednodusi pracovat s integerem 1 TRUE nebo 0 FALSE
+ */
+
+typedef struct stackPtr
+{
+  int iResult;
+  float fResult;
+  int boolResult;
+  char cResult;             // zde si presne nejsem jist, jestli by nebylo lepsi pouit pole
+  struct stackPtr *next;    // ukazatel na nasledujici prvek v zasobniku
+} stackElem;
+
+/*
+ * Inicializace zasobniku, ocekavam ukazatel na dany zasobnik
+ */
+void stackInit(stack *S);
+
+/*
+ * PUSHnuti vysledkù (podle typu) na zasobnik
+ */
+void stackPUSHInt(stack *S, int i);
+void stackPUSHReal(stack *S, float f);
+void stackPUSHBool(stack *S, int i);
+void stackPUSHChar(stack *S, char *c);         //opet, u charu si nejsem jist spravnosti
+
+/*
+ * POPnuti vysledku ze zasobnku, bude vracet celou strukturu
+ */
+
+void stackPOP(stack *S, stackPtr *result);
+
+/*
+ * Zjisti zdali je stack prazdny. Pokud je prazdny vraci 0 jinak 1
+ */
+
+int stackEmpty(stack *S);
