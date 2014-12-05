@@ -11,17 +11,14 @@
  #include <stdio.h>
  #include "scanner.h"
  #include "btree.h"
+ #include "scanner.h"
+ #include "io.h"
+ #include "ilist.h"
 
- #define SYNTAX_OK     0
- #define SYNTAX_ERROR  2
- #define SEMAN_ERROR   3
- #define LEX_ERROR     4
- #define INTER_ERROR   5
  #define dINT 6
  #define dREAL 7
- #dedine dSTR 8
+ #define dSTR 8
  #define dBOOL 9
 
  //hlavicka syntaktickeho analyzatoru
 
-int Parser (node *TS, tListOfInstr *instrList);

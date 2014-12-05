@@ -38,4 +38,4 @@ clean:
 	rm -vf *.o *.a *.so ifj14
 
 zip:
-	zip ifj14.zip *.c *.h Makefile
+	zip ifj14.zip *.c *.h rozdeleni Makefile

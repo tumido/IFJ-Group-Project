@@ -18,58 +18,97 @@ btree SymbolTableInit()
   return table;
 }
 
+struct node * SymbolTableCreateNode(lexType type, char * key)
+{
+  struct node * nd;
+  if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
+
+  nd->rightNode = nd->leftNode = NULL;
+  strcpy(key, nd->keyValue);
+  switch (type)
+  {
+    case l_int:
+      nd->data = (int *) malloc(sizeof(int));
+      break;
+    case l_real:
+      nd->data = (double *) malloc(sizeof(double));
+      break;
+    case l_str:
+      nd->data = (string *) malloc(sizeof(string));
+      break;
+    default:
+      free(nd);
+      return NULL;
+      break;
+  }
+  return nd;
+}
+
+
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
  * - zapoji novy prvek do tabulky symbolu na spravne misto
  * - vstupnimy parametry funkce jsou tabulka symbolu a prvek, ktery ma
  *   byt vlozen
  */
-int SymbolTableInsert(struct node ** leaf, struct node * insert)
+int SymbolTableInsert(btree * table, struct node * insert)
 {
-  if (*leaf == NULL)
-  {
-    *leaf = insert;
-    return EXIT_SUCCESS;
-  }
-  else if (insert->keyValue > (*leaf)->keyValue)
-  {
-    return SymbolTableInsert(&(*leaf)->rightNode, insert);
-  }
-  else if (insert->keyValue < (*leaf)->keyValue)
-  {
-    return SymbolTableInsert(&(*leaf)->leftNode, insert);
-  }
+  return __SymbolTableInsert(&table->root, insert);
+}
+
+int __SymbolTableInsert(struct node ** leaf, struct node * insert)
+{
+  if (*leaf == NULL) { *leaf = insert; return EXIT_SUCCESS; }
+  else if (strcmp(insert->keyValue, (*leaf)->keyValue) == EXIT_SUCCESS)
+    { (*leaf)->data = insert->data; return EXIT_SUCCESS; }
+  else if (strcmp(insert->keyValue, (*leaf)->keyValue) > EXIT_SUCCESS)
+    return __SymbolTableInsert(&(*leaf)->rightNode, insert);
   else
-    return EXIT_INTERNAL_ERROR;
+    return __SymbolTableInsert(&(*leaf)->leftNode, insert);
+
 }
 
 /*   Zruseni tabulky symbolu
  * ---------------------------------------------------------------------
- * - zrusi tabulku symbolu (nerekurzivne z duvodu rychlosti)
+ * - zrusi tabulku symbolu (nerekurzivne z duvodu rychlosti) -> upravit
  */
-int SymbolTableDispose(struct node * leaf)
+int SymbolTableDispose(btree * table)
 {
-  if (leaf != NULL)
+  __SymbolTableDispose(&table->root);
+  table->root = table->last = NULL;
+  return EXIT_SUCCESS;
+}
+
+int __SymbolTableDispose(struct node ** leaf)
+{
+  if (*leaf != NULL)
   {
-    SymbolTableDispose(leaf->leftNode);
-    SymbolTableDispose(leaf->rightNode);
-    free(leaf);
+    __SymbolTableDispose(&((*leaf)->leftNode));
+    __SymbolTableDispose(&((*leaf)->rightNode));
+
+    if ((*leaf)->type == l_str) free(((string * )(*leaf)->data)->str);
+    free((*leaf)->data);
+    free(*leaf);
   }
   return EXIT_SUCCESS;
 }
 
 /*   Vyhledani prvku v tabulce symbolu
  * ---------------------------------------------------------------------
- * - prohleda tabulku, nejspis bude rozhodovat jestli pre/in/postorder
  * - vraci ukazatel na uzel pokud je hledany prvek nalezen nebo NULL
  */
-struct node * SymbolTableSearch(struct node * leaf, int key)
+struct node * SymbolTableSearch(btree * table, char * key)
+{
+  return __SymbolTableSearch(table->root, key);
+}
+
+struct node * __SymbolTableSearch(struct node * leaf, char * key)
 {
   if (leaf != NULL)
   {
-    if (key == leaf->keyValue) { return leaf; }
-    else if (key < leaf->keyValue) {return SymbolTableSearch(leaf->leftNode, key); }
-    else {return SymbolTableSearch(leaf->rightNode, key); }
+    if (strcmp(key, leaf->keyValue) == EXIT_SUCCESS) { return leaf; }
+    else if (strcmp(key, leaf->keyValue) < EXIT_SUCCESS) { return __SymbolTableSearch(leaf->leftNode, key); }
+    else {return __SymbolTableSearch(leaf->rightNode, key); }
   }
   return NULL;
 }

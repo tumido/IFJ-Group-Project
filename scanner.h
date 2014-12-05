@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "io.h"
+#include "strings.h"
 
 #define DETAIL_LENGHT 8 // relikt Kubovy spravy pameti, je treba predelat
 #define BASE 10
@@ -33,29 +34,6 @@ typedef enum
   s_real_exp, s_real_exp_all, s_real_exp_ok
 } tState;
 
-/*   Typ pro lexemy
- * ---------------------------------------------------------------------
- * - urcuje typ lexemu, resp. tokenu
- */
-typedef enum
-{
-  l_id, l_key, l_assign,          // identifikator   klicove slovo   :=
-  l_colon, l_int,                 // :   integer
-  l_real, l_str, l_bool,          // float   string   bool
-  l_add, l_sub, l_mul, l_div,     // +   -   *   /
-  l_less, l_lequal, l_greater,    // <   <=   >
-  l_gequal, l_equal, l_not,       // >=  =   <>
-  l_lparenth, l_rparenth,         // (   )
-  l_lbracket, l_rbracket,         // [   ]
-  l_endl, l_eof, l_reset = 99     // ;   EOF   chyba
-} lexType;
-
-typedef struct
-{
-  char * str;
-  unsigned int length;
-  unsigned int alloc;
-} string;
 
 /*   Struktura tokenu
  * ---------------------------------------------------------------------

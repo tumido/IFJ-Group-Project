@@ -12,7 +12,9 @@
 #define BTREE_INCLUDED
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "io.h"
+#include "strings.h"
 
 /*  Struktura pro binarni strom
  * --------------------------------------------------------------------
@@ -20,24 +22,17 @@
  *   podstromy a dalsi data...
  */
 
-typedef struct
-{
-    int varType;
-    double value;
-
-}tData;
-
-
 struct node
 {
-  string keyValue; // klic jmeno funkce, promenne
-  tData data;
+  char * keyValue; // klic jmeno funkce, promenne
+  void * data;
+  lexType type;
 
   struct node * leftNode;
   struct node * rightNode;
 };
 
-typedef struct btreeS
+typedef struct
 {
   struct node * root;
   struct node * last;
@@ -50,25 +45,30 @@ typedef struct btreeS
  */
 
 
+struct node * SymbolTableCreateNode(lexType type, char * key);
+
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
  * - zapoji novy prvek do tabulky symbolu na spravne misto
  * - vstupnimy parametry funkce jsou tabulka symbolu a prvek, ktery ma
  *   byt vlozen
  */
-int SymbolTableInsert(struct node ** leaf, struct node * insert);
+int SymbolTableInsert(btree * table, struct node * insert);
+int __SymbolTableInsert(struct node ** leaf, struct node * insert);
 
 /*   Zruseni tabulky symbolu
  * ---------------------------------------------------------------------
  * - zrusi tabulku symbolu (nerekurzivne z duvodu rychlosti)
  */
-int SymbolTableDispose(struct node * leaf);
+int SymbolTableDispose(btree * table);
+int __SymbolTableDispose(struct node ** leaf);
 
 /*   Vyhledani prvku v tabulce symbolu
  * ---------------------------------------------------------------------
  * - prohleda tabulku, nejspis bude rozhodovat jestli pre/in/postorder
  * - vraci ukazatel na uzel pokud je hledany prvek nalezen nebo NULL
  */
-struct node * SymbolTableSearch(struct node * leaf, int key);
+struct node * SymbolTableSearch(btree * table, char * key);
+struct node * __SymbolTableSearch(struct node * leaf, char * key);
 
 #endif

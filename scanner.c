@@ -42,6 +42,7 @@ void tokenClean(token *str)
 {
   tokenFree(str);
   tokenInit(str);
+  str->type = l_reset;
 }
 
 /*   Pridat charu do retezce
@@ -73,7 +74,7 @@ int strToInt(token * lex)
 {
   string * oldData = lex->data;
   char * tail = oldData->str;
-  if ((lex->data= (long int *) malloc (sizeof(long int))) == NULL )
+  if ((lex->data = (long int *) malloc (sizeof(long int))) == NULL )
     return EXIT_INTERNAL_ERROR;
   *(((long int *) lex->data)) = strtol(oldData->str, &tail, BASE);
   free(oldData->str);
@@ -133,8 +134,8 @@ int fillToken(FILE * Code, token * lex)
   tState state = s_begin;
   bool read = true;
   int z;
-  lex->type = l_reset;
   int retVal = EXIT_SUCCESS;
+  tokenClean(lex);
 
   while (read)
   {
@@ -155,6 +156,8 @@ int fillToken(FILE * Code, token * lex)
               retVal = EOF;
             case '{': state = s_comment; break;
             case '\'': state = s_string; break;
+            case '.': read = false; lex->type = l_enddot; break;
+            case ',': read = false; lex->type = l_sep; break;
             case '+': read = false; lex->type = l_add; break;
             case '-': read = false; lex->type = l_sub; break;
             case '*': read = false; lex->type = l_mul; break;

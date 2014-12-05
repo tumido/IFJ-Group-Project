@@ -1,59 +1,15 @@
-z�� /*
+/*
  * =====================================================================
- *          Verze:  1.0
- *      Vytvoreno:  11/12/2014 04:21:52 PM
+ *          Verze:  1.EXIT_SUCCESS
+ *      Vytvoreno:  11/12/2EXIT_SUCCESS14 EXIT_SUCCESS4:21:52 PM
  *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
- *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
+ *          Login:  xcoufaEXIT_SUCCESS9, xhalikEXIT_SUCCESS1, xhladyEXIT_SUCCESSEXIT_SUCCESS, xjochlEXIT_SUCCESSEXIT_SUCCESS
  *        Projekt:  IFJ
  * =====================================================================
  */
- #include <stdio.h>
- #include "scanner.h"
- #include "btree.h"
  #include "parser.h"
- #include "scanner.h"
- #include "io.h"
- #include "ilist.h"
 
-
-
-node *NODE;      // globalni promena obsahujici tabulku symbolu
-tListofInstr *list; // GP seznam isntrukci
-token Token;        // zde bude ulozen aktualni token
-
-
-
-
-
-
-// promenna pro ulozeni vstupniho souboru
-FILE *source;
-
-void setSourceFile(FILE *f)
-{
-  source = f;
-}
-
-// generuje jedinecne nazvy identifikatoru
-// nazev se sklada ze znaku $ nasledovanym cislem
-// postupne se tu generuji prirozena cisla a do nazvu promenne se ukladaji
-// v reverzovanem poradi - na funkcnost to nema vliv, ale je jednodussi implementace
-int counterVar = 1;
-void generateVariable(token *var)
-{
-  tokenDetailClean(var);
-  addCharToString(var, '$');
-  int i;
-  i = counterVar;
-  while (i != 0)
-  {
-    addCharToString(var, (char)(i % 10 + '0'));
-    i = i / 10;
-  }
-  counterVar ++;
-}
-
-void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
+void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist)
 // vlozi novou instrukci do seznamu instrukci
 {
    tInstr I;
@@ -61,9 +17,7 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
    I.addr1 = addr1;
    I.addr2 = addr2;
    I.addr3 = addr3;
-   if(listInsertLast(list, I))
-    return INTER_ERROR;
-    return 0;
+   return listInsertLast(ilist, I);
 }
 
 
@@ -73,79 +27,71 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3)
 //      Tato funkce kontroluje gramatiku deklarace
 //       (Mela by je ukladat do binarniho stromu)
 //=====================================================
-int decList()
+int decList(FILE * source, btree * table, token * lex)
 {
   int result;
-  token Zaloh; // zaloha tokenu
   // Pokud je to klicove slovo var
   // pokud ne, nejedna se o deklaraci tak se vratime zpet, kde nas volali
-  if (strcmp("var",Token.data)==0)
+  if ((lex->type != l_key) || (strcmp("var", ((string *)lex->data)->str) != EXIT_SUCCESS))
+      return EXIT_SUCCESS;
+
+  // Pozadame o dalsi token, vime ze to musi byt identifikator
+  // Pokud to neni identifikator l_id, vratim chybu
+  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
+  if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
+
+  if ( SymbolTableSearch(table, ((string *)lex->data)->str) == NULL) return EXIT_SYNTAX_ERROR;
+
+  // zalohujeme si token, zatim nevime jakej je to typ
+  token tmp; // zaloha tokenu
+  if ((result = tokenInit(&tmp)) != EXIT_SUCCESS) return result;
+  tmp.type = lex->type;
+  tmp.data = lex->data;
+
+  // Dalsi token musi byt ":"
+  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ tokenFree(&tmp); return result; }
+  if (lex->type != l_colon) { tokenFree(&tmp); return EXIT_SYNTAX_ERROR; }
+
+  // Dalsi token musi byt datovy typ
+  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ tokenFree(&tmp); return result; }
+
+  struct node * nd;
+  if ((nd = SymbolTableCreateNode(lex->type, ((string *)tmp.data)->str)) == NULL)
   {
-    // Pozadame o dalsi token, vime ze to musi byt identifikator
-    // Pokud to neni identifikator l_id, vratim chybu
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-    if (token.lexType != l_id) return SYNTAX_ERROR;
-
-    // zalohujeme si token, zatim nevime jakej je to typ
-    if (result=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
-    return INTER_ERROR;
-    //+++++++++++++++++++++++++++++++++
-    // tady musim prohledat strom jestli nedeklaruji 2x stejny jmeno id
-    //++++++++++++++++++++++++++++++++++++++++
-    Zaloh=Token;
-
-    // Dalsi token musi byt ":"
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR){ tokenFree(Zaloh); return LEX_ERROR;}
-    if (Token.lexType != l_colon) { tokenFree(Zaloh); return SYNTAX_ERROR;}
-
-    // Dalsi token musi byt datovy typ
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR){ tokenFree(Zaloh); return LEX_ERROR;}
-
-    switch{ (Token.lexType)
-      // pokud je to integer, real atd.
-      // ++++++++++++++++++++++++++++++++++++++++++
-      // Tady bych mel vlozit ted ID+TYP do stromu
-      //++++++++++++++++++++++++++++++++++++++++++
-      case l_int:
-           // SymbolTableInsert( &NODE, )
-
-      tokenFree(Zaloh);
-      break;
-
-      case l_real: tokenFree(Zaloh);
-      break;
-
-      case l_str: tokenFree(Zaloh);
-      break;
-
-      case l_bool: tokenFree(Zaloh);
-      break;
-
-      default:
-      tokenFree(Zaloh);
-      return SYNTAX_ERROR;
-      break;
-      }
-    // Pozadam o dalsi token ktery musi byt ';'
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-    if (Token.lexType != l_endl) return SYNTAX_ERROR;
-
-    // pozadam uz jen o dalsi token a zavolam decListNext
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-    return result=declListNext();
-    }
-    else return SYNTAX_OK;
+    __SymbolTableDispose(&nd);
+    tokenFree(&tmp);
+    return EXIT_INTERNAL_ERROR;
   }
+  switch (lex->type)
+  {
+    case l_int:
+    case l_real:
+    case l_str:
+      nd->data = lex->data;
+      break;
+    default:
+      __SymbolTableDispose(&nd);
+      tokenFree(&tmp);
+      return EXIT_INTERNAL_ERROR;
+  }
+
+  // Pozadam o dalsi token ktery musi byt ';'
+  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
+  if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
+
+  // pozadam uz jen o dalsi token a zavolam decListNext
+  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
+  return declListNext();
 
 // pravidlo <decListNext> -> id: typ; <decListNext>
 // <decListNext> -> eps
-int declListNext()
+int declListNext(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
     int result;
     token Zaloh;
     // pokud je dalsi token ID pokracujeme tady
     // jinak se nejedna uz o deklaraci, pouze se vratime
-    if (Token.lexType==l_id)
+    if (Token.type==l_id)
     {
     if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
     return INTER_ERROR;
@@ -155,12 +101,12 @@ int declListNext()
     Zaloh=Token;
     // dalsi token musi byt dvojtecka
     if (result=fillTOken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-    if (Token.lexType!= l_colon) return SYNTAX_ERROR;
+    if (Token.type!= l_colon) return SYNTAX_ERROR;
 
     // dalsi token je typ
     if (result=fillTOken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
 
-    switch{ (Token.lexType)
+    switch{ (Token.type)
       // pokud je to integer, real atd.
       // ++++++++++++++++++++++++++++++++++++++++++
        // Tady bych mel vlozit ted ID+TYP do stromu
@@ -183,13 +129,13 @@ int declListNext()
       }
     // Pozadam o dalsi token ktery musi byt ';'
     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-    if (Token.lexType != l_endl) return SYNTAX_ERROR;
+    if (Token.type != l_endl) return SYNTAX_ERROR;
     // pozadam uz jen o dalsi token a zavolam decListNext
     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
     return result=declListNext();
     }
-  // pokud se uz nedeklaruje vracime SYNTAX_OK
-  return SYNTAX_OK;
+  // pokud se uz nedeklaruje vracime EXIT_SUCCESS
+  return EXIT_SUCCESS;
 }
 
 
@@ -199,17 +145,17 @@ int declListNext()
 // fce kontroluje gramatiku podle deklaraci funkci
 // (musi se doplnit ukladani funkci ID parametry atd.)
 // ===================================================================
-function()
+function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
     int result;
     token Zaloh;
 
-    if (strcmp("function",Token.data)==0)
+    if (strcmp("function",Token.data)==EXIT_SUCCESS)
     {
 
       // Dalsi token musi byt ID, ktere si musim zatim zalohovat
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR) return LEX_ERROR;
-      if (Token.lexType != l_id) return SYNTAX_ERROR;
+      if (Token.type != l_id) return SYNTAX_ERROR;
       //zalohujeme si token
       if (i=tokenDetailInit(&Zaloh) != EXIT_SUCCESS);
       return INTER_ERROR;
@@ -217,22 +163,22 @@ function()
 
       // dalsi token musi byt "("
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (Token.lexType!= l_lparenth)  return SYNTAX_ERROR;
+      if (Token.type!= l_lparenth)  return SYNTAX_ERROR;
 
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       // dalsi token by mel byt parametr
        result = Param();
-       if (result != SYNTAX_OK) return;
+       if (result != EXIT_SUCCESS) return;
 
       // dalsi token musi byt ")" a pak ":"
-      if (Token.lexType!= l_rparenth) return SYNTAX_ERROR;
+      if (Token.type!= l_rparenth) return SYNTAX_ERROR;
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
+      if (Token.type!= l_colon)  return SYNTAX_ERROR;
 
       // Dalsi token musi byt datovy typ
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR){ tokenFree(Zaloh); return LEX_ERROR;}
 
-      switch{ (Token.lexType)
+      switch{ (Token.type)
       // pokud je to integer, real atd.
       // +++++++++++++++++++++++++++++++++++++++++++++++++++++++
       // Tady bych mel vlozit ted ID+TYP+?parametry? do stromu +
@@ -253,7 +199,7 @@ function()
       }
       // dalsi co by mi melo prijit je strednik
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
+      if (Token.type!= l_endl)  return SYNTAX_ERROR;
 
       // Ted je vice moznosti co mi muze dojit
       // 1. forward 2. var (deklarace lokalnich promennych)
@@ -264,30 +210,30 @@ function()
       // nejdrive zkontrolujeme jestli to neni forward a pak var
       // protoze to predchazi begin
       //  <forward> -> ; <function>
-      if (strcmp("forward",Token.data)==0)
+      if (strcmp("forward",Token.data)==EXIT_SUCCESS)
       {
          // jestli to byl forward, tak poslu dalsi token kterej musi byt ;
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
+         if (Token.type!= l_endl)  return SYNTAX_ERROR;
          // musim ulozit ze je to pouze prototyp boolean nastavit true napr.
          //+++++++++++++++++++++ DOPLNIM
          // zavolam rekurzivne fci pro dalsi deklarace fci
          result = function();
       }
-      else if (strcmp("var",Token.data)==0)
+      else if (strcmp("var",Token.data)==EXIT_SUCCESS)
       {
         result=decList();
-        if (result != SYNTAX_OK) return result;
+        if (result != EXIT_SUCCESS) return result;
       }
       // v jinym pripade by se melo jednat o begin
       // stejne to zkontrolujeme radsi
-      if (strcmp("begin",Token.data)!=0)
+      if (strcmp("begin",Token.data)!=EXIT_SUCCESS)
       {
           result=body();
-          if (result != SYNTAX_OK) return result;
+          if (result != EXIT_SUCCESS) return result;
         //++++++++++++++++ NEVIM JESTLI VOLAT DALSI TOKEN NEBO UZ BUDE ZAVOLAN
           // funkce musi koncit ;
-        if (Token.lexType!= l_endl)  return SYNTAX_ERROR;
+        if (Token.type!= l_endl)  return SYNTAX_ERROR;
       }
       else return SEM_ERROR;
       // zavolame si o dalsi token a zavolame rekurzivne funkci
@@ -295,7 +241,7 @@ function()
       return function();
     }
 
-  return SYNTAX_OK;
+  return EXIT_SUCCESS;
 }
 //===================================
 // <Param> -> ID: typ <NextParam>
@@ -303,25 +249,25 @@ function()
 // Pokud zadny parametr nebyl nepokracuje
 // jinak vola funkci NextParam
 // ====================================
-int Param()
+int Param(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
    // zkontrolujeme jestli tam vubec nejaky parametr je
-   if (Token.lexType== l_rparenth ) return SYNTAX_OK;
+   if (Token.type== l_rparenth ) return EXIT_SUCCESS;
 
    // dalsi token musi byt ID
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (Token.lexType!= l_id)  return SYNTAX_ERROR;
+   if (Token.type!= l_id)  return SYNTAX_ERROR;
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    //  meli bychom si ulozit k te funkci parametry ale tady jeste nevime typ
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    // dalsi token je :
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
+   if (Token.type!= l_colon)  return SYNTAX_ERROR;
 
    // Dalsi token musi byt typ
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-    switch{ (Token.lexType)
+    switch{ (Token.type)
       // pokud je to integer, real atd.
       // ++++++++++++++++++++++++++++++++++++++++++++++
       // meli bychom ted k te funkci ulozit parametry
@@ -348,25 +294,25 @@ int Param()
 // zkontroluje jestli tam je strednik jestli ano, tak bude dalsi parametr
 // jinak podobna funkci Param
 //========================================================================
-int NextParam()
+int NextParam(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
   // zkontroluji jestli tam je strednik jestli neni tak asi zadny dalsi param
-  if (Token.lexType != l_endl ) return SYNTAX_OK;
+  if (Token.type != l_endl ) return EXIT_SUCCESS;
 
    // dalsi token musi byt ID
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (Token.lexType!= l_id)  return SYNTAX_ERROR;
+   if (Token.type!= l_id)  return SYNTAX_ERROR;
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    //  meli bychom si ulozit k te funkci parametry ale tady jeste nevime typ
    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    // dalsi token je :
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-   if (Token.lexType!= l_colon)  return SYNTAX_ERROR;
+   if (Token.type!= l_colon)  return SYNTAX_ERROR;
 
    // Dalsi token musi byt typ
    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-    switch{ (Token.lexType)
+    switch{ (Token.type)
       // pokud je to integer, real atd.
       // ++++++++++++++++++++++++++++++++++++++++++++
       // meli bychom ted k te funkci ulozit parametry
@@ -399,14 +345,14 @@ int NextParam()
 //<state> -> while <expression> do <body> ;
 //<state> -> readln (<type>)
 //=================================================
-int state()
+int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
 
   tData *varInfo;
   token zaloh;
 
-  switch (Token.lexType)
+  switch (Token.type)
   {
     // pokud token je id
     // <stat> -> id := <expression>
@@ -419,7 +365,7 @@ int state()
 
     // dalsi znak musi byt :=
     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-    if (Token.lexType!=l_assign) return SYNTAX_ERROR;
+    if (Token.type!=l_assign) return SYNTAX_ERROR;
 
     // dalsi token je budto expression nebo id funkce
     if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
@@ -427,11 +373,11 @@ int state()
     // vestavene funkce by bylo asi nejlepsi hned vlozit do stromu
     // +++++++++++++++++++++++++++++
     // zatim to neresim, pak doplnim
-    if (Token.lexType==l_id || Token.lexType==l_key )
+    if (Token.type==l_id || Token.type==l_key )
     {
        // vim ze dalsi token musi byt zavorka
        if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-       if (Token.lexType!= l_lparenth) return SYNTAX_ERROR;
+       if (Token.type!= l_lparenth) return SYNTAX_ERROR;
 
        if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
        // ++++++++++++++++++++++++
@@ -453,7 +399,7 @@ int state()
     // nebo readln nebo write
     case (l_key):
     // pokud se jedna o cyklus if
-     if (strcmp("if",Token.data)==0)
+     if (strcmp("if",Token.data)==EXIT_SUCCESS)
      { //++++++++++++++++++++++++++++++++++++
        // dalsi musi byt expression
        // tady to musim doplnit, ukladani do tab.symbolu
@@ -472,7 +418,7 @@ int state()
      }
 
      //<state> -> while <expression> do <body> ;
-     else if (strcmp ("while",Token.data)==0)
+     else if (strcmp ("while",((string * )Token.data)->str )==EXIT_SUCCESS)
      {
 
       // dalsi token co nas ceka je vyraz
@@ -506,12 +452,12 @@ int state()
 
       //nevim jestli nacitat dalsi token nebo ho dostanu od READEXPRESSION funkce
       // kazdopadne dalsi token musi byt DO
-      if (strcmp(Token.data, "do")!= 0) return SYNTAX_ERROR;
+      if (strcmp(Token.data, "do")!= EXIT_SUCCESS) return SYNTAX_ERROR;
 
       // dalsi token musi byt slozeny prikaz, zavolame begin
       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       result = body();
-      if (result != SYNTAX_OK) return result;
+      if (result != EXIT_SUCCESS) return result;
 
       // je potreba ted instrukce skoku
       // skoci za while nad adressu Lab1
@@ -531,14 +477,14 @@ int state()
       data=listGetData(list);
       data->addr3= addrOfLab2;
 
-      return SYNTAX_OK;
+      return EXIT_SUCCESS;
 
      }
-     else if (strcmp ("readln",Token.data)==0)
+     else if (strcmp ("readln",Token.data)==EXIT_SUCCESS)
      {
          // vim ze dalsi token je zavorka (
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (Token.lexType != l_lparenth) return SYNTAX_ERROR;
+         if (Token.type != l_lparenth) return SYNTAX_ERROR;
 
          // nacteme dalsi token
          // vime ze podle pravidla tady musi byt typ
@@ -546,11 +492,11 @@ int state()
          // to musim jeste nejdriv dopsat ten type..
          //return type();
      }
-     else if (strcmp ("write",Token.data)==0)
+     else if (strcmp ("write",Token.data)==EXIT_SUCCESS)
      {
          // vim ze dalsi token je zavorka (
          if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (Token.lexType != l_lparenth) return SYNTAX_ERROR;
+         if (Token.type != l_lparenth) return SYNTAX_ERROR;
 
          // nacteme dalsi token
          // vime ze podle pravidla tady musi byt <term>
@@ -573,18 +519,18 @@ int state()
 // <statements> -> <state>
 //================================================
 
-int statements ()
+int statements (FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
-  result= state();
-  if (result != SYNTAX_OK) return result;
+  result = state(source, table, ilist, lex);
+  if (result != EXIT_SUCCESS) return result;
 
   // pokud dalsi token je strednik tzn ze bude
   // nasledovat dalsi prikaz
-  if (Token.lexType== l_endl)
+  if (lex->type == l_endl)
     return statements();
   // pokud uz strednik nebude
   // za poslednim prikazem nema byt strednik
@@ -592,89 +538,70 @@ int statements ()
   else return result;
 }
 
-//===============================================
-// <body> -> <statements> end
-//================================================
-int body()
+/*  Telo programu
+ * ---------------------------------------------------------------------
+ * - za tokenem "begin" nasleduje telo programu -> voleme statements a
+ *   pak zkontrolujeme "end"
+ * <body> -> <statements> end
+ * <body> -> end
+ */
+int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
- int result;
-  // zacatek byl begin
-  // nacteme dalsi token a zkontrolujeme jestli neni end
-  if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-  if (strcmp("end",Token.data)==0) return SYNTAX_OK;
+  int result;
+  if (((result = fillToken (source, lex)) == EXIT_LEXICAL_ERROR) ||
+      // naplneny token, pokud nic neselze
+      (strcmp("end", ((string *)lex->data)->str) == EXIT_SUCCESS) ||
+      // zkontroluje prazdne telo programu, kdy po "begin" nasleduje hned "end"
+      ((result = statements(source, table, ilist, lex)) != EXIT_SUCCESS))
+      // a projde telo programu -> pokud cokoliv z toho selze, vraci error
+    return result;
 
-  result = statements();
-  if (result != SYNTAX_OK) return result;
+  if (strcmp("end", ((string *)lex->data)->str) != EXIT_SUCCESS)
+    return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
-  // pokud za poslednim prikazem nebude end je to chyba
-  if (strcmp("end",Token.data)!=0) return SYNTAX_ERROR;
-
-return result;
-
+  return result;
 }
 
-
-
-//====================================================
-// Program zacina deklaraci, def. funkci nebo begin
-// Zavolam deklaracni list pak function dec. list
-// Nakonec bychom meli narazit na Begin -> zac.programu
-// <program> -> <decList> <funciton> <body> . <EOF>
-// ====================================================
-int program()
+/*   Parser
+ * ---------------------------------------------------------------------
+ * - volan hlavnim programem
+ * - potrebuje znat zdrojovy soubor, tabulku symbolu a list instrukci
+ * - program zacina deklaracnim liste promennych, deklaraci funkce a pak
+ *   nasleduje samotne telo programu
+ *
+ * <program> -> <decList> <funciton> <body> <EOF>
+ */
+int parser(FILE * source, btree * table, tListOfInstr * ilist)
 {
- int result;
+  token lex;
+  int result;
 
- switch(Token.lexType)
- {
-   // pokud je to klicove slovo, var,function,begin
-   case l_key:
-     result = declList(); //Kontrola deklarace promennych (nemusi byt nic deklarovano)
-     if (result != SYNTAX_OK) return result;
+  if ((tokenInit(&lex) != EXIT_INTERNAL_ERROR) &&
+      ((result = fillToken(source, &lex)) != EXIT_INTERNAL_ERROR) &&
+      (result != EXIT_LEXICAL_ERROR))
+  {
+    switch(lex.type)
+    {
+      case l_key: // pokud je to klicove slovo, var,function,begin (vyuzivam toho, ze C vyhodnocuje disjunkci zleva)
+        if (((result = declList(source, table, ilist, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
+            ((result = function(source, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
+            ((result = body(source, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
-     result=function(); // Kontrola funkci deklarace (nemusi byt nic deklarovano)
-     if (result != SYNTAX_OK) return result;
+        if (((result = fillToken(source, &lex)) != EXIT_SUCCESS) ||
+           (lex.type == l_enddot) ||
+           ((result = fillToken(source, &lex)) != EXIT_SUCCESS) ||
+           (lex.type == l_eof)) { result = EXIT_SYNTAX_ERROR; break; } // na konci programu musi byt . a pak EOF
 
-     result = body(); // Hlavni program begin
-     if (result != SYNTAX_OK) return result;
+          //generateInstruction(I_END, NULL, NULL, NULL); // instrukce?? + ilist
+        break;
+      case l_eof: // prazdny soubor
+        break;
+      default: // cokoliv jineho je chyba
+        result = EXIT_SYNTAX_ERROR;
+        break;
+    }
+  }
 
-
-     //ZDE MUSIM JESTE TESTOVAT KONEC SOUBORU
-     // BUDE DOPLNENO
-     // + GENERACE INSTRUKCE KONEC PROGRAMU
-     break;
-
-    default:
-        return SYNTAX_ERROR;
-      break;
-   }
- return result;
-}
-
-
-
-// hlavicka parseru
-// -- parametry dostane strom a instrukcni list
-int Parser(node *TS, tListOfInstr *instrList,){
-
- int result;
- int i;
-
- if (i=tokenInit (Token)==EXIT_INTERNAL_ERROR)
-  return INTER_ERROR;
-
- NODE=TS;
- list = instrList;
-
- result=fillToken (source,Token);
-
- if (result==EXIT_LEXICAL_ERROR)return LEX_ERROR;
-
- else if (result == EXIT_INTERNAL_ERROR) return INTER_ERROR;
- else
-
- result=program ();
- tokenFree(Token);
-
- return result;
+  tokenFree(lex);
+  return result;
 }
