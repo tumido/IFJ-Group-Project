@@ -37,4 +37,16 @@ typedef enum
   l_endl, l_eof, l_enddot,        // ;   EOF .
   l_sep, l_reset = 99             // ,   chyba
 } lexType;
+
+typedef enum
+{
+  k_begin, k_bool, k_do,
+  k_else, k_end, k_false,
+  k_find, k_forward, k_function,
+  k_if, k_int, k_readln,
+  k_real, k_sort, k_string,
+  k_then, k_true, k_var,
+  k_while, k_write
+} key;
+
 #endif

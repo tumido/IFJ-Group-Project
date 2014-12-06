@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include "io.h"
 #include "scanner.h"
+#include "parser.h"
+#include "ilist.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,34 +31,20 @@ int main(int argc, char *argv[])
     return EXIT_INTERNAL_ERROR;
   }
 
-  token printToken;
-  tokenInit(&printToken);
-  int retVal;
-/*  while ((retVal = fillToken(code, &printToken)) != EOF)
-  {
-    if (retVal != EXIT_INTERNAL_ERROR && retVal != EXIT_LEXICAL_ERROR)
-    {
-      // dulezity je typ tokenu, obsah (retezec je ukladan jen u stringu, identifikatoru, klicoveho slova)
-      printf("Token type %d", printToken.type);
-      if (printToken.type == l_int) { printf(" of value: %ld", *((long int *)printToken.data) ); }
-      else if (printToken.type == l_real) { printf(" of value: %f", *((double *)printToken.data) ); }
-      else if ((printToken.type == l_id) || (printToken.type == l_key) || (printToken.type == l_str))
-        { printf(" of value: \"%s\" (memory allocated %d)", ((string *)printToken.data)->str, ((string *)printToken.data)->alloc ); }
-      printf("\n");
-    }
-    tokenClean(&printToken);
-  }*/
-  while (((retVal = fillToken(code, &printToken)) != EOF) && (retVal != EXIT_INTERNAL_ERROR) && (retVal != EXIT_LEXICAL_ERROR)) {tokenClean(&printToken); }
-  tokenFree(&printToken);
+  tListOfInstr ilist;
+  listInit(&ilist);
+  btree table;
+  SymbolTableInit(&table);
 
-  // Inicializujeme tabulku symbolu
-  // Inicializace seznamu instrukci
-  // Zavolame syntakticky analyzator
+  int retVal = parser(code, &table, &ilist);
+
   // Kdyz se neco rozbije (chyba v prubehu prekladu - at uz lex, syn, sem), volame funkce:
     // uklid - uvolneni pameti, zavreni souboru
     // vratime error code
   // Jinak interpretujeme kod a nasledne po sobe zase uklidime a zavreme soubor
 
+  SymbolTableDispose(&table);
+  listFree(&ilist);
   fclose(code);
 
   return retVal;

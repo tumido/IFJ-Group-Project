@@ -1,5 +1,12 @@
-#include <stdio.h>
-#include <malloc.h>
+/*
+ * =====================================================================
+ *          Verze:  1.0
+ *      Vytvoreno:  30/12/2014 18:15:58 PM
+ *         Autori:  Tomá Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
+ *        Projekt:  IFJ
+ * =====================================================================
+ */
 #include "ilist.h"
 
 void listInit(tListOfInstr *L)
@@ -23,11 +30,11 @@ void listFree(tListOfInstr *L)
   }
 }
 
-void listInsertLast(tListOfInstr *L, tInstr I)
+int listInsertLast(tListOfInstr *L, tInstr I)
 // vlozi novou instruci na konec seznamu
 {
   tListItem *newItem;
-  newItem = malloc(sizeof (tListItem));
+  if ((newItem = malloc(sizeof (tListItem))) == NULL) return EXIT_INTERNAL_ERROR;
   newItem->Instruction = I;
   newItem->nextItem = NULL;
   if (L->first == NULL)
@@ -35,6 +42,7 @@ void listInsertLast(tListOfInstr *L, tInstr I)
   else
      L->last->nextItem=newItem;
   L->last=newItem;
+  return EXIT_SUCCESS;
 }
 
 void listFirst(tListOfInstr *L)
@@ -84,79 +92,79 @@ tInstr *listGetData(tListOfInstr *L)
  *----------------Cast pro praci se zasobnikem----------------
  */
 
-void stackInit(stack *S)
+void stackInit(stack * S)
 {
   S->top = NULL;
   S->numberOfResults = 0;
   return;
 }
 
-void stackPUSHInt(stack *S, int i)
+int stackPUSHInt(stack *S, int i)
 {
   struct stackPtr *push;
   if ((push = malloc(sizeof(stackElem))) == NULL)
     return EXIT_INTERNAL_ERROR;
   push->iResult = i;
-  push->fResult = NULL;
-  push->boolResult = NULL;
-  push->cResult = NULL;
+  push->fResult = 0;
+  push->boolResult = 0;
+  push->cResult = 0;
   push->next = S->top;
   S->top = push;
-  return;
+  return EXIT_SUCCESS;
 }
 
-void stackPUSHReal(stack *S, float f)
+int stackPUSHReal(stack *S, double f)
 {
   struct stackPtr *push;
   if ((push = malloc(sizeof(stackElem))) == NULL)
     return EXIT_INTERNAL_ERROR;
-  push->iResult = NULL;
+  push->iResult = 0;
   push->fResult = f;
-  push->boolResult = NULL;
-  push->cResult = NULL;
+  push->boolResult = false;
+  push->cResult = '\0';
   push->next = S->top;
   S->top = push;
-  return;
+  return EXIT_SUCCESS;
 }
 
-void stackPUSHBool(stack *S, int i)
+int stackPUSHBool(stack *S, int i)
 {
   struct stackPtr *push;
   if ((push = malloc(sizeof(stackElem))) == NULL)
     return EXIT_INTERNAL_ERROR;
-  push->iResult = NULL;
-  push->fResult = NULL;
+  push->iResult = 0;
+  push->fResult = 0;
   push->boolResult = i;
-  push->cResult = NULL;
+  push->cResult = '\0';
   push->next = S->top;
   S->top = push;
-  return;
+  return EXIT_SUCCESS;
 }
 
-void stackPUSHChar(stack *S, char *c)                // opet, nejsem si jist, jak to ma vypadat
+int stackPUSHChar(stack *S, char *c)                // opet, nejsem si jist, jak to ma vypadat
 {
   struct stackPtr *push;
   if ((push = malloc(sizeof(stackElem))) == NULL)
     return EXIT_INTERNAL_ERROR;
-  push->iResult = NULL;
-  push->fResult = NULL;
-  push->boolResult = NULL;
+  push->iResult = 0;
+  push->fResult = 0;
+  push->boolResult = false;
   push->cResult = *c;
   push->next = S->top;
   S->top = push;
-  return;
+  return EXIT_SUCCESS;
 }
 
-void stackPOP(stack *S, stackPtr *result)
+int stackPOP(stack *S, struct stackPtr *result)
 {
   if (S->top == NULL)
     return EXIT_INTERNAL_ERROR;
   struct stackPtr *tmp;
   tmp = S->top;
   S->top = S->top->next;
-  *result = tmp;
+  result = tmp;
   free(tmp);
-  return;
+  return EXIT_SUCCESS;
 }
 
 int stackEmpty(stack *S)

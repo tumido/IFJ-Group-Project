@@ -16,15 +16,17 @@
 
 #    Deklarace promenych
 #  ---------------------------------------------------------------------
-CC = gcc
+CC = clang #gcc
 CPP = g++
 CFLAGS = -std=c99 -pedantic -Wall -Werror
+ARCHIVE = xcoufa09
+LIBS = io.o scanner.o ilist.o parser.o btree.o
 
 #    Pravidla pro jednotlive programy
 #  ---------------------------------------------------------------------
 all: ifj14
 
-ifj14: main.c io.o scanner.o
+ifj14: main.c $(LIBS)
 	$(CC) $(CFLAGS) $^ -o $@
 
 #    Ostatni objekty
@@ -35,7 +37,7 @@ ifj14: main.c io.o scanner.o
 #    Doplnkove funkce
 #  ---------------------------------------------------------------------
 clean:
-	rm -vf *.o *.a *.so ifj14
+	rm -vf *.o *.a *.so *.zip ifj14
 
 zip:
-	zip ifj14.zip *.c *.h rozdeleni Makefile
+	zip $(ARCHIVE).zip *.c *.h rozdeleni Makefile

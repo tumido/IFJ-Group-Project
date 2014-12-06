@@ -11,29 +11,28 @@
 #include "btree.h"
 
 
-btree SymbolTableInit()
+void SymbolTableInit(btree * table)
 {
-  btree table;
-  table.root = table.last = NULL;
-  return table;
+  table->root = table->last = NULL;
 }
 
-struct node * SymbolTableCreateNode(lexType type, char * key)
+struct node * SymbolTableCreateNode(key type, char * key)
 {
   struct node * nd;
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
 
   nd->rightNode = nd->leftNode = NULL;
-  strcpy(key, nd->keyValue);
+  strncpy(nd->keyValue, key, BUFSIZE);
+  key = NULL;
   switch (type)
   {
-    case l_int:
+    case k_int:
       nd->data = (int *) malloc(sizeof(int));
       break;
-    case l_real:
+    case k_real:
       nd->data = (double *) malloc(sizeof(double));
       break;
-    case l_str:
+    case k_string:
       nd->data = (string *) malloc(sizeof(string));
       break;
     default:
@@ -41,6 +40,7 @@ struct node * SymbolTableCreateNode(lexType type, char * key)
       return NULL;
       break;
   }
+  printErr("node\n");
   return nd;
 }
 

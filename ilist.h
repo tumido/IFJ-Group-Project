@@ -1,3 +1,17 @@
+/*
+ * =====================================================================
+ *          Verze:  1.0
+ *      Vytvoreno:  30/12/2014 18:15:58 PM
+ *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
+ *        Projekt:  IFJ
+ * =====================================================================
+ */
+
+#ifndef ILIST_INCLUDED
+#define ILIST_INCLUDED
+#include <stdio.h>
+#include <stdlib.h>
 #include "io.h"
 
 // typy jednotlivych instrukci
@@ -35,7 +49,7 @@ typedef struct
 
 void listInit(tListOfInstr *L);
 void listFree(tListOfInstr *L);
-void listInsertLast(tListOfInstr *L, tInstr I);
+int listInsertLast(tListOfInstr *L, tInstr I);
 void listFirst(tListOfInstr *L);
 void listNext(tListOfInstr *L);
 void listGoto(tListOfInstr *L, void *gotoInstr);
@@ -55,11 +69,6 @@ tInstr *listGetData(tListOfInstr *L);
   *  |
   *  V
   */
-typedef struct
-{
-  struct stackElem top;           // ukazatel na vrchol zasobniku
-  int numberOfResults;            // pocet prvku v zasobniku
-} stack;
 
 /*
  * samotny prvek seznamu, bude obsahovat vsechnz mozne typy vysledku, nepouzite typy dostanou NULL
@@ -69,12 +78,17 @@ typedef struct
 typedef struct stackPtr
 {
   int iResult;
-  float fResult;
+  double fResult;
   int boolResult;
   char cResult;             // zde si presne nejsem jist, jestli by nebylo lepsi pouit pole
-  struct stackPtr *next;    // ukazatel na nasledujici prvek v zasobniku
+  struct stackPtr * next;    // ukazatel na nasledujici prvek v zasobniku
 } stackElem;
 
+typedef struct
+{
+  stackElem * top;           // ukazatel na vrchol zasobniku
+  int numberOfResults;            // pocet prvku v zasobniku
+} stack;
 /*
  * Inicializace zasobniku, ocekavam ukazatel na dany zasobnik
  */
@@ -83,19 +97,20 @@ void stackInit(stack *S);
 /*
  * PUSHnuti vysledkù (podle typu) na zasobnik
  */
-void stackPUSHInt(stack *S, int i);
-void stackPUSHReal(stack *S, float f);
-void stackPUSHBool(stack *S, int i);
-void stackPUSHChar(stack *S, char *c);         //opet, u charu si nejsem jist spravnosti
+int stackPUSHInt(stack *S, int i);
+int stackPUSHReal(stack *S, double f);
+int stackPUSHBool(stack *S, int i);
+int stackPUSHChar(stack *S, char *c);         //opet, u charu si nejsem jist spravnosti
 
 /*
  * POPnuti vysledku ze zasobnku, bude vracet celou strukturu
  */
 
-void stackPOP(stack *S, stackPtr *result);
+int stackPOP(stack *S, struct stackPtr *result);
 
 /*
  * Zjisti zdali je stack prazdny. Pokud je prazdny vraci 0 jinak 1
  */
 
 int stackEmpty(stack *S);
+#endif

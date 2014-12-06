@@ -30,7 +30,8 @@ int tokenInit(token * lex)
  */
 void tokenFree(token *str)
 {
-  if (str->type != l_int && str->type != l_real) { free(((string *) str->data)->str); }
+  if (str->type != l_int && str->type != l_real && str->type != l_key)
+    free(((string *) str->data)->str);
   free(str->data);
 }
 
@@ -40,6 +41,7 @@ void tokenFree(token *str)
  */
 void tokenClean(token *str)
 {
+  printErr("--- CLEAN ---\n");
   tokenFree(str);
   tokenInit(str);
   str->type = l_reset;
@@ -111,11 +113,16 @@ int keyWordCheck(token * lex)
 {
   const int KEYWORDS_COUNT =  20;
   const char * KEYWORDS[] ={ "begin", "boolean", "do", "else", "end", "false", "find", "forward", "function", "if", "integer", "readln", "real", "sort", "string", "then", "true", "var", "while", "write" };
-  for (int i = 0; i < KEYWORDS_COUNT; i++)
+  for ( key i = k_begin; i < KEYWORDS_COUNT; i++)
   {
     if (strcmp(KEYWORDS[i], ((string *) lex->data)->str) == EXIT_SUCCESS)
     {
       lex->type = l_key;
+      free(((string *)lex->data)->str);
+      free(lex->data);
+      if ((lex->data = (key *) malloc(sizeof(key))) == NULL )
+        return EXIT_INTERNAL_ERROR;
+      *((key *) lex->data) = i;
       return EXIT_SUCCESS;
     }
   }

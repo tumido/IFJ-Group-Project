@@ -15,6 +15,7 @@
 #include <string.h>
 #include "io.h"
 #include "strings.h"
+#define BUFSIZE 256
 
 /*  Struktura pro binarni strom
  * --------------------------------------------------------------------
@@ -24,7 +25,7 @@
 
 struct node
 {
-  char * keyValue; // klic jmeno funkce, promenne
+  char keyValue[BUFSIZE]; // klic jmeno funkce, promenne
   void * data;
   lexType type;
 
@@ -38,14 +39,29 @@ typedef struct
   struct node * last;
 } btree;
 
+struct funcData
+{
+  lexType retType;
+  unsigned int numberOfParams;
+  struct fParam * param;
+};
+
+struct fParam
+{
+  char * name;
+  void * data;
+  struct fParam * next;
+};
+
 /*   Vytvoreni tabulky symbolu
  * ---------------------------------------------------------------------
  * - lze provest jednoduchym, lec ucinnym
  *   struct node * root = NULL;
  */
+void SymbolTableInit(btree * table);
 
 
-struct node * SymbolTableCreateNode(lexType type, char * key);
+struct node * SymbolTableCreateNode(key type, char * key);
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
