@@ -20,7 +20,7 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tL
    listInsertLast(ilist, I);
    return;
 }
-// vraci index do tabulky
+/*// vraci index do tabulky
 int retIndex (lexType typ)
 {
   int j;
@@ -291,7 +291,7 @@ int expression(FILE *source, btree *table, token *lex,node *data)
              // na typ real
              else return EXIT_SEMANTIC_ERROR;
              // if(generateInstruction(I_DIV
-             //********************************
+             // ********************************
             break;
             case l_greater:
              //if(generateInstruction(I_GREATER
@@ -330,7 +330,7 @@ int expression(FILE *source, btree *table, token *lex,node *data)
 
  return result;
 }
-
+*/
 
 
 
@@ -343,7 +343,7 @@ int expression(FILE *source, btree *table, token *lex,node *data)
 //=====================================================
 int declList(FILE * source, btree * table, token * lex)
 {
-  printErr("declList\n");
+  printErr("Deklarace promenych\n");
   // Pokud je to klicove slovo var
   // pokud ne, nejedna se o deklaraci tak se vratime zpet, kde nas volali
   if ((lex->type != l_key) || (*((key *)lex->data) != k_var))
@@ -355,7 +355,7 @@ int declList(FILE * source, btree * table, token * lex)
 // <decListNext> -> eps
 int declListNext(FILE * source, btree * table, token * lex)
 {
-  printErr("declListNext\n");
+  printErr("Zpracovani promenne\n");
   int result;
   // Pozadame o dalsi token, vime ze to musi byt identifikator
   // Pokud to neni identifikator l_id, vratim chybu
@@ -754,7 +754,7 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
      break;
      default break;
 
-  } */ printErr("Statement\n"); return EXIT_SUCCESS;
+  } */ printErr("Zpracovavam prikaz\n"); return EXIT_SUCCESS;
 
 
 }
@@ -768,7 +768,7 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 int statements (FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
-  printErr("Statements\n");
+  printErr("Zacatek bloku prikazu\n");
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
@@ -794,7 +794,7 @@ int statements (FILE * source, btree * table, tListOfInstr * ilist, token * lex)
  */
 int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 {
-  printErr("Body\n");
+  printErr("Zacatek hlavniho kodu programu\n");
   int result;
   if (((result = fillToken(source, lex)) != EXIT_SUCCESS) ||
       // naplneny token, pokud nic neselze
@@ -804,7 +804,7 @@ int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
       // a projde telo programu -> pokud cokoliv z toho selze, vraci error
     return result;
 
-        printErr("skorokonec");
+        printErr("Konec Programu");
   if (strcmp("end", ((string *)lex->data)->str) != EXIT_SUCCESS)
     return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
@@ -822,7 +822,7 @@ int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
  */
 int parser(FILE * source, btree * table, tListOfInstr * ilist)
 {
-  printErr("parser\n");
+  printErr("Spoustim Parser\n");
   token lex;
   int result = EXIT_SUCCESS;
 

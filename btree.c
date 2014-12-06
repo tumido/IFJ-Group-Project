@@ -40,7 +40,7 @@ struct node * SymbolTableCreateNode(key type, char * key)
       return NULL;
       break;
   }
-  printErr("node\n");
+  printErr("Novy uzel vytvoren\n");
   return nd;
 }
 
