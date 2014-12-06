@@ -15,10 +15,13 @@
  * - provadi shellovo razeni n prvku v poli
  * - implemetace podle slajdu prof. Hozníka
  * - zatim neotestovano
+ * 
+ * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
-void shellSort(int *array, int n)
+void shellSort(char *array, int n)
 {
   int step, i, j;
+  char tmp;
   step = n / 2; // prvni krok je polovina delky pole
   
   while (step > 0) // cykli, pokud je krok vetsi/roven 1
