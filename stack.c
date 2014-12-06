@@ -9,7 +9,6 @@
  */
 
 #include "stack.h"
-#include "io.h"
 
 /*
  * stack inicialization

@@ -8,6 +8,11 @@
  * =====================================================================
  */
 
+#ifndef STACK_INCLUDED
+#define STACK_INCLUDED
+#include <stdio.h>
+#include <stdlib.h>
+#include "io.h"
 /*
  * Zasobnik
  * -----------------------------------------------------------------------------
@@ -30,7 +35,7 @@ typedef struct stackPtr
 
 typedef struct
 {
-  stackElem top; // ukazatel na vrchol zasobniku
+  stackElem * top; // ukazatel na vrchol zasobniku
   int numberOfResults; // pocet prvku v zasobniku
 } stack;
 
@@ -56,3 +61,4 @@ int stackPOP(stack *S, struct stackPtr * result);
  * Zjisti zdali je stack prazdny. Pokud je prazdny vraci 0 jinak 1
  */
 int stackEmpty(stack *S);
+#endif
