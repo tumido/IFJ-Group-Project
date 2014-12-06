@@ -407,6 +407,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * tomu teda moc nerozumim..
  * je v ni dalsi switch a pripady pro kazdy typ, zatim nepisu
+ * treba ani nebude potreba
  */
       case I_TYPE:
 
@@ -442,8 +443,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_COPY:
         if (!((operand1->type == T_STRING) && (operand2->type == T_REAL))) return EXIT_TYPE_ERROR;
+        else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
+          // zde je treba jeste osetrit, aby byl operand dve (tedy jeho prvni cast) vetsi nebo
+          // roven jedne, coz muzeme udelat az po jeho rozlozeni na dva inty
+          // stejne tak 'n' by zrejme melo byt vetsi rovno 1, nebo se pletu?
           // ...
           return EXIT_SUCCESS;
         }
@@ -459,6 +464,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_LENGHT:
         if (!(operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
+        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
           result->type = T_INTEGER;
@@ -472,6 +478,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_FIND:
         if (!((operand1->type == T_STRING) && (operand2->type == T_STRING))) return EXIT_TYPE_ERROR;
+        else if ((!(operand1->data)) || (!(operand2->data))) return EXIT_NOT_INIT_ERROR;
+        else if (strlen(operand2->data) > strlen(operand1->data)) return EXIT_RUNTIME_ERROR;
         else
         {
           result->type = T_INTEGER;
@@ -487,14 +495,23 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         // string je vlastne pole znaku, ze? 
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
-        if (!(operand1->type == T_STRING)) return EXIT_TYPE_ERROR;
+        if (!(operand2->type == T_STRING) return EXIT_TYPE_ERROR;
+        else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          int n = strlen(operand2->data);
+          if (strlen(operand2->data) == 1) // retezec ma delku 1, neni co radit
+          {
+            result->data = operand2->data;
+            return EXIT_SUCCESS;
+          }
+          else
+          {
+            int n = strlen(operand2->data);
 
-          result->type = T_STRING;
-          result->data = (shellSort(*operand2, n));
-          return EXIT_SUCCESS;
+            result->type = T_STRING;
+            result->data = (shellSort(*operand2, n));
+            return EXIT_SUCCESS;
+          }
         }
         break;
     }
@@ -569,31 +586,12 @@ int iRead();
   }
 }
 
-/* Zajimava myslenka jest ukladat triadresny kod jako vektor
- * (tedy asi jednorozmerne pole)
- * pak si zrejme prochazim jeden vektor po druhem, a zpracovavam jeho prvky
- * naimplementovanymi instrukcemi
- * pricemz se pokazde posunu dal o jednu instrukci = vektor!!
- *
- * jeste se tam na neco pouziva zasobnik, a sice na to, ze si do nej ukladam
- * mezivysledky operaci. Sikovna to vecicka! :) Je to vlastne metodika, jak
- * zpracovavat slozite programove kontrukce.
- * Takze bude potreba si naimplementovat zasobnik - IAL? A nejakym zpusobem
- * ho narvat do intepretu a pak hlavne odzkouset - musi umet vkladat, cist,
- * mazat a mozna jeste neco.
- * Takze spousta srandy prede mnou..
- *
+/*
  * TODO:
- * Nastudovat rozhrani interpetu, system vykonavani instrukci (tabulka, seznam?)
- * System predavani 3AK - no asi ten vektor ne? Davat to jako string je blbost
- * na entou, bych si to zas musel rozkouskovavat a stejne bych to pak ukladal
- * nejakych lokalnich promennych nebo do pole.
- *
- * Je treba vymyslet, jakym zpusobem dostanu 3AK, a jak ho teda budu zpracovavat.
- * Stale jsem neprisel na to, zda-li je treba dostat veskery kod najednou, nebo
- * staci vykonavat jednu instrukci po druhe a tudit v kazdem jednom okamziku mi
- * staci znat jen jeden konkretni 3AK, ktery by se timpadem dal rvat do obycejne
- * struktury, ze ktere bych si ho vzal. No ale kam s vysledky?
- *
- * Na skakani si udelat pole, do ktereho si budu znacit, kam skakat?
+ * - kodit, makat, modlit se
+ * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to 
+ *   zkusit nejak nasimulovat..
+ * - dokoncit zbyvajici instrukce
+ * - podivat se na funkci getSubString (Boyer-Mooreuv algoritmus), bylo by vhodne 
+ *   tu funkci konecne napsat
  */
