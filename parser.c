@@ -337,19 +337,26 @@ int expression(FILE *source, btree *table, token *lex)
 
 //=====================================================
 //      Deklaracni funkce
-//      Pravidlo <decList> -> var id : typ ; <DecListNext>
+//      Pravidlo <decList> -> var <DecListNext>
 //      Tato funkce kontroluje gramatiku deklarace
 //       (Mela by je ukladat do binarniho stromu)
 //=====================================================
 int declList(FILE * source, btree * table, token * lex)
 {
   printErr("declList\n");
-  int result;
   // Pokud je to klicove slovo var
   // pokud ne, nejedna se o deklaraci tak se vratime zpet, kde nas volali
   if ((lex->type != l_key) || (*((key *)lex->data) != k_var))
       return EXIT_SUCCESS;
 
+  return declListNext(source, table, lex);
+}
+// pravidlo <decListNext> -> id: typ; <decListNext>
+// <decListNext> -> eps
+int declListNext(FILE * source, btree * table, token * lex)
+{
+  printErr("declListNext\n");
+  int result;
   // Pozadame o dalsi token, vime ze to musi byt identifikator
   // Pokud to neni identifikator l_id, vratim chybu
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
@@ -380,64 +387,6 @@ int declList(FILE * source, btree * table, token * lex)
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
   if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
 
-  // pozadam uz jen o dalsi token a zavolam decListNext
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
-  return declListNext(source, table, lex);
-}
-// pravidlo <decListNext> -> id: typ; <decListNext>
-// <decListNext> -> eps
-int declListNext(FILE * source, btree * table, token * lex)
-{
-  printErr("declListNext\n");
-  int result;
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
-  if (lex->type != l_id) return EXIT_SUCCESS;
-
-  if ( SymbolTableSearch(table, ((string *)lex->data)->str) == NULL) return EXIT_SYNTAX_ERROR;
-
-  // zalohujeme si token, zatim nevime jakej je to typ
-  token tmp; // zaloha tokenu
-  if ((result = tokenInit(&tmp)) != EXIT_SUCCESS) return result;
-  tmp.type = lex->type;
-  tmp.data = lex->data;
-  lex->data = NULL;
-
-  // Dalsi token musi byt ":"
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ tokenFree(&tmp); return result; }
-  if (lex->type != l_colon) { tokenFree(&tmp); return EXIT_SYNTAX_ERROR; }
-
-  // Dalsi token musi byt datovy typ
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ tokenFree(&tmp); return result; }
-
-  struct node * nd;
-  if ((nd = SymbolTableCreateNode(*((key *)lex->data), ((string *)tmp.data)->str)) == NULL)
-  {
-    __SymbolTableDispose(&nd);
-    tokenFree(&tmp);
-    return EXIT_INTERNAL_ERROR;
-  }
-
-  switch (lex->type)
-  {
-    case l_int:
-    case l_real:
-    case l_str:
-      nd->data = lex->data;
-      break;
-    default:
-      __SymbolTableDispose(&nd);
-      tokenFree(&tmp);
-      return EXIT_INTERNAL_ERROR;
-  }
-
-  tokenFree(&tmp); // uz jej nepotrebuju
-  SymbolTableInsert(table, nd);
-  // Pozadam o dalsi token ktery musi byt ';'
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
-  if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
-
-  // pozadam uz jen o dalsi token a zavolam decListNext
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
   return declListNext(source, table, lex);
 }
 
@@ -855,6 +804,7 @@ int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
       // a projde telo programu -> pokud cokoliv z toho selze, vraci error
     return result;
 
+        printErr("skorokonec");
   if (strcmp("end", ((string *)lex->data)->str) != EXIT_SUCCESS)
     return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
@@ -876,13 +826,15 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
   token lex;
   int result = EXIT_SUCCESS;
 
-  if ((tokenInit(&lex) != EXIT_INTERNAL_ERROR) &&
-      ((result = fillToken(source, &lex)) != EXIT_INTERNAL_ERROR) &&
-      (result != EXIT_LEXICAL_ERROR))
+  if ((tokenInit(&lex) == EXIT_SUCCESS) &&
+      ((result = fillToken(source, &lex)) == EXIT_SUCCESS))
   {
     switch(lex.type)
     {
       case l_key: // pokud je to klicove slovo, var,function,begin (vyuzivam toho, ze C vyhodnocuje disjunkci zleva)
+        if ((*(key *)lex.data != k_var) && (*(key *)lex.data != k_function) && (*(key *)lex.data != k_begin))
+          { result = EXIT_SYNTAX_ERROR; break; }
+
         if (((result = declList(source, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
             ((result = function(source, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
             ((result = body(source, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
@@ -902,6 +854,7 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
     }
   }
 
+  if (result == EXIT_SYNTAX_ERROR) printErr("Syntax error found. Check your program once more, please.\n");
   tokenFree(&lex);
   return result;
 }
