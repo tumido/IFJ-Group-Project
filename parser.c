@@ -51,8 +51,8 @@ int retIndex (lexType typ)
  return j;
 }
 
-
-int expression(FILE *source, btree *table, token *lex)
+// teto funkci se předá soubor, tabulka, token a ??struktura node, kam ulozim vypocitany vyraz??
+int expression(FILE *source, btree *table, token *lex,node *data)
 {
  sData itemAct; // tady bude aktualni token
  sData itemTop; // tady bude token co je navrcholu zasobniku
