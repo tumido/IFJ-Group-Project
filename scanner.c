@@ -135,17 +135,20 @@ int keyWordCheck(token * lex)
  * - rozlisi spravny typ tokenu a pokud zadnemu neodpovida vrati
  *   EXIT_LEXICAL_ERROR
  */
-int fillToken(FILE * Code, token * lex)
+int fillToken(struct input * in, token * lex)
 {
   tState state = s_begin;
   bool read = true;
   int z;
+  char * expected = "valid symbol";
   int retVal = EXIT_SUCCESS;
   tokenClean(lex);
 
   while (read)
   {
-    z = fgetc(Code);
+    z = fgetc(in->file);
+
+    if (z == '\n') (in->line)++;
     switch(state)
     {
       case s_begin: // zakladni stav automatu, za zaklade pismene rozhodne co by to mohlo byt za lexem
@@ -157,9 +160,7 @@ int fillToken(FILE * Code, token * lex)
           switch (z)
           {
             case EOF: // jediny spravny EOF je pri zacatku lexemu
-              lex->type = l_eof;
-              read = false;
-              retVal = EOF;
+              lex->type = l_eof; read = false;
             case '{': state = s_comment; break;
             case '\'': state = s_string; break;
             case '.': read = false; lex->type = l_enddot; break;
@@ -183,25 +184,26 @@ int fillToken(FILE * Code, token * lex)
         break;
       case s_comment: // jsem v komentari
         if (z == '}') state = s_begin;
+        else if (z == EOF) { retVal = EXIT_LEXICAL_ERROR; read = false; ungetc(z, in->file); expected = "\"}\""; }
         break;
       case s_id: // nacitam identifikator
         if (isalnum(z) || z == '_') { addCharToString(lex, z); }
-        else { read = false; ungetc(z, Code); }
+        else { read = false; ungetc(z, in->file); }
         break;
       case s_colon: // je to dvojtecka nebo prirazeni
         if ( z == '=') { lex->type = l_assign; }
-        else { lex->type = l_colon; ungetc(z, Code); }
+        else { lex->type = l_colon; ungetc(z, in->file); }
         read = false;
         break;
       case s_less: // rozhoduji < <= <>
         if ( z == '=') { lex->type = l_lequal; }
         else if ( z == '>') { lex->type = l_not; }
-        else { lex->type = l_less; ungetc(z, Code); }
+        else { lex->type = l_less; ungetc(z, in->file); }
         read = false;
         break;
       case s_greater: // rozhoduji > >=
         if ( z == '=') { lex->type = l_gequal; }
-        else { lex->type = l_greater; ungetc(z, Code); }
+        else { lex->type = l_greater; ungetc(z, in->file); }
         read = false;
         break;
       case s_string: // zpracovani retezce
@@ -211,46 +213,46 @@ int fillToken(FILE * Code, token * lex)
       case s_string_check: // je to escape sekvence nebo konec?
         if (z == '\'') { state = s_string; addCharToString(lex, z); }
         else if (z =='#' ){ state = s_string_escape; }
-        else { lex->type = l_str; read = false; ungetc(z, Code); }
+        else { lex->type = l_str; read = false; ungetc(z, in->file); }
         break;
       case s_string_escape: // u escape sekvence potrebuj alespon jedno cislo
         if (isdigit(z)) { addCharToString(lex, z - '0'); state = s_string_escape_check; }
-        else { read = false; retVal = EXIT_LEXICAL_ERROR; }
+        else { read = false; retVal = EXIT_LEXICAL_ERROR; expected = "0..9"; }
         break;
       case s_string_escape_check: // zpracovani escape sekvence s ord. hodnotou vetsi nez 9
         if (isdigit(z)) { ((string *) lex->data)->str[((string *) lex->data)->length - 1] = ((string *) lex->data)->str[((string *) lex->data)->length - 1] * 10 + z - '0'; }
         else if (z == '\'') { state = s_string; }
-        else { read = false; retVal = EXIT_LEXICAL_ERROR; }
+        else { read = false; retVal = EXIT_LEXICAL_ERROR; expected = "0..9 or \' "; }
         break;
       case s_integer: // nacitani integeru
         if (isdigit(z)) { addCharToString(lex, z); }
         else if (z == 'E' || z == 'e') { addCharToString(lex, z); state = s_real_exp; }
         else if (z == '.') { addCharToString(lex, z); state = s_real; }
-        else { lex->type = l_int; read = false; ungetc(z, Code); }
+        else { lex->type = l_int; read = false; ungetc(z, in->file); }
         break;
       case s_real: // integer skoncil teckou, je to tedy realne cislo
         if (isdigit(z)) { addCharToString(lex, z); }
         else if(z == 'E' || z == 'e') { addCharToString(lex, z); state = s_real_exp; }
-        else { lex->type = l_real; read = false; ungetc(z, Code); }
+        else { lex->type = l_real; read = false; ungetc(z, in->file); }
         break;
       case s_real_exp: // dostal jsem se k exponentu
         if (isdigit(z)) { addCharToString(lex, z); state = s_real_exp_all; }
         else if (z == '+' || z == '-') { addCharToString(lex, z); state = s_real_exp_ok; }
-        else { ungetc(z, Code); read = false; retVal = EXIT_LEXICAL_ERROR; }
+        else { ungetc(z, in->file); read = false; retVal = EXIT_LEXICAL_ERROR; expected = "0..9 or \"+\" or \"-\""; }
         break;
       case s_real_exp_ok: // je specifikovane znamenko, potrebuji cislici
         if (isdigit(z)) { addCharToString(lex, z); state = s_real_exp_all; }
-        else { ungetc(z, Code); read = false; retVal = EXIT_LEXICAL_ERROR; }
+        else { ungetc(z, in->file); read = false; retVal = EXIT_LEXICAL_ERROR; expected = "0..9";}
         break;
       case s_real_exp_all: // nacitam cislice exponentu
         if (isdigit(z)) { addCharToString(lex, z); }
-        else { lex->type = l_real; read = false; ungetc(z, Code); }
+        else { lex->type = l_real; read = false; ungetc(z, in->file); }
         break;
-      default: read = false; retVal = EXIT_LEXICAL_ERROR;
+      default: read = false; retVal = EXIT_INTERNAL_ERROR;
     }
   }
   // doslo-li k problemu behem nacitani vypisu hlaseni
-  if (retVal == EXIT_LEXICAL_ERROR) { printErr("What did you mean by \"%s%c\"\n", ((string *) lex->data)->str, z);}
+  if (retVal == EXIT_LEXICAL_ERROR) { printErr("LEXICAL ERROR on line %d: What did you mean by \"%s%c\" ? Expected %s.\n", in->line, ((string *) lex->data)->str, z, expected);}
   else if (lex->type == l_int) { strToInt(lex); }
   else if (lex->type == l_real) { strToDouble(lex); }
   else if (lex->type == l_id) { keyWordCheck(lex); }

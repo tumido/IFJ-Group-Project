@@ -52,7 +52,7 @@ int retIndex (lexType typ)
 }
 
 // teto funkci se předá soubor, tabulka, token a ??struktura node, kam ulozim vypocitany vyraz??
-int expression(FILE *source, btree *table, token *lex,node *data)
+int expression(FILE *in->file, btree *table, token *lex,node *data)
 {
  sData itemAct; // tady bude aktualni token
  sData itemTop; // tady bude token co je navrcholu zasobniku
@@ -106,7 +106,7 @@ int expression(FILE *source, btree *table, token *lex,node *data)
     sPush (&s,itemAct);  // dam na zasobnik token a vezmu dalsi
     itemTop= sTop (&s);  // iTop = vrhcol zasobniku
     // do iAct si nactu dalsi token
-    if (result=fillTOken (source,lex) == EXIT_LEXICAL_ERROR) return EXIT_LEXICAL_ERROR;
+    if (result=fillTOken (in->file,lex) == EXIT_LEXICAL_ERROR) return EXIT_LEXICAL_ERROR;
     // pokud je nacteny token ID tak si musim najit jeho data a ulozit je
     // do itemAct.data
     // nevim jak to udelat, zatim necham jednoduchy prirazeni
@@ -155,7 +155,7 @@ int expression(FILE *source, btree *table, token *lex,node *data)
     // nakonec vlozime token na vrchol
     sPush (&s,itemAct);
     //nactu dalsi token a itemTop bude vrchol zasobniku
-    if (result=fillTOken (source,lex) == EXIT_LEXICAL_ERROR) return EXIT_LEXICAL_ERROR;
+    if (result=fillTOken (in->file,lex) == EXIT_LEXICAL_ERROR) return EXIT_LEXICAL_ERROR;
     itemTop=sTop(&s);
     // pokud je nacteny token ID tak si musim najit jeho data a ulozit je
     // do itemA.data
@@ -346,21 +346,21 @@ int expression(FILE *source, btree *table, token *lex,node *data)
  *
  *   <declareList> -> "var" <DeclareListContent>
  */
-int declareList(FILE * source, btree * table, token * lex)
+int declareList(struct input * in, btree * table, token * lex)
 {
   printErr("Deklarace promenych\n");
   if ((lex->type != l_key) || (*((key *)lex->data) != k_var))
     return EXIT_SUCCESS; // nezacinam "var" -> konec
 
   int result;
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS) return result;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;
   if (lex->type != l_id)
   {
     if (lex->type == l_key) { printErr("Blok je prazdny\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
     return EXIT_SYNTAX_ERROR;
   }
 
-  return declareListContent(source, table, lex);
+  return declareListContent(in, table, lex);
 }
 
 /*   Rekurzivni zpracovani promennych v deklaracni casti
@@ -372,7 +372,7 @@ int declareList(FILE * source, btree * table, token * lex)
  *   <declareListContent> -> "id" ":" "type" ";" <declareListContent>
  *   <declareListContent> -> eps
  */
-int declareListContent(FILE * source, btree * table, token * lex)
+int declareListContent(struct input * in, btree * table, token * lex)
 {
   printErr("Vytvarim promennou\n");
   int result;
@@ -390,11 +390,11 @@ int declareListContent(FILE * source, btree * table, token * lex)
   strncpy(tmp, ((string *)lex->data)->str, BUFSIZE);
 
   // Dalsi token musi byt ":"
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_colon) { return EXIT_SYNTAX_ERROR; }
 
   // Dalsi token musi byt datovy typ
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key) { return EXIT_SYNTAX_ERROR; }
 
   struct node * nd; // vytvorime zaznam v tabulce symbolu
@@ -405,11 +405,11 @@ int declareListContent(FILE * source, btree * table, token * lex)
   }
   SymbolTableInsert(table, nd); // vlozime symbol
 
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_endl ) {; return EXIT_SYNTAX_ERROR; }
 
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
-  return declareListContent(source, table, lex);
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  return declareListContent(in, table, lex);
 }
 
 /*   Rekurzivni zpracovani promennych v deklaraci funkce
@@ -421,12 +421,12 @@ int declareListContent(FILE * source, btree * table, token * lex)
  *   <declareListContent> -> "id" ":" "type" ";" <declareListContent>
  *   <declareListContent> -> "id" ":" "type" ")"
  */
-int paramsList(FILE * source, token * lex, unsigned int * count, struct funcParam ** param)
+int paramsList(struct input * in, token * lex, unsigned int * count, struct funcParam ** param)
 {
   printErr("Vytvarim promennou\n");
   int result;
 
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id)
   {
     if (lex->type == l_rparenth) { printErr("Konec bloku parametru\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
@@ -438,11 +438,11 @@ int paramsList(FILE * source, token * lex, unsigned int * count, struct funcPara
   strncpy((*param)->keyValue, ((string *)lex->data)->str, BUFSIZE);
 
   // Dalsi token musi byt ":"
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_colon) { return EXIT_SYNTAX_ERROR; }
 
   // Dalsi token musi byt datovy typ
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
       ((*(key *)lex->data != k_int) &&
       (*(key *)lex->data != k_real) &&
@@ -455,12 +455,12 @@ int paramsList(FILE * source, token * lex, unsigned int * count, struct funcPara
   printErr("Vytvarim parametr funkce\n");
 
   // Nasleduje ";" nebo ")" podle toho se uvidi co dal
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
 
   if (lex->type == l_rparenth) return EXIT_SUCCESS; // je to zavorka -> konec
   else if (lex->type != l_endl) return EXIT_SYNTAX_ERROR; // musi to byt strednik
 
-  return paramsList(source, lex, count, &((*param)->next));
+  return paramsList(in, lex, count, &((*param)->next));
 }
 
 /*   Deklarace funkce
@@ -471,7 +471,7 @@ int paramsList(FILE * source, token * lex, unsigned int * count, struct funcPara
  *   <forward> -> "forward" ";"
  *   <forward> -> <declareList> <body> ";" <function>
  */
-int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
+int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
   printErr("Funkce\n");
   int result;
@@ -481,7 +481,7 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
     return EXIT_SUCCESS;
 
   // Dalsi token musi byt ID, ktere si musim zatim zalohovat
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
   if (SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
 
@@ -489,20 +489,20 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
   strncpy(tmp, ((string *)lex->data)->str, BUFSIZE);
 
   // Dalsi token musi byt oteviraci zavorka
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth ) { return EXIT_SYNTAX_ERROR; }
 
   //zpracuju parametry MUSI SE DORESIT LOKALNI TABULKY
   unsigned int count = 0;
   struct funcParam * firstParam;
-  if ((result = paramsList(source, lex, &count, &firstParam)) != EXIT_SUCCESS) return result;
+  if ((result = paramsList(in, lex, &count, &firstParam)) != EXIT_SUCCESS) return result;
 
   // Dalsi token musi byt dvojtecka
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_colon ) { return EXIT_SYNTAX_ERROR; }
 
   // nasleduje token definujici typ navratove hodnoty
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
       ((*(key *)lex->data != k_int) &&
       (*(key *)lex->data != k_real) &&
@@ -512,11 +512,11 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
   key type = *(key *)lex->data; // ulozit pro pozdejsi pouziti
 
   // Nasleduje ";"
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
 
   // "forward" || "var" || "begin"
-  if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key) return EXIT_SYNTAX_ERROR;
 
   bool defined = false;
@@ -539,38 +539,36 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 
   if (*(key *)lex->data == k_forward) // token je "forward", potrebuju ";"
   {
-    if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   }
   else
   {
-    if (((result = declareList(source, table, lex)) != EXIT_SUCCESS) ||
-        ((result = body(source, table, ilist, lex)) != EXIT_SUCCESS))
+    if (((result = declareList(in, table, lex)) != EXIT_SUCCESS) ||
+        ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS))
       return result;
   }
-  return function(source, table, ilist, lex);
+  return function(in, table, ilist, lex);
 }
-//================================================
-// Tady budou vsechny cykly
-// read, write
-// volani funkci
-// expresions
-//<state> -> id := <expression>
-//<state> -> id := id (<term>)
-//<state> -> if <expression> then<body> ; else <body> ;
-//<state> -> while <expression> do <body> ;
-//<state> -> readln (<type>)
-//=================================================
-int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
+
+/*   Zpracovani prikazu programu
+ * ---------------------------------------------------------------------
+ * - zpracuju zde vsechna prirazeni, cykly, vestavne funkce, volani
+ *   funkci, vetveni
+ *
+ *   <state> -> id := <expression>
+ *   <state> -> id := id ( <term> )
+ *   <state> -> if <expression> then <body> ; else <body>
+ *   <state> -> while <expression> do <body>
+ *   <state> -> readln ( <type> )
+ */
+int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
+  return EXIT_INTERNAL_ERROR;
 /*  int result;
 
-  tData *varInfo;
-  token zaloh;
-
-  switch (Token.type)
+  switch (lex->type)
   {
-    // pokud token je id
     // <stat> -> id := <expression>
     // <stat> -> id := <term>
     case (l_id):
@@ -580,11 +578,11 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
     // ++++++++++++ tak je to sem. chyba
 
     // dalsi znak musi byt :=
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+    if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
     if (Token.type!=l_assign) return SYNTAX_ERROR;
 
     // dalsi token je budto expression nebo id funkce
-    if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+    if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
     // pokud je to id
     // vestavene funkce by bylo asi nejlepsi hned vlozit do stromu
     // +++++++++++++++++++++++++++++
@@ -592,10 +590,10 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
     if (Token.type==l_id || Token.type==l_key )
     {
        // vim ze dalsi token musi byt zavorka
-       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+       if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
        if (Token.type!= l_lparenth) return SYNTAX_ERROR;
 
-       if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+       if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
        // ++++++++++++++++++++++++
        // ted ocekavame TERM, funkci dopisu pak ji sem dam
 
@@ -641,7 +639,7 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
       // to dame pak zpracovat SA zdola nahoru
       // nejdriv nagenerujeme instrukci navesti
 
-      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+      if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       // vygenerujeme instrukci navesti
       if(generateInstruction(I_LAB, NULL, NULL, NULL)) return INTER_ERROR;
       // ted potrebujeme ulozit adresu za WHILE
@@ -671,7 +669,7 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
       if (strcmp(Token.data, "do")!= EXIT_SUCCESS) return SYNTAX_ERROR;
 
       // dalsi token musi byt slozeny prikaz, zavolame begin
-      if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+      if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
       result = body();
       if (result != EXIT_SUCCESS) return result;
 
@@ -699,24 +697,24 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
      else if (strcmp ("readln",Token.data)==EXIT_SUCCESS)
      {
          // vim ze dalsi token je zavorka (
-         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
          if (Token.type != l_lparenth) return SYNTAX_ERROR;
 
          // nacteme dalsi token
          // vime ze podle pravidla tady musi byt typ
-         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
          // to musim jeste nejdriv dopsat ten type..
          //return type();
      }
      else if (strcmp ("write",Token.data)==EXIT_SUCCESS)
      {
          // vim ze dalsi token je zavorka (
-         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
          if (Token.type != l_lparenth) return SYNTAX_ERROR;
 
          // nacteme dalsi token
          // vime ze podle pravidla tady musi byt <term>
-         if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
+         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
          // to musim jeste nejdriv dopsat ten type..
          //return term();
      }
@@ -729,26 +727,29 @@ int state(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
 
 }
 
-
-//===============================================
-// <statements> -> <state> ; <statements>
-// <statements> -> <state>
-//================================================
-
-int statements (FILE * source, btree * table, tListOfInstr * ilist, token * lex)
+/*   Blok kodu
+ * ---------------------------------------------------------------------
+ * - zpracovavam jednotlive prikazy v bloku kodu programu
+ * - rekurzivne zpracuje prikaz, ";" a znova dokud po prikazu nasleduje
+ *   strednik
+ *
+ *   <statements> -> <state> ; <statements>
+ *   <statements> -> <state>
+ */
+int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
-  printErr("Zacatek bloku prikazu\n");
+  printErr("Zacatek noveho prikazu\n");
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
-  result = state(source, table, ilist, lex);
+  result = state(in, table, ilist, lex);
   if (result != EXIT_SUCCESS) return result;
 
   // pokud dalsi token je strednik tzn ze bude
   // nasledovat dalsi prikaz
   if (lex->type == l_endl)
-    return statements(source, table, ilist, lex);
+    return statements(in, table, ilist, lex);
   // pokud uz strednik nebude
   // za poslednim prikazem nema byt strednik
   // tzn ze se vratime do body
@@ -762,20 +763,20 @@ int statements (FILE * source, btree * table, tListOfInstr * ilist, token * lex)
  * <body> -> <statements> end
  * <body> -> end
  */
-int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
+int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
   printErr("Zacatek hlavniho kodu programu\n");
   int result;
-  if (((result = fillToken(source, lex)) != EXIT_SUCCESS) ||
+  if (((result = fillToken(in, lex)) != EXIT_SUCCESS) ||
       // naplneny token, pokud nic neselze
    //   (strcmp("end", ((string *)lex->data)->str) == EXIT_SUCCESS) ||
       // zkontroluje prazdne telo programu, kdy po "begin" nasleduje hned "end"
-      ((result = statements(source, table, ilist, lex)) != EXIT_SUCCESS))
+      ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS))
       // a projde telo programu -> pokud cokoliv z toho selze, vraci error
     return result;
 
         printErr("Konec Programu");
-  if (strcmp("end", ((string *)lex->data)->str) != EXIT_SUCCESS)
+  if ((lex->type != l_key) || (*(key *)lex->data != k_end))
     return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
   return result;
@@ -790,14 +791,14 @@ int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
  *
  * <program> -> <decList> <funciton> <body> <EOF>
  */
-int parser(FILE * source, btree * table, tListOfInstr * ilist)
+int parser(struct input * in, btree * table, tListOfInstr * ilist)
 {
   printErr("Spoustim Parser\n");
   token lex;
   int result = EXIT_SUCCESS;
 
   if ((tokenInit(&lex) == EXIT_SUCCESS) &&
-      ((result = fillToken(source, &lex)) == EXIT_SUCCESS))
+      ((result = fillToken(in, &lex)) == EXIT_SUCCESS))
   {
     switch(lex.type)
     {
@@ -805,13 +806,13 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
         if ((*(key *)lex.data != k_var) && (*(key *)lex.data != k_function) && (*(key *)lex.data != k_begin))
           { result = EXIT_SYNTAX_ERROR; break; }
 
-        if (((result = declareList(source, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
-            ((result = function(source, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
-            ((result = body(source, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
+        if (((result = declareList(in, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
+            ((result = function(in, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
+            ((result = body(in, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
-        if (((result = fillToken(source, &lex)) != EXIT_SUCCESS) ||
+        if (((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
            (lex.type == l_enddot) ||
-           ((result = fillToken(source, &lex)) != EXIT_SUCCESS) ||
+           ((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
            (lex.type == l_eof)) { result = EXIT_SYNTAX_ERROR; break; } // na konci programu musi byt . a pak EOF
 
           //generateInstruction(I_END, NULL, NULL, NULL); // instrukce?? + ilist
@@ -825,8 +826,8 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
     }
   }
 
-  if (result == EXIT_SYNTAX_ERROR) printErr("Syntax error found. Check your program once more, please.\n");
-  if (result == EXIT_INTERNAL_ERROR) printErr("Something really bad happend.\n");
+  if (result == EXIT_SYNTAX_ERROR) printErr("SYNTAX ERROR on line %d: Check your program once more, please.\n", in->line);
+  if (result == EXIT_INTERNAL_ERROR) printErr("INTERNAL ERROR on line %d: Something really bad happend. This is not your fault.\n", in->line);
   tokenFree(&lex);
   return result;
 }

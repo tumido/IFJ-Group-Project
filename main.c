@@ -17,7 +17,8 @@
 
 int main(int argc, char *argv[])
 {
-  FILE * code;
+  struct input in;
+  in.line = 1;
 
   if (argc != 2)
   {
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     return EXIT_INTERNAL_ERROR;
   }
 
-  if (!(code = fopen(argv[1], "r")))
+  if (!(in.file = fopen(argv[1], "r")))
   {
     printf("Soubor se nepodarilo otevrit.\n");
     return EXIT_INTERNAL_ERROR;
@@ -36,13 +37,13 @@ int main(int argc, char *argv[])
   btree table;
   SymbolTableInit(&table);
 
-  int retVal = parser(code, &table, &ilist);
+  int retVal = parser(&in, &table, &ilist);
 
   //if (retVal == EXIT_SUCCESS) interpret(code, &ilist);
 
   SymbolTableDispose(&table);
   listFree(&ilist);
-  fclose(code);
+  fclose(in.file);
 
   return retVal;
 }

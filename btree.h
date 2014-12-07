@@ -15,7 +15,6 @@
 #include <string.h>
 #include "io.h"
 #include "strings.h"
-#define BUFSIZE 256
 
 /*  Struktura pro binarni strom
  * --------------------------------------------------------------------

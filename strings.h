@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define BUFSIZE 256
+#define BASE 10
+
 typedef struct
 {
   char * str;

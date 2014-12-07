@@ -19,7 +19,6 @@
 #include "strings.h"
 
 #define DETAIL_LENGHT 8 // relikt Kubovy spravy pameti, je treba predelat
-#define BASE 10
 
 /*   Typ pro stavovy automat
  * --------------------------------------------------------------------
@@ -46,6 +45,12 @@ typedef struct
 } token;
 
 
+struct input
+{
+  FILE * file;
+  unsigned int line;
+};
+
 /*   Nacitani tokenu
  * ---------------------------------------------------------------------
  * - funkce zodpovedna za nacteni casti zdrojoveho textu a prevedeni jej
@@ -53,7 +58,7 @@ typedef struct
  * - rozlisi spravny typ tokenu a pokud zadnemu neodpovida vrati
  *   EXIT_LEXICAL_ERROR
  */
-int fillToken(FILE *Code, token * lex);
+int fillToken(struct input * in, token * lex);
 
 /*   Inicializace tokenu
  * ---------------------------------------------------------------------
