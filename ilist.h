@@ -35,12 +35,12 @@ typedef struct
   struct listItem *active; // ukazatel na aktivni prvek
 } tListOfInstr;
 
-void listInit(tListOfInstr *L);
-void listFree(tListOfInstr *L);
-int listInsertLast(tListOfInstr *L, tInstr I);
-void listFirst(tListOfInstr *L);
-void listNext(tListOfInstr *L);
-void listGoto(tListOfInstr *L, void *gotoInstr);
-void *listGetPointerLast(tListOfInstr *L);
-tInstr *listGetData(tListOfInstr *L);
+void listInit(tListOfInstr *L); // funkce inicializuje seznam instrukci
+void listFree(tListOfInstr *L); // funkce dealokuje seznam instrukci
+int listInsertLast(tListOfInstr *L, tInstr I); // vlozi novou instruci na konec seznamu
+void listFirst(tListOfInstr *L); // zaktivuje prvni instrukci
+void listNext(tListOfInstr *L); // aktivni instrukci se stane nasledujici instrukce
+void listGoto(tListOfInstr *L, void *gotoInstr); // nastavime aktivni instrukci podle zadaneho ukazatele
+void *listGetPointerLast(tListOfInstr *L); // vrati ukazatel na posledni instrukci
+tInstr *listGetData(tListOfInstr *L); // vrati aktivni instrukci0
 #endif

@@ -11,6 +11,7 @@
 #include "io.h"
 #include "interpret.h"
 #include "ial.h" // kvuli funkci findSubstring a shellSort
+#include "ilist.h"
 
 /*
  * Klasifikace datového typu
@@ -62,41 +63,134 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * Specialni instrukce
  * -----------------------------------------------------------------------------
- * - stop, read, write, if, if_end, jump, assign, substr, call_fuction, do_while
+ * - stop, read, write, if, then, if_end, jump, assign, substr, call_fuction,
+ *   do_while
  */
-      case I_STOP: // pro zastaveni provadeni cyklu
+
+/*
+ * STOP
+ * - slouzi pro zastaveni provadeni cyklu
+ */
+      case I_STOP:
         return EXIT_SUCCESS;
         break;
-      case I_READ: // cteni ze stdin
+
+/*
+ * READ
+ * - obsluhuje cteni ze stdin
+ * - vola pomocnou funkci iRead
+ */
+      case I_READ: 
         iRead(((tVarValue*) operand1->data), ((tVarValue*) operand2->data));
         return EXIT_SUCCESS;
         break;
-      case I_WRITE: // vypis na stdout
+
+/*
+ * WRITE
+ * - obsluhuje vypis na stdout
+ * - vola pomocnou funkci iWrite
+ */
+      case I_WRITE:
         iWrite((tVarValue*) result->data);
         return EXIT_SUCCESS;
         break;
-      case I_IF: // to bude dobre k rozpoznani zacatku IFu
+
+/*
+ * IF
+ * - znaci zacatek podminky
+ * - zpracovava vyraz v podmince
+ */       
+      case I_IF:
+        while (tListOfInstr->active != I_THEN) // dokud je co vyhodnocovat
+        {
+          listNext(tListOfInstr *L); // posun na dalsi prvek seznamu
+          // ...
+        }
+        
+        // v tuto chvili mam skrze dalsi intrukce vyhodnocenou podminku,
+        // tudiz musim zjistit jak dopadla a podle toho se chovat
+
+        if(/* podminka pravdiva */)
+        {
+          // vykonavam dokud nenarazim na END_IF
+        }
+        else /* podminka nepravdiva */
+        {
+          // preskakuju dokud nenarazim na END_IF
+        }
+
         return EXIT_SUCCESS;
         break;
-      case I_IF_END: // toto zas bude znacit konec IFu, nejak
-      case I_JUMP: // skaceme
+
+/*
+ * THEN
+ * - znaci konec vyhodnocovani podminky a prechod na telo
+ * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
+ */
+      case I_THEN: // znaci konec vyhodnocovani podminky a prechod na telo
+        if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
+        else
+        {
+          if (operand1->data == FALSE) return FALSE;
+          else return TRUE;
+        }
         break;
-      case I_LABEL: // navesti, kam skaceme
+
+/*
+ * IF_END, JUMP
+ * - IF_END nic nedela, slouzi pro oznaceni konce tela podminky
+ * - JUMP - oznaceni ze skaceme
+ * ------- HOTOVO ------- nic vic tu nebude -------
+ */
+      case I_IF_END:
+      case I_JUMP:
+        break;
+
+/*
+ * LABEL
+ * - oznaceni navesti, kam skaceme
+ */
+      case I_LABEL:
         return EXIT_SUCCESS;
         break;
-      case I_ASSIGN: // intrukce prirazeni, operator =
+
+/*
+ * ASSIGN
+ * - intrukce prirazeni, operator =
+ */
+      case I_ASSIGN:
         return EXIT_SUCCESS;
         break;
-      case I_SUBSTR: // intrukce ulozi nekam podretezec v zadanem retezci
+
+/*
+ * SUBSTRING
+ * - intrukce ulozi nekam podretezec v zadanem retezci
+ */
+      case I_SUBSTR: 
         return EXIT_SUCCESS;
         break;
-      case I_CALL_FUNCTION: // instrukce volani uzivatelskych funkci
+
+/*
+ * CALL FUNCTION
+ * - intrukce volani uzivatelskych funkci
+ */
+      case I_CALL_FUNCTION:
         return EXIT_SUCCESS;
         break;
-      case I_RETURN: // instrukce navratu z volane funkce
+
+/*
+ * RETURN
+ * - instrukce navratu z volane funkce
+ */
+      case I_RETURN:
         return EXIT_SUCCESS;
         break;
-      case I_DO_WHILE: // instrukce cyklu do-while
+
+/*
+ * DO WHILE
+ * - instrukce cyklu do-while
+ */
+      case I_DO_WHILE:
         return EXIT_SUCCESS;
         break;
 
@@ -415,31 +509,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
- * Instrukce implenetujici vestavene funkce copy, lenght, find, sort
+ * Instrukce implenetujici vestavene funkce
  * -----------------------------------------------------------------------------
- * copy(s : string; i : integer; n : integer) : string
- *   - vrati podretezec zadaneho retezce 's'
- *   - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
- *   - 'n' urcuje delku podretezce
- *
- * length(s : string) : integer
- *   - vrati delku retezce zadaneho parametrem 's'
- *
- * find(s : string; search : string) : integer
- *   - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's'
- *     a vrati jeho pozici (pocitano od 1)
- *   - pokud neni podretezec nalezen, vraci 0
- *   - implementovano pomoci Boyer-Moorova algoritmu
- *
- * sort(s : string) : string
- *   - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
- *     hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
- *   - vraci retezec obsahujici serazene znaky
- *   - implementovano pomoci algoritmu shell sort
+ * - copy, lenght,find, sort
  */
 
 /*
  * COPY
+ * - copy(s : string; i : integer; n : integer) : string
+ * - vrati podretezec zadaneho retezce 's'
+ * - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
+ * - 'n' urcuje delku podretezce
  */
       case I_COPY:
         if (!((operand1->type == T_STRING) && (operand2->type == T_REAL))) return EXIT_TYPE_ERROR;
@@ -478,6 +558,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * LENGHT
+ * - length(s : string) : integer
+ * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
         if (!(operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
@@ -492,6 +574,11 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * FIND
+ * - find(s : string; search : string) : integer
+ * - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's'
+ *   a vrati jeho pozici (pocitano od 1)
+ * - pokud neni podretezec nalezen, vraci 0
+ * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
         if (!((operand1->type == T_STRING) && (operand2->type == T_STRING))) return EXIT_TYPE_ERROR;
@@ -507,6 +594,11 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * SORT
+ * - sort(s : string) : string
+ * - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
+ *   hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
+ * - vraci retezec obsahujici serazene znaky
+ * - implementovano pomoci algoritmu shell sort
  */
       case I_SORT:
         // string je vlastne pole znaku, ze?
@@ -545,8 +637,9 @@ int interpret(tInstList *)
 }
 
 /*
- * Funkce na kontrolu typu integer a real v operandech 3AK
+ * isIntorReal
  * -----------------------------------------------------------------------------
+ * - funkce na kontrolu typu integer a real v operandech 3AK
  * - vraci TRUE, jestlize se v operandech vyskytuji pouze typy int a real
  * - jinak vraci FALSE
  */
@@ -560,7 +653,9 @@ bool isIntOrReal(void)
 }
 
 /*
- * Funkce vykonava volani WRITE - zapisuje na stdout
+ * iWRITE
+ * -----------------------------------------------------------------------------
+ * - zapisuje na stdout
  */
 int iWrite(tVarValue *source)
 {
@@ -583,7 +678,9 @@ int iWrite(tVarValue *source)
 }
 
 /*
- * Funkce vykonava volani READ - cte ze stdin
+ * iREAD
+ * -----------------------------------------------------------------------------
+ * - cte ze stdin
  */
 int iRead();
 {
