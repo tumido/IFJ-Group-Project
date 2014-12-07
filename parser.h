@@ -54,7 +54,7 @@
 void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist);
 int declareList(FILE * source, btree * table, token * lex);
 int declareListContent(FILE * source, btree * table, token * lex);
-int paramsList(FILE * source, btree * table, token * lex);
+int paramsList(FILE * source, token * lex, unsigned int * count, struct funcParam ** param);
 int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
 int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
 int parser(FILE * source, btree * table, tListOfInstr * ilist);

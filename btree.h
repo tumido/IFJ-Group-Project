@@ -27,7 +27,7 @@ struct node
 {
   char keyValue[BUFSIZE]; // klic jmeno funkce, promenne
   void * data;
-  lexType type;
+  key type;
 
   struct node * leftNode;
   struct node * rightNode;
@@ -36,16 +36,30 @@ struct node
 typedef struct
 {
   struct node * root;
-  struct node * last;
 } btree;
 
-struct funcData
+/*   Data v uzlu pro funkci
+ * ---------------------------------------------------------------------
+ * - specifike data v uzlu uchovavane pro funkci
+ * - parametry funkce jsou uchovavane jako linearni seznam
+ */
+struct funcParam
 {
-  lexType retType;
+  char keyValue[BUFSIZE];
+  void * data;
+  key type;
+  struct funcParam * next;
+};
+
+typedef struct
+{
   unsigned int numberOfParams;
   btree * localTable;
+  key retVal;
+  struct funcParam * param;
   bool defined;
-};
+} funcData;
+
 
 /*   Vytvoreni tabulky symbolu
  * ---------------------------------------------------------------------
@@ -54,8 +68,13 @@ struct funcData
  */
 void SymbolTableInit(btree * table);
 
-
+/*   Vytvoreni uzlu z dat
+ * ---------------------------------------------------------------------
+ * - z poskytnutych dat vytvorim uzel pro tabulku symbolu
+ * - vytvatim uzly pro promenne a pro funkce
+ */
 struct node * SymbolTableCreateNode(char * name, key type);
+struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, unsigned int count, bool defined);
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------

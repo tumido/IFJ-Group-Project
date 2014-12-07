@@ -421,7 +421,7 @@ int declareListContent(FILE * source, btree * table, token * lex)
  *   <declareListContent> -> "id" ":" "type" ";" <declareListContent>
  *   <declareListContent> -> "id" ":" "type" ")"
  */
-int paramsList(FILE * source, btree * table, token * lex)
+int paramsList(FILE * source, token * lex, unsigned int * count, struct funcParam ** param)
 {
   printErr("Vytvarim promennou\n");
   int result;
@@ -433,11 +433,9 @@ int paramsList(FILE * source, btree * table, token * lex)
     return EXIT_SYNTAX_ERROR;
   }
 
-  if ( SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
-
   // zalohujeme si identifikator, zatim nevime, jaky je to typ
-  char tmp[BUFSIZE];
-  strncpy(tmp, ((string *)lex->data)->str, BUFSIZE);
+  if ((*param = (struct funcParam *) malloc(sizeof(struct funcParam))) == NULL) return EXIT_INTERNAL_ERROR;
+  strncpy((*param)->keyValue, ((string *)lex->data)->str, BUFSIZE);
 
   // Dalsi token musi byt ":"
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
@@ -445,10 +443,16 @@ int paramsList(FILE * source, btree * table, token * lex)
 
   // Dalsi token musi byt datovy typ
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key) { return EXIT_SYNTAX_ERROR; }
+  if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
+      ((*(key *)lex->data != k_int) &&
+      (*(key *)lex->data != k_real) &&
+      (*(key *)lex->data != k_string)))
+    return EXIT_SYNTAX_ERROR;
 
-  //vytor parametr CHYBI
-  printErr("Fiktivne vytvarim parametr\n");
+  (*param)->type = *(key *)lex->data;
+  (*param)->next = NULL;
+  (*count)++;
+  printErr("Vytvarim parametr funkce\n");
 
   // Nasleduje ";" nebo ")" podle toho se uvidi co dal
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
@@ -456,7 +460,7 @@ int paramsList(FILE * source, btree * table, token * lex)
   if (lex->type == l_rparenth) return EXIT_SUCCESS; // je to zavorka -> konec
   else if (lex->type != l_endl) return EXIT_SYNTAX_ERROR; // musi to byt strednik
 
-  return paramsList(source, table, lex);
+  return paramsList(source, lex, count, &((*param)->next));
 }
 
 /*   Deklarace funkce
@@ -479,7 +483,7 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
   // Dalsi token musi byt ID, ktere si musim zatim zalohovat
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
-  if ( SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
+  if (SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
 
   char tmp[BUFSIZE];
   strncpy(tmp, ((string *)lex->data)->str, BUFSIZE);
@@ -489,9 +493,11 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
   if (lex->type != l_lparenth ) { return EXIT_SYNTAX_ERROR; }
 
   //zpracuju parametry MUSI SE DORESIT LOKALNI TABULKY
-  if ((result = paramsList(source, table, lex)) != EXIT_SUCCESS) return result;
+  unsigned int count = 0;
+  struct funcParam * firstParam;
+  if ((result = paramsList(source, lex, &count, &firstParam)) != EXIT_SUCCESS) return result;
 
-  // Dalsi token musi byt zaviraci dvojtecka
+  // Dalsi token musi byt dvojtecka
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_colon ) { return EXIT_SYNTAX_ERROR; }
 
@@ -503,57 +509,46 @@ int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex)
       (*(key *)lex->data != k_string)))
     return EXIT_SYNTAX_ERROR;
 
-  return EXIT_INTERNAL_ERROR;
-  /*
-  struct node * nd; // vytvorime zaznam v tabulce symbolu
-  if ((nd = SymbolTableCreateFunction(tmp, *(key *)lex->data), ) == NULL)
-  {
-    __SymbolTableDispose(&nd);
-    return EXIT_INTERNAL_ERROR;
-  }
-  SymbolTableInsert(table, nd); // vlozime symbol
+  key type = *(key *)lex->data; // ulozit pro pozdejsi pouziti
 
+  // Nasleduje ";"
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type!= l_endl) return EXIT_SYNTAX_ERROR;
+  if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
 
-  // Ted je vice moznosti co mi muze dojit
   // "forward" || "var" || "begin"
   if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key) return EXIT_SYNTAX_ERROR;
-  switch (*(key *)lex->data)
+
+  bool defined = false;
+  if (*(key *)lex->data != k_forward) defined = true;
+  printErr("Pocet parametru funkce: %d\n", count);
+  struct node * nd; // vytvorime zaznam v tabulce symbolu
+  if ((nd = SymbolTableCreateFunctionNode(tmp, type, firstParam, count, defined)) == NULL)
   {
-    case k_forward:
-    case k_var:
+    for (unsigned int i = 0; i < count; i++)
+    {
+      firstParam = ((funcData *)nd->data)->param;
+      ((funcData *)nd->data)->param = ((funcData *)nd->data)->param->next;
+      free(firstParam);
+    }
+    __SymbolTableDispose(&nd);
+    return EXIT_INTERNAL_ERROR;
   }
 
+  SymbolTableInsert(table, nd); // vlozime symbol
 
-  if (strcmp("forward", ((string * )lex->data)->str) == EXIT_SUCCESS)
+  if (*(key *)lex->data == k_forward) // token je "forward", potrebuju ";"
   {
-      // jestli to byl forward, tak poslu dalsi token kterej musi byt ;
-      if ((result = fillToken(source,lex)) != EXIT_SUCCESS)  return result;
-      if (lex->type != l_endl) return ;
-
-
+    if ((result = fillToken(source,lex)) != EXIT_SUCCESS){ return result; }
+    if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   }
-  else if (strcmp("var",Token.data)==EXIT_SUCCESS)
+  else
   {
-    result=declareList();
-    if (result != EXIT_SUCCESS) return result;
+    if (((result = declareList(source, table, lex)) != EXIT_SUCCESS) ||
+        ((result = body(source, table, ilist, lex)) != EXIT_SUCCESS))
+      return result;
   }
-  // v jinym pripade by se melo jednat o begin
-  // stejne to zkontrolujeme radsi
-  if (strcmp("begin",Token.data) == EXIT_SUCCESS)
-  {
-      result=body();
-      if (result != EXIT_SUCCESS) return result;
-    //++++++++++++++++ NEVIM JESTLI VOLAT DALSI TOKEN NEBO UZ BUDE ZAVOLAN
-      // funkce musi koncit ;
-    if (Token.type!= l_endl)  return SYNTAX_ERROR;
-  }
-  else return SEM_ERROR;
-  // zavolame si o dalsi token a zavolame rekurzivne funkci
-  if (result=fillToken (source,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-  return function();*/
+  return function(source, table, ilist, lex);
 }
 //================================================
 // Tady budou vsechny cykly
@@ -822,6 +817,7 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
           //generateInstruction(I_END, NULL, NULL, NULL); // instrukce?? + ilist
         break;
       case l_eof: // prazdny soubor
+        result = EXIT_SUCCESS;
         break;
       default: // cokoliv jineho je chyba
         result = EXIT_SYNTAX_ERROR;
@@ -830,6 +826,7 @@ int parser(FILE * source, btree * table, tListOfInstr * ilist)
   }
 
   if (result == EXIT_SYNTAX_ERROR) printErr("Syntax error found. Check your program once more, please.\n");
+  if (result == EXIT_INTERNAL_ERROR) printErr("Something really bad happend.\n");
   tokenFree(&lex);
   return result;
 }

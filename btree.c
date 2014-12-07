@@ -11,16 +11,27 @@
 #include "btree.h"
 
 
+/*   Vytvoreni tabulky symbolu
+ * ---------------------------------------------------------------------
+ * - lze provest jednoduchym, lec ucinnym
+ *   struct node * root = NULL;
+ */
 void SymbolTableInit(btree * table)
 {
-  table->root = table->last = NULL;
+  table->root = NULL;
 }
 
+/*   Vytvoreni uzlu z dat
+ * ---------------------------------------------------------------------
+ * - z poskytnutych dat vytvorim uzel pro tabulku symbolu
+ * - vytvatim uzly pro promenne a pro funkce
+ */
 struct node * SymbolTableCreateNode(char * name, key type)
 {
   struct node * nd;
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
 
+  nd->type = type;
   nd->rightNode = nd->leftNode = NULL;
   strncpy(nd->keyValue, name, BUFSIZE);
   name = NULL;
@@ -40,10 +51,32 @@ struct node * SymbolTableCreateNode(char * name, key type)
       return NULL;
       break;
   }
-  printErr("Novy uzel vytvoren\n");
+  if (nd->data == NULL) {free(nd); return NULL;}
+  printErr("Novy uzel promenne vytvoren\n");
   return nd;
 }
 
+struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, unsigned int count, bool defined)
+{
+  struct node * nd;
+  if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
+
+  nd->type = k_function;
+  nd->rightNode = nd->leftNode = NULL;
+  strncpy(nd->keyValue, name, BUFSIZE);
+  name = NULL;
+
+  if ((nd->data = (funcData *) malloc(sizeof(funcData))) == NULL) return NULL;
+
+  ((funcData *)nd->data)->defined = defined;
+  ((funcData *)nd->data)->numberOfParams = count;
+  ((funcData *)nd->data)->param = param;
+  ((funcData *)nd->data)->retVal = type;
+  ((funcData *)nd->data)->localTable = NULL;
+
+  printErr("Novy uzel pro funkci vytvoren\n");
+  return nd;
+}
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
@@ -75,7 +108,7 @@ int __SymbolTableInsert(struct node ** leaf, struct node * insert)
 int SymbolTableDispose(btree * table)
 {
   __SymbolTableDispose(&table->root);
-  table->root = table->last = NULL;
+  table->root = NULL;
   return EXIT_SUCCESS;
 }
 
@@ -86,7 +119,20 @@ int __SymbolTableDispose(struct node ** leaf)
     __SymbolTableDispose(&((*leaf)->leftNode));
     __SymbolTableDispose(&((*leaf)->rightNode));
 
-    if ((*leaf)->type == l_str) free(((string * )(*leaf)->data)->str);
+    if ((*leaf)->type == k_string) free(((string * )(*leaf)->data)->str);
+
+    if ((*leaf)->type == k_function)
+    {
+      struct funcParam * param;
+      for (unsigned int i = 0; i < ((funcData *)(*leaf)->data)->numberOfParams; i++)
+      {
+        printErr("Mazu Parametr\n");
+        param = ((funcData *)(*leaf)->data)->param;
+        ((funcData *)(*leaf)->data)->param = ((funcData *)(*leaf)->data)->param->next;
+        free(param);
+      }
+    }
+
     free((*leaf)->data);
     free(*leaf);
   }

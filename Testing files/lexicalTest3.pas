@@ -1,8 +1,8 @@
 var a: integer;
     b: real;
 
-function f(x: string; y: string; z:string) : integer
-var a: integer;
+function f(x: string; y: string; z:string) : integer;
+var c: integer;
 begin
 end;
 
