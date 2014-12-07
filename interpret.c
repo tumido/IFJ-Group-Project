@@ -446,10 +446,26 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          // zde je treba jeste osetrit, aby byl operand dve (tedy jeho prvni cast) vetsi nebo
-          // roven jedne, coz muzeme udelat az po jeho rozlozeni na dva inty
-          // stejne tak 'n' by zrejme melo byt vetsi rovno 1, nebo se pletu?
-          // ...
+          /*
+           * budu vychaztet zhruba z neceho takoveho: fceCopy(char* textCopy, int POCATECNI_PISMENO, int DELKA_PODRETEZCE) - pro pozdejsi hromadne prepsani
+           * vysledek bude PROZATIM ulozen v poli, ze ktereho si muzu vysledek ulozit kam budu chtit
+           * jakmile se dohodne zpusob predani paramteru (respektive jak to v tom triadresnym kodu prijde), udelam i zpracovani parametru
+           * prozatim budu uvazovat, ze uz mam dva integery, ktere mi urcuji podminky
+           */
+          int arrayLenght = strlen(textCopy);
+          int arraySize = arrayLenght - POCATECNI_PISMENO - 2;                 // magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu, plati pro vsechny magicke konstanty
+          char arrayCopy [arraySize];
+          for(int i = 0; i <= lenght; i++)            //inicializace vysledneho pole
+          {
+            arrayCopy[i] = textCopy[POCATECNI_PISMENO - 1];
+            POCATECNI_PISMENO++;
+            if(textCopy[i] == '\0')
+              i = DELKA_PODRETEZCE;
+          }
+          /*
+           * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
+           * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
+           */
           return EXIT_SUCCESS;
         }
         // vymyslet zpusob, jak v standardne 3 adresnem kodu predat krom instrukce
@@ -492,7 +508,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * SORT
  */
       case I_SORT:
-        // string je vlastne pole znaku, ze? 
+        // string je vlastne pole znaku, ze?
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
         if (!(operand2->type == T_STRING) return EXIT_TYPE_ERROR;
@@ -589,9 +605,9 @@ int iRead();
 /*
  * TODO:
  * - kodit, makat, modlit se
- * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to 
+ * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to
  *   zkusit nejak nasimulovat..
  * - dokoncit zbyvajici instrukce
- * - podivat se na funkci getSubString (Boyer-Mooreuv algoritmus), bylo by vhodne 
+ * - podivat se na funkci getSubString (Boyer-Mooreuv algoritmus), bylo by vhodne
  *   tu funkci konecne napsat
  */
