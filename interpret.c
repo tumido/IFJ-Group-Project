@@ -455,8 +455,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           int arrayLenght = strlen(textCopy);
           int arraySize = arrayLenght - POCATECNI_PISMENO - 2;                 // magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu, plati pro vsechny magicke konstanty
           char arrayCopy [arraySize];
-          for(int i = 0; i <= lenght; i++)            //inicializace vysledneho pole
-          {
+          for(int i = 0; i <= arraySize; i++)            //inicializace vysledneho pole
+            {arrayCopy[i] = '\0';}
+          for(int i = 0; i <= DELKA_PODRETEZCE; i++)                        //prepsani stringu do charu a vyhoyeni vysledku
             arrayCopy[i] = textCopy[POCATECNI_PISMENO - 1];
             POCATECNI_PISMENO++;
             if(textCopy[i] == '\0')
