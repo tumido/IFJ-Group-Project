@@ -41,7 +41,6 @@ void tokenFree(token *str)
  */
 void tokenClean(token *str)
 {
-  printErr("--- CLEAN ---\n");
   tokenFree(str);
   tokenInit(str);
   str->type = l_reset;

@@ -52,10 +52,9 @@
  //hlavicka syntaktickeho analyzatoru
 
 void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist);
-int declList(FILE * source, btree * table, token * lex);
-int declListNext(FILE * source, btree * table, token * lex);
-int nextParam(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
-int param(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
+int declareList(FILE * source, btree * table, token * lex);
+int declareListContent(FILE * source, btree * table, token * lex);
+int paramsList(FILE * source, btree * table, token * lex);
 int body(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
 int function(FILE * source, btree * table, tListOfInstr * ilist, token * lex);
 int parser(FILE * source, btree * table, tListOfInstr * ilist);

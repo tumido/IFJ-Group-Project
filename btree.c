@@ -16,14 +16,14 @@ void SymbolTableInit(btree * table)
   table->root = table->last = NULL;
 }
 
-struct node * SymbolTableCreateNode(key type, char * key)
+struct node * SymbolTableCreateNode(char * name, key type)
 {
   struct node * nd;
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
 
   nd->rightNode = nd->leftNode = NULL;
-  strncpy(nd->keyValue, key, BUFSIZE);
-  key = NULL;
+  strncpy(nd->keyValue, name, BUFSIZE);
+  name = NULL;
   switch (type)
   {
     case k_int:

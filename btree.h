@@ -43,14 +43,8 @@ struct funcData
 {
   lexType retType;
   unsigned int numberOfParams;
-  struct fParam * param;
-};
-
-struct fParam
-{
-  char * name;
-  void * data;
-  struct fParam * next;
+  btree * localTable;
+  bool defined;
 };
 
 /*   Vytvoreni tabulky symbolu
@@ -61,7 +55,7 @@ struct fParam
 void SymbolTableInit(btree * table);
 
 
-struct node * SymbolTableCreateNode(key type, char * key);
+struct node * SymbolTableCreateNode(char * name, key type);
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------

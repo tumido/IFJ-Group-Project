@@ -38,10 +38,7 @@ int main(int argc, char *argv[])
 
   int retVal = parser(code, &table, &ilist);
 
-  // Kdyz se neco rozbije (chyba v prubehu prekladu - at uz lex, syn, sem), volame funkce:
-    // uklid - uvolneni pameti, zavreni souboru
-    // vratime error code
-  // Jinak interpretujeme kod a nasledne po sobe zase uklidime a zavreme soubor
+  //if (retVal == EXIT_SUCCESS) interpret(code, &ilist);
 
   SymbolTableDispose(&table);
   listFree(&ilist);
