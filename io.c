@@ -19,3 +19,13 @@ void printErr(const char *msg, ...)
   va_end(args);
   return;
 }
+
+void printDebug(const char *msg, ...)
+{
+  va_list args;
+  va_start(args, msg);
+  fprintf(stderr,"\x1B[32mDebug: \033[0m");
+  vfprintf(stderr, msg, args);
+  va_end(args);
+  return;
+}

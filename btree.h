@@ -15,6 +15,7 @@
 #include <string.h>
 #include "io.h"
 #include "strings.h"
+#include "ilist.h"
 
 /*  Struktura pro binarni strom
  * --------------------------------------------------------------------
@@ -34,7 +35,8 @@ struct node
 
 typedef struct
 {
-  struct node * root;
+  struct node * local;
+  struct node * global;
 } btree;
 
 /*   Data v uzlu pro funkci
@@ -45,35 +47,35 @@ typedef struct
 struct funcParam
 {
   char keyValue[BUFSIZE];
-  void * data;
   key type;
   struct funcParam * next;
 };
 
 typedef struct
 {
-  unsigned int numberOfParams;
-  btree * localTable;
-  key retVal;
-  struct funcParam * param;
-  bool defined;
+  key retVal; // navratova hodnota
+  btree * table; // lokalni tablulka symbolu
+  struct funcParam * param; // linearni seznam parametru
+  tListOfInstr ilist; // list instrukci funkce
+  bool defined; // byla definovana?
 } funcData;
 
 
 /*   Vytvoreni tabulky symbolu
  * ---------------------------------------------------------------------
  * - lze provest jednoduchym, lec ucinnym
- *   struct node * root = NULL;
+ *   struct node * global = NULL;
  */
 void SymbolTableInit(btree * table);
+void SymbolTableInitLocal(btree * table, btree * global);
 
 /*   Vytvoreni uzlu z dat
  * ---------------------------------------------------------------------
  * - z poskytnutych dat vytvorim uzel pro tabulku symbolu
  * - vytvatim uzly pro promenne a pro funkce
  */
-struct node * SymbolTableCreateNode(char * name, key type);
-struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, unsigned int count, bool defined);
+struct node * SymbolTableCreateNode(char * name, key type, void * data);
+struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, bool defined);
 
 /*   Vlozeni noveho prvku do tabulky symbolu
  * ---------------------------------------------------------------------
@@ -90,6 +92,7 @@ int __SymbolTableInsert(struct node ** leaf, struct node * insert);
  */
 int SymbolTableDispose(btree * table);
 int __SymbolTableDispose(struct node ** leaf);
+int FunctionParamsListDispose(struct funcParam * paramList);
 
 /*   Vyhledani prvku v tabulce symbolu
  * ---------------------------------------------------------------------

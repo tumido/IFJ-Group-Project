@@ -348,7 +348,7 @@ int expression(FILE *in->file, btree *table, token *lex,node *data)
  */
 int declareList(struct input * in, btree * table, token * lex)
 {
-  printErr("Deklarace promenych\n");
+  printDebug("Deklarace promenych\n");
   if ((lex->type != l_key) || (*((key *)lex->data) != k_var))
     return EXIT_SUCCESS; // nezacinam "var" -> konec
 
@@ -356,7 +356,7 @@ int declareList(struct input * in, btree * table, token * lex)
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;
   if (lex->type != l_id)
   {
-    if (lex->type == l_key) { printErr("Blok je prazdny\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key) { printDebug("Blok je prazdny\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -374,12 +374,12 @@ int declareList(struct input * in, btree * table, token * lex)
  */
 int declareListContent(struct input * in, btree * table, token * lex)
 {
-  printErr("Vytvarim promennou\n");
+  printDebug("Vytvarim promennou\n");
   int result;
 
   if (lex->type != l_id)
   {
-    if (lex->type == l_key) { printErr("Konec bloku promennych\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key) { printDebug("Konec bloku promennych\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -398,7 +398,7 @@ int declareListContent(struct input * in, btree * table, token * lex)
   if (lex->type != l_key) { return EXIT_SYNTAX_ERROR; }
 
   struct node * nd; // vytvorime zaznam v tabulce symbolu
-  if ((nd = SymbolTableCreateNode(tmp, *((key *)lex->data))) == NULL)
+  if ((nd = SymbolTableCreateNode(tmp, *((key *)lex->data), NULL)) == NULL)
   {
     __SymbolTableDispose(&nd);
     return EXIT_INTERNAL_ERROR;
@@ -418,18 +418,18 @@ int declareListContent(struct input * in, btree * table, token * lex)
  * - zprostredkuje deklaraci promenne a jeji ulozeni do tabulky symbolu
  * - na vstupu mam token s identifikatorem
  *
- *   <declareListContent> -> "id" ":" "type" ";" <declareListContent>
- *   <declareListContent> -> "id" ":" "type" ")"
+ *   <paramsList> -> "id" ":" "type" ";" <paramsList>
+ *   <paramsList> -> "id" ":" "type"
  */
-int paramsList(struct input * in, token * lex, unsigned int * count, struct funcParam ** param)
+int paramsList(struct input * in, token * lex, struct funcParam ** param)
 {
-  printErr("Vytvarim promennou\n");
+  printDebug("Vytvarim promennou\n");
   int result;
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id)
   {
-    if (lex->type == l_rparenth) { printErr("Konec bloku parametru\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_rparenth) { printDebug("Konec bloku parametru\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -451,8 +451,7 @@ int paramsList(struct input * in, token * lex, unsigned int * count, struct func
 
   (*param)->type = *(key *)lex->data;
   (*param)->next = NULL;
-  (*count)++;
-  printErr("Vytvarim parametr funkce\n");
+  printDebug("Vytvarim parametr funkce\n");
 
   // Nasleduje ";" nebo ")" podle toho se uvidi co dal
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -460,21 +459,22 @@ int paramsList(struct input * in, token * lex, unsigned int * count, struct func
   if (lex->type == l_rparenth) return EXIT_SUCCESS; // je to zavorka -> konec
   else if (lex->type != l_endl) return EXIT_SYNTAX_ERROR; // musi to byt strednik
 
-  return paramsList(in, lex, count, &((*param)->next));
+  return paramsList(in, lex, &((*param)->next));
 }
 
 /*   Deklarace funkce
  * ---------------------------------------------------------------------
  * - zpracuje deklaraci funkce, ulozi jeji identifikator, a parametry 
- *   <function> -> "function" "id" "(" <paramList> ":" "typ" ";" <forward>
+ *   <function> -> "function" "id" "(" <paramList> ")" ":" "typ" ";" <forward>
  *   <function> -> eps
  *   <forward> -> "forward" ";"
  *   <forward> -> <declareList> <body> ";" <function>
  */
 int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
-  printErr("Funkce\n");
-  int result;
+  printDebug("Funkce\n");
+  int result = EXIT_SUCCESS;
+  struct node * nd = NULL; // vytvorime zaznam v tabulce symbolu
 
   // Prvni token musi byt klicove slovo "function"
   if ((lex->type != l_key)  || (*(key *)lex->data != k_function ))
@@ -483,7 +483,10 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   // Dalsi token musi byt ID, ktere si musim zatim zalohovat
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
-  if (SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
+  if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) != NULL) &&
+      ((nd->type != k_function) || ((funcData *)nd->data)->defined))
+    // pokud uz je identifikator v tabulce a pritom to neni funkce (ktera jeste nebyla definovana) -> chyba
+    return EXIT_SYNTAX_ERROR;
 
   char tmp[BUFSIZE];
   strncpy(tmp, ((string *)lex->data)->str, BUFSIZE);
@@ -492,10 +495,34 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth ) { return EXIT_SYNTAX_ERROR; }
 
-  //zpracuju parametry MUSI SE DORESIT LOKALNI TABULKY
-  unsigned int count = 0;
-  struct funcParam * firstParam;
-  if ((result = paramsList(in, lex, &count, &firstParam)) != EXIT_SUCCESS) return result;
+  //zpracuju parametry
+  struct funcParam * firstParam = NULL;
+  if ((result = paramsList(in, lex, &firstParam)) != EXIT_SUCCESS) return result;
+  printDebug("Parametry funkce zpracovany\n");
+
+  struct funcParam * paramDecl, * paramDef;
+  // pokud byla uz dopredu deklarovana a ted je jeji definice, pak musi sedet parametry
+  if (nd != NULL)
+  {
+    printDebug("Nalezen drive definovany prototyp\n");
+    paramDecl = firstParam;
+    paramDef = ((funcData *)nd->data)->param;
+    while (paramDecl != NULL || paramDef != NULL) // zkontroluju obsah jednotlivych parametru
+    {
+      if ((paramDecl->type != paramDef->type) || (strcmp(paramDecl->keyValue, paramDef->keyValue) != EXIT_SUCCESS))
+        break;
+      paramDecl = paramDecl->next;
+      paramDef = paramDef->next;
+    }
+    if (paramDecl != NULL && paramDef != NULL) result = EXIT_SEMANTIC_ERROR; // nemaji stejny pocet parametru
+
+    if (result != EXIT_SUCCESS) // prototyp neodpovida nove deklaraci -> smazat parametry a konec
+    {
+      FunctionParamsListDispose(firstParam);
+      return result;
+    }
+    printDebug("Parametry sedi s prototypem\n");
+  }
 
   // Dalsi token musi byt dvojtecka
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -509,6 +536,12 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
       (*(key *)lex->data != k_string)))
     return EXIT_SYNTAX_ERROR;
 
+  if ((nd != NULL) && (*(key *)lex->data != ((funcData *)nd->data)->retVal)) // navratova hodnota prototypu neodpovida deklaraci -> smazat parametry a konec
+  {
+    printDebug("Jiny navratovy typ\n");
+    FunctionParamsListDispose(firstParam);
+    return EXIT_SEMANTIC_ERROR;
+  }
   key type = *(key *)lex->data; // ulozit pro pozdejsi pouziti
 
   // Nasleduje ";"
@@ -521,16 +554,17 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 
   bool defined = false;
   if (*(key *)lex->data != k_forward) defined = true;
-  printErr("Pocet parametru funkce: %d\n", count);
-  struct node * nd; // vytvorime zaznam v tabulce symbolu
-  if ((nd = SymbolTableCreateFunctionNode(tmp, type, firstParam, count, defined)) == NULL)
+
+  // jeden prototyp uz je a ja vytvarim druhy
+  if (nd != NULL && defined == false)
   {
-    for (unsigned int i = 0; i < count; i++)
-    {
-      firstParam = ((funcData *)nd->data)->param;
-      ((funcData *)nd->data)->param = ((funcData *)nd->data)->param->next;
-      free(firstParam);
-    }
+    printDebug("Nova deklarace prototypu funkce\n");
+    FunctionParamsListDispose(firstParam);
+    return EXIT_SEMANTIC_ERROR;
+  }
+
+  if ((nd = SymbolTableCreateFunctionNode(tmp, type, firstParam, defined)) == NULL)
+  { // pokud selze vytvoreni uzlu funkce
     __SymbolTableDispose(&nd);
     return EXIT_INTERNAL_ERROR;
   }
@@ -539,192 +573,128 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 
   if (*(key *)lex->data == k_forward) // token je "forward", potrebuju ";"
   {
+    printDebug("Dopredna deklarace\n");
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   }
   else
   {
-    if (((result = declareList(in, table, lex)) != EXIT_SUCCESS) ||
-        ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS))
-      return result;
+    printDebug("Definice funkce\n");
+    listInit(&(((funcData *)nd->data)->ilist));
+    SymbolTableInitLocal(((funcData *)nd->data)->table, table);
+    if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
+        ((result = body(in, table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
+      { SymbolTableDispose(((funcData *)nd->data)->table); return result; }
   }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return function(in, table, ilist, lex);
 }
 
+/*   Rekurzivni zpracovani promennych v deklaraci funkce
+ * ---------------------------------------------------------------------
+ * - necha zpracovat deklaraci promenne, strednik a rekurzivne pokracuje
+ * - zprostredkuje deklaraci promenne a jeji ulozeni do tabulky symbolu
+ * - na vstupu mam token s identifikatorem
+ *
+ *   <paramsCall> -> "id" "," <paramsCall>
+ *   <paramsCall> -> "id"
+ */
+int paramsCall(struct input * in, btree * table, token * lex, funcData * function, struct funcParam * param)
+{
+  printDebug("Zpracovavam parametry volani\n");
+  int result;
+
+  if (param == NULL) { printDebug("Vsechny argumenty nacteny\n"); return EXIT_SUCCESS; } // mam spravny pocet parametru -> konec
+
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+
+  struct node * nd, * new;
+  switch (lex->type)
+  {
+    case l_id: // prisel identifikator, musim ho najit (a musi byt stejneho typu) v tabulce a pouzit jeho hodnotu
+      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || (nd->type != param->type))
+        return EXIT_SEMANTIC_ERROR;
+      if ((new = SymbolTableCreateNode(param->keyValue, nd->type, nd->data)) == NULL)
+      {
+        __SymbolTableDispose(&new);
+        return EXIT_INTERNAL_ERROR;
+      }
+      SymbolTableInsert(function->table, new); // vlozime nove vytvoreny symbol se zkopirovanou hodnotou odkazovaneho
+      break;
+    case l_int:
+    case l_real:
+    case l_str:
+    default:
+      return EXIT_SYNTAX_ERROR;
+  }
+  printDebug("Parametr volani nacten\n");
+
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type != l_sep) return EXIT_SYNTAX_ERROR; // neni carka, ale nemam vsechny parametry -> chyba
+
+  return paramsCall(in, table, lex, function, param->next);
+}
 /*   Zpracovani prikazu programu
  * ---------------------------------------------------------------------
  * - zpracuju zde vsechna prirazeni, cykly, vestavne funkce, volani
  *   funkci, vetveni
  *
  *   <state> -> id := <expression>
- *   <state> -> id := id ( <term> )
+ *   <state> -> id := <call>
  *   <state> -> if <expression> then <body> ; else <body>
  *   <state> -> while <expression> do <body>
+ *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
 int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
-  return EXIT_INTERNAL_ERROR;
-/*  int result;
+  printDebug("Zpracovavam prikaz\n");
+  int result = EXIT_SUCCESS;
 
+  return EXIT_SYNTAX_ERROR;
+  struct node * loc = NULL;
   switch (lex->type)
   {
-    // <stat> -> id := <expression>
-    // <stat> -> id := <term>
+    // <state> -> id := <expression>
+    // <state> -> id := <call>
     case (l_id):
-    // musim si ulozit data, kam se bude nacitat
-    // ++++++++++++ doplnit
-    // ++++++++++++ prohledat strom, jestli identifikator neexistuje
-    // ++++++++++++ tak je to sem. chyba
+      if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+        return EXIT_SEMANTIC_ERROR;
 
-    // dalsi znak musi byt :=
-    if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-    if (Token.type!=l_assign) return SYNTAX_ERROR;
+      // potrebuji ":="
+      if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+      if (lex->type != l_assign) return EXIT_SYNTAX_ERROR;
 
-    // dalsi token je budto expression nebo id funkce
-    if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-    // pokud je to id
-    // vestavene funkce by bylo asi nejlepsi hned vlozit do stromu
-    // +++++++++++++++++++++++++++++
-    // zatim to neresim, pak doplnim
-    if (Token.type==l_id || Token.type==l_key )
-    {
-       // vim ze dalsi token musi byt zavorka
-       if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-       if (Token.type!= l_lparenth) return SYNTAX_ERROR;
-
-       if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-       // ++++++++++++++++++++++++
-       // ted ocekavame TERM, funkci dopisu pak ji sem dam
-
-    }
-    else
-    {
-    // ted co?? Zdola nahoru SA zkontrolovat expression ?
-    // pak generovat kod?
-    // +++++++++++++ musime doplnit
-
-    }
-    return result;
-    break;
-
-    // nacetly jsme klicove slovo
-    // tzn ze by to melo byt cyklus while nebo if
-    // nebo readln nebo write
+      // bud nasleduje identifikator nebo expression
+      //  evalExpression();
+      break;
+    // <state> -> if <expression> then <body> ; else <body>
+    // <state> -> while <expression> do <body>
+    // <state> -> write ( <type> )
+    // <state> -> readln ( <type> )
     case (l_key):
-    // pokud se jedna o cyklus if
-     if (strcmp("if",Token.data)==EXIT_SUCCESS)
-     { //++++++++++++++++++++++++++++++++++++
-       // dalsi musi byt expression
-       // tady to musim doplnit, ukladani do tab.symbolu
-       // generovat vyraz
-       // vysledek vyrazu si musim ulozit
-       //  ++++++++++++++++++++++++++++++
+      switch (*(key *)lex->data)
+      {
+        case k_if:
+          // vyhodnoceni podminky
+        //  if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
+        //      ((result = evalExpression()) != EXIT_SUCCESS))
+        //  { return result; }
+        //  
 
-       // zkontrolovat dalsi token musi byt then
-       // nactu dalsi token
-       // ted zavolam body
-       // tady se musi resit skoky atd.
-       // KURVAAAAA boli me uz hlava
-       // generovat a srat se se skokama
-       //dalsi token else
-       //++++++++++++++++++++++++++++++++++++++++++
-     }
-
-     //<state> -> while <expression> do <body> ;
-     else if (strcmp ("while",((string * )Token.data)->str )==EXIT_SUCCESS)
-     {
-
-      // dalsi token co nas ceka je vyraz
-      // to dame pak zpracovat SA zdola nahoru
-      // nejdriv nagenerujeme instrukci navesti
-
-      if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      // vygenerujeme instrukci navesti
-      if(generateInstruction(I_LAB, NULL, NULL, NULL)) return INTER_ERROR;
-      // ted potrebujeme ulozit adresu za WHILE
-      void *addrLab1;
-      addrLab1 = listGetPointerLast (list) ; // vraci nam ukazatel na posledni instukci
-
-      // potrebujeme unikatni nazev promenne
-      if ((result=tokenDetailInit(zaloh))!= EXIT_SUCCESS) return INTER_ERROR;
-      if(generateVariable(&zaloh))   return INTER_ERROR;
-      //++++++++++++++++++++++++++++++
-      // tady bych si mel ulozit promennou
-      // varInfo= tady bych si mel ulozit adresu s daty
-      tokenDetailFree(&zaloh); // uvolnim nazev
-      //
-      // ++++++++++++++++++++++++++++++++++++
-      //ted tu musi byt uz cteni EXPRESSION
-      // Zdola nahoru
-
-      //  Musime si vygenerovat instrukci pod.skoku a ulozit si adresu
-      void *addrIfNotGoto;
-
-      if(generateInstruction(I_IFNOTGOTO, (void*) varInfo, NULL, NULL))return INTER_ERROR;
-      addrIfNotGoto = listGetPointerLast (list);
-
-      //nevim jestli nacitat dalsi token nebo ho dostanu od READEXPRESSION funkce
-      // kazdopadne dalsi token musi byt DO
-      if (strcmp(Token.data, "do")!= EXIT_SUCCESS) return SYNTAX_ERROR;
-
-      // dalsi token musi byt slozeny prikaz, zavolame begin
-      if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-      result = body();
-      if (result != EXIT_SUCCESS) return result;
-
-      // je potreba ted instrukce skoku
-      // skoci za while nad adressu Lab1
-      if (generateInstuction (I_GOTO,NULL,NULL, (void*)addrLab1)) return INTER_ERROR;
-
-      //musime si udelat navesti kam to ma skocit kdyz podminka neplati
-      if(generateInstruction(I_LAB, NULL, NULL, NULL)) return INTER_ERROR;
-
-      void *addrLab2;
-      addrLab2= listGetPointerLast(list); // ukazatel je nyni za posledni instrukci
-
-      // zname adresu 2 navesti
-      // nastavime aktualni instrukci
-
-      listGoto(list,addrIfNotGoto);
-      tInstr *data;
-      data=listGetData(list);
-      data->addr3= addrOfLab2;
-
-      return EXIT_SUCCESS;
-
-     }
-     else if (strcmp ("readln",Token.data)==EXIT_SUCCESS)
-     {
-         // vim ze dalsi token je zavorka (
-         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (Token.type != l_lparenth) return SYNTAX_ERROR;
-
-         // nacteme dalsi token
-         // vime ze podle pravidla tady musi byt typ
-         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         // to musim jeste nejdriv dopsat ten type..
-         //return type();
-     }
-     else if (strcmp ("write",Token.data)==EXIT_SUCCESS)
-     {
-         // vim ze dalsi token je zavorka (
-         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         if (Token.type != l_lparenth) return SYNTAX_ERROR;
-
-         // nacteme dalsi token
-         // vime ze podle pravidla tady musi byt <term>
-         if (result=fillToken (in->file,Token) == EXIT_LEXICAL_ERROR)  return LEX_ERROR;
-         // to musim jeste nejdriv dopsat ten type..
-         //return term();
-     }
-     else return SYNTAX_ERROR;
-     break;
-     default break;
-
-  } */ printErr("Zpracovavam prikaz\n"); return EXIT_SUCCESS;
-
-
+        case k_while:
+        case k_write:
+        case k_readln:
+        default:
+          result = EXIT_SYNTAX_ERROR;
+          break;
+      }
+      break;
+    default:
+      result = EXIT_SYNTAX_ERROR;
+      break;
+  }
+  return result;
 }
 
 /*   Blok kodu
@@ -739,7 +709,7 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
   int result;
-  printErr("Zacatek noveho prikazu\n");
+  printDebug("Zacatek noveho prikazu\n");
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
@@ -765,7 +735,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  */
 int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
-  printErr("Zacatek hlavniho kodu programu\n");
+  printDebug("Zacatek hlavniho kodu programu\n");
   int result;
   if (((result = fillToken(in, lex)) != EXIT_SUCCESS) ||
       // naplneny token, pokud nic neselze
@@ -774,8 +744,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
       ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS))
       // a projde telo programu -> pokud cokoliv z toho selze, vraci error
     return result;
-
-        printErr("Konec Programu");
+  printDebug("Konec Programu");
   if ((lex->type != l_key) || (*(key *)lex->data != k_end))
     return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
@@ -793,7 +762,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
  */
 int parser(struct input * in, btree * table, tListOfInstr * ilist)
 {
-  printErr("Spoustim Parser\n");
+  printDebug("Spoustim Parser\n");
   token lex;
   int result = EXIT_SUCCESS;
 
@@ -826,6 +795,7 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
     }
   }
 
+  if (result == EXIT_SEMANTIC_ERROR) printErr("SEMANTIC ERROR on line %d: Check your program once more, please, wrong type assignment or use of undeclared variable.\n", in->line);
   if (result == EXIT_SYNTAX_ERROR) printErr("SYNTAX ERROR on line %d: Check your program once more, please.\n", in->line);
   if (result == EXIT_INTERNAL_ERROR) printErr("INTERNAL ERROR on line %d: Something really bad happend. This is not your fault.\n", in->line);
   tokenFree(&lex);

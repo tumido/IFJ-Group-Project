@@ -54,7 +54,7 @@
 void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist);
 int declareList(struct input * in, btree * table, token * lex);
 int declareListContent(struct input * in, btree * table, token * lex);
-int paramsList(struct input * in, token * lex, unsigned int * count, struct funcParam ** param);
+int paramsList(struct input * in, token * lex, struct funcParam ** param);
 int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
 int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
 int parser(struct input * in, btree * table, tListOfInstr * ilist);

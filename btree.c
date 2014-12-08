@@ -14,11 +14,16 @@
 /*   Vytvoreni tabulky symbolu
  * ---------------------------------------------------------------------
  * - lze provest jednoduchym, lec ucinnym
- *   struct node * root = NULL;
+ *   struct node * global = NULL;
  */
 void SymbolTableInit(btree * table)
 {
-  table->root = NULL;
+  table->global = table->local = NULL;
+}
+void SymbolTableInitLocal(btree * table, btree * global)
+{
+  table->global = global->local;
+  table->local = NULL;
 }
 
 /*   Vytvoreni uzlu z dat
@@ -26,7 +31,7 @@ void SymbolTableInit(btree * table)
  * - z poskytnutych dat vytvorim uzel pro tabulku symbolu
  * - vytvatim uzly pro promenne a pro funkce
  */
-struct node * SymbolTableCreateNode(char * name, key type)
+struct node * SymbolTableCreateNode(char * name, key type, void * data)
 {
   struct node * nd;
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
@@ -39,12 +44,15 @@ struct node * SymbolTableCreateNode(char * name, key type)
   {
     case k_int:
       nd->data = (int *) malloc(sizeof(int));
+      if (data != NULL) *((int *)nd->data) = *(int *)data;
       break;
     case k_real:
       nd->data = (double *) malloc(sizeof(double));
+      if (data != NULL) *((double *)nd->data) = *(double *)data;
       break;
     case k_string:
       nd->data = (string *) malloc(sizeof(string));
+      if (data != NULL) *((string *)nd->data) = *(string *)data; // kopirovani stringu ??
       break;
     default:
       free(nd);
@@ -52,11 +60,11 @@ struct node * SymbolTableCreateNode(char * name, key type)
       break;
   }
   if (nd->data == NULL) {free(nd); return NULL;}
-  printErr("Novy uzel promenne vytvoren\n");
+  printDebug("Novy uzel promenne vytvoren\n");
   return nd;
 }
 
-struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, unsigned int count, bool defined)
+struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcParam * param, bool defined)
 {
   struct node * nd;
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
@@ -69,12 +77,11 @@ struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcPa
   if ((nd->data = (funcData *) malloc(sizeof(funcData))) == NULL) return NULL;
 
   ((funcData *)nd->data)->defined = defined;
-  ((funcData *)nd->data)->numberOfParams = count;
   ((funcData *)nd->data)->param = param;
   ((funcData *)nd->data)->retVal = type;
-  ((funcData *)nd->data)->localTable = NULL;
+  if ((((funcData *)nd->data)->table = (btree *) malloc(sizeof(btree))) == NULL) return NULL;
 
-  printErr("Novy uzel pro funkci vytvoren\n");
+  printDebug("Novy uzel pro funkci vytvoren\n");
   return nd;
 }
 
@@ -86,7 +93,7 @@ struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcPa
  */
 int SymbolTableInsert(btree * table, struct node * insert)
 {
-  return __SymbolTableInsert(&table->root, insert);
+  return __SymbolTableInsert(&table->local, insert);
 }
 
 int __SymbolTableInsert(struct node ** leaf, struct node * insert)
@@ -103,12 +110,12 @@ int __SymbolTableInsert(struct node ** leaf, struct node * insert)
 
 /*   Zruseni tabulky symbolu
  * ---------------------------------------------------------------------
- * - zrusi tabulku symbolu (nerekurzivne z duvodu rychlosti) -> upravit
+ * - zrusi lokalni tabulku symbolu (nerekurzivne z duvodu rychlosti) -> upravit
  */
 int SymbolTableDispose(btree * table)
 {
-  __SymbolTableDispose(&table->root);
-  table->root = NULL;
+  __SymbolTableDispose(&table->local);
+  table->local = NULL;
   return EXIT_SUCCESS;
 }
 
@@ -123,18 +130,25 @@ int __SymbolTableDispose(struct node ** leaf)
 
     if ((*leaf)->type == k_function)
     {
-      struct funcParam * param;
-      for (unsigned int i = 0; i < ((funcData *)(*leaf)->data)->numberOfParams; i++)
-      {
-        printErr("Mazu Parametr\n");
-        param = ((funcData *)(*leaf)->data)->param;
-        ((funcData *)(*leaf)->data)->param = ((funcData *)(*leaf)->data)->param->next;
-        free(param);
-      }
+      FunctionParamsListDispose(((funcData *)(*leaf)->data)->param);
+      free(((funcData *)(*leaf)->data)->table);
     }
 
     free((*leaf)->data);
     free(*leaf);
+  }
+  return EXIT_SUCCESS;
+}
+
+int FunctionParamsListDispose(struct funcParam * paramList)
+{
+  struct funcParam * param;
+  while (paramList != NULL)
+  {
+    printDebug("Mazu Parametr\n");
+    param = paramList;
+    paramList = paramList->next;
+    free(param);
   }
   return EXIT_SUCCESS;
 }
@@ -145,7 +159,9 @@ int __SymbolTableDispose(struct node ** leaf)
  */
 struct node * SymbolTableSearch(btree * table, char * key)
 {
-  return __SymbolTableSearch(table->root, key);
+  struct node * found = __SymbolTableSearch(table->local, key);
+  if (found == NULL) return __SymbolTableSearch(table->global, key);
+  return found;
 }
 
 struct node * __SymbolTableSearch(struct node * leaf, char * key)

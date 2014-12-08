@@ -29,5 +29,6 @@
 #define EXIT_INTERNAL_ERROR 99
 
 void printErr(const char * msg, ...);
+void printDebug(const char * msg, ...);
 
 #endif
