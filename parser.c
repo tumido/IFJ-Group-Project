@@ -733,11 +733,12 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
         case k_while: return embededWhile(in, table, ilist, lex);
         case k_write: return embededFuncWrite(in, table, ilist, lex);
         case k_readln: return embededFuncReadln(in, table, ilist, lex);
-        default: return EXIT_SYNTAX_ERROR;
+        default: return  EXIT_SYNTAX_ERROR;
       }
       break;
     default: return EXIT_SYNTAX_ERROR;
   }
+
   return EXIT_SUCCESS;
 }
 
@@ -762,8 +763,13 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
 
   // pokud dalsi token je strednik tzn ze bude
   // nasledovat dalsi prikaz
+  if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
   if (lex->type == l_endl)
+  {
+    printDebug("Nasleduje prikaz\n");
+    if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
     return statements(in, table, ilist, lex);
+  }
   // pokud uz strednik nebude
   // za poslednim prikazem nema byt strednik
   // tzn ze se vratime do body
@@ -861,18 +867,17 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
   int result = EXIT_SUCCESS;
   struct node * loc;
   printDebug("Write\n");
-  // potrebuju "write"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_write) return EXIT_SYNTAX_ERROR;
+  // mam "write"
   // potrebuju "("
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
   // potrebuju zpracovat n parametru (dokud mi je token id nebo hodnota volam)
   void * data;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  while (lex->type == l_id || (lex->type == l_key &&
+  while (lex->type == l_id || lex->type == l_sep || (lex->type == l_key &&
         (*(key *)lex->data == k_int || *(key *)lex->data == k_real || *(key *)lex->data == k_string)))
   {
+    if (lex->type == l_sep) continue;
     if (lex->type == l_id)
     {
       if (((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || loc->type == k_function)
@@ -881,9 +886,9 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
     }
     else data = lex->data;
     // generateInstruction();
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   // potrebuju ")"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
   return result;
 }
@@ -898,16 +903,13 @@ int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, to
   int result = EXIT_SUCCESS;
   struct node * loc;
   printDebug("Readln\n");
-  // potrebuju "Readln"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_readln) return EXIT_SYNTAX_ERROR;
   // potrebuju "("
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
   // potrebuju id
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
-  if (((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL))
+  if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
     return EXIT_SEMANTIC_ERROR;
   // potrebuju ")"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -1018,9 +1020,7 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
 {
   int result = EXIT_SUCCESS;
   printDebug("Cyklus\n");
-  // potrebuju "while"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_while) return EXIT_SYNTAX_ERROR;
+  // mam "while"
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL)) != EXIT_SUCCESS))

@@ -101,7 +101,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param);
 
 /*   Deklarace funkce
  * ---------------------------------------------------------------------
- * - zpracuje deklaraci funkce, ulozi jeji identifikator, a parametry 
+ * - zpracuje deklaraci funkce, ulozi jeji identifikator, a parametry
  *   <function> -> "function" "id" "(" <paramList> ")" ":" "typ" ";" <forward>
  *   <function> -> eps
  *   <forward> -> "forward" ";"
