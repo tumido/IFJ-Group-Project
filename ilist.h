@@ -35,6 +35,16 @@ typedef struct
   struct listItem *active; // ukazatel na aktivni prvek
 } tListOfInstr;
 
+/*
+ * pro funkci COPY je potreba aby operand2 (addr2) byla struktura o dvou prvcich
+ * moje otazka na TOMA, muzuju pouzit tento zpusob?
+ */
+typedef struct copy
+{
+  int start;
+  int legth;
+}tCopy;
+
 void listInit(tListOfInstr *L); // funkce inicializuje seznam instrukci
 void listFree(tListOfInstr *L); // funkce dealokuje seznam instrukci
 int listInsertLast(tListOfInstr *L, tInstr I); // vlozi novou instruci na konec seznamu
