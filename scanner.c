@@ -80,9 +80,7 @@ int strToInt(token * lex)
   *(((long int *) lex->data)) = strtol(oldData->str, &tail, BASE);
   free(oldData->str);
   free(oldData);
-  if (strcmp(tail, "") == EXIT_SUCCESS)
-    return EXIT_SUCCESS;
-  return EXIT_INTERNAL_ERROR;
+  return EXIT_SUCCESS;
 }
 
 /*   Prevod na double
@@ -98,9 +96,7 @@ int strToDouble(token * lex)
   *(((double *) lex->data)) = strtod(oldData->str, &tail);
   free(oldData->str);
   free(oldData);
-  if (strcmp(tail, "") == EXIT_SUCCESS)
-    return EXIT_SUCCESS;
-  return EXIT_INTERNAL_ERROR;
+  return EXIT_SUCCESS;
 }
 
 /*   Kontrola klicovych slov
@@ -148,7 +144,7 @@ int fillToken(struct input * in, token * lex)
   {
     z = fgetc(in->file);
 
-    if (z == '\n') (in->line)++;
+    if (z == '\n') (in->line)++; // nepresne, obcas o jeden radek mimo, pokud bude cas, muzem si hrat...
     switch(state)
     {
       case s_begin: // zakladni stav automatu, za zaklade pismene rozhodne co by to mohlo byt za lexem
@@ -176,8 +172,6 @@ int fillToken(struct input * in, token * lex)
             case ':': state = s_colon; break;
             case '(': read = false; lex->type = l_lparenth; break;
             case ')': read = false; lex->type = l_rparenth; break;
-            case '[': read = false; lex->type = l_lbracket; break;
-            case ']': read = false; lex->type = l_rbracket; break;
             default: read = false; retVal = EXIT_LEXICAL_ERROR;
           }
         }

@@ -395,7 +395,12 @@ int declareListContent(struct input * in, btree * table, token * lex)
 
   // Dalsi token musi byt datovy typ
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key) { return EXIT_SYNTAX_ERROR; }
+  if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
+      ((*(key *)lex->data != k_int) &&
+      (*(key *)lex->data != k_bool) &&
+      (*(key *)lex->data != k_real) &&
+      (*(key *)lex->data != k_string)))
+    return EXIT_SYNTAX_ERROR;
 
   struct node * nd; // vytvorime zaznam v tabulce symbolu
   if ((nd = SymbolTableCreateNode(tmp, *((key *)lex->data), NULL)) == NULL)
@@ -445,6 +450,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param)
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
       ((*(key *)lex->data != k_int) &&
+      (*(key *)lex->data != k_bool) &&
       (*(key *)lex->data != k_real) &&
       (*(key *)lex->data != k_string)))
     return EXIT_SYNTAX_ERROR;
@@ -478,7 +484,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 
   // Prvni token musi byt klicove slovo "function"
   if ((lex->type != l_key)  || (*(key *)lex->data != k_function ))
-    return EXIT_SUCCESS;
+    { printDebug("Konec bloku deklarace funkci\n"); return EXIT_SUCCESS; }
 
   // Dalsi token musi byt ID, ktere si musim zatim zalohovat
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -532,6 +538,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if ((lex->type != l_key ) || // neni to klic nebo to neni ani jeden typ
       ((*(key *)lex->data != k_int) &&
+      (*(key *)lex->data != k_bool) &&
       (*(key *)lex->data != k_real) &&
       (*(key *)lex->data != k_string)))
     return EXIT_SYNTAX_ERROR;
@@ -580,11 +587,13 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   else
   {
     printDebug("Definice funkce\n");
+    // inicializuju ilist a TS funkce
     listInit(&(((funcData *)nd->data)->ilist));
     SymbolTableInitLocal(((funcData *)nd->data)->table, table);
+    // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
     if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
         ((result = body(in, table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
-      { SymbolTableDispose(((funcData *)nd->data)->table); return result; }
+      return result;
   }
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return function(in, table, ilist, lex);
@@ -634,15 +643,66 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
 
   return paramsCall(in, table, lex, function, param->next);
 }
+
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
+{
+  printDebug("Vyhodnoceni vyrazu << NAMAPOVAT NA JURUV KOD\n");
+  return EXIT_INTERNAL_ERROR;
+}
+
+/*   Volani funkce
+ * ---------------------------------------------------------------------
+ *   <callFunction> -> id "(" <paramsCall> ")"
+ */
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
+{
+  int result = EXIT_SUCCESS;
+  printDebug("Volani funkce\n");
+  struct node * nd;
+  if (lex->type == l_id)
+  {
+    // musim overit, ze identifikator existuje a je funkce
+    if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || (nd->type != k_function) || (((funcData *)nd->data)->defined) == false)
+      return EXIT_SEMANTIC_ERROR;
+    // nactu oteviraci zavorku
+    if (nextLex != NULL)
+    {
+      if (nextLex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
+    } else
+    {
+      if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+      if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
+    }
+    // zpracovani parametru
+    if ((result = paramsCall(in, table, lex, (funcData *)nd->data, ((funcData *)nd->data)->param)) != EXIT_SUCCESS)
+      return result;
+    // nacteme pravou zavorku a konec
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+    if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
+    return EXIT_SUCCESS;
+  }
+  else if (lex->type == l_key)
+  {
+    switch (*(key *)lex->data)
+    {
+      case k_sort:
+      case k_find:
+      default:
+        return EXIT_SYNTAX_ERROR;
+    }
+  }
+  return EXIT_SYNTAX_ERROR;
+}
+
 /*   Zpracovani prikazu programu
  * ---------------------------------------------------------------------
  * - zpracuju zde vsechna prirazeni, cykly, vestavne funkce, volani
  *   funkci, vetveni
  *
- *   <state> -> id := <expression>
- *   <state> -> id := <call>
- *   <state> -> if <expression> then <body> ; else <body>
- *   <state> -> while <expression> do <body>
+ *   <state> -> id := <evalExpression>
+ *   <state> -> id := <callFunction>
+ *   <state> -> if <evalExpression> then <body> ; else <body>
+ *   <state> -> while <evalExpression> do <body>
  *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
@@ -651,13 +711,13 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
   printDebug("Zpracovavam prikaz\n");
   int result = EXIT_SUCCESS;
 
-  return EXIT_SYNTAX_ERROR;
   struct node * loc = NULL;
   switch (lex->type)
   {
-    // <state> -> id := <expression>
+    // <state> -> id := <evalExpression>
     // <state> -> id := <call>
     case (l_id):
+      printDebug("Prirazeni\n");
       if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
         return EXIT_SEMANTIC_ERROR;
 
@@ -665,26 +725,106 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
       if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
       if (lex->type != l_assign) return EXIT_SYNTAX_ERROR;
 
-      // bud nasleduje identifikator nebo expression
-      //  evalExpression();
+      // nasleduje bud id -> volam <callFunction>, jinak <evalExpression>
+      if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+      // je to vestavna funkce s navratovou hodnotou volam
+      if (lex->type == l_key && (*(key *)lex->data == k_sort || *(key *)lex->data == k_find)) result = callFunction(in, table, ilist, lex, NULL);
+      else if (lex->type == l_id) // mam identifikator, ale jeste nevim, jestli chci vyhodnocovat vyraz nebo volat funkci
+      {
+        token tmp; // pokud bude dalsi token zavorka volam funkci
+        tokenInit(&tmp);
+        if ((result = fillToken(in,&tmp)) != EXIT_SUCCESS){ return result; }
+        if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp);
+        else result = evalExpression(in, table, ilist, lex, &tmp);
+        tokenFree(&tmp);
+      }
+      else result = evalExpression(in, table, ilist, lex, NULL); // jinak (je to hodnota, cokoliv) volan evalExpression
+
+      if (result != EXIT_SUCCESS) return result;
+
+      // generateInstruction();
+      return EXIT_SYNTAX_ERROR;
+
       break;
-    // <state> -> if <expression> then <body> ; else <body>
-    // <state> -> while <expression> do <body>
+    // <state> -> if <evalExpression> then <body> ; else <body>
+    // <state> -> while <evalExpression> do <body>
     // <state> -> write ( <type> )
     // <state> -> readln ( <type> )
     case (l_key):
       switch (*(key *)lex->data)
       {
         case k_if:
+          printDebug("Vetveni\n");
           // vyhodnoceni podminky
-        //  if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-        //      ((result = evalExpression()) != EXIT_SUCCESS))
-        //  { return result; }
-        //  
-
+          if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
+              ((result = evalExpression(in, table, ilist, lex, NULL)) != EXIT_SUCCESS))
+            { return result; }
+          // nasleduje "then"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_then) return EXIT_SYNTAX_ERROR;
+          //nasledovat musi begin
+          if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+          if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
+          if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+          // pak ";"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
+          // pak "else"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_else) return EXIT_SYNTAX_ERROR;
+          //nasledovat musi begin
+          if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+          if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
+          if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+          break;
         case k_while:
+          printDebug("Cyklus\n");
+          // potrebuju "while"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_while) return EXIT_SYNTAX_ERROR;
+          // vyhodnoceni podminky
+          if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
+              ((result = evalExpression(in, table, ilist, lex, NULL)) != EXIT_SUCCESS))
+            { return result; }
+          // potrebuju "do"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_do) return EXIT_SYNTAX_ERROR;
+          //nasledovat musi begin
+          if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+          if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
+          if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+          // jump back na podminku
+          break;
         case k_write:
+          printDebug("Write\n");
+          // potrebuju "write"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_write) return EXIT_SYNTAX_ERROR;
+          // potrebuju "("
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
+          // potrebuju id nebo hodnotu
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
+          // potrebuju ")"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
+          break;
         case k_readln:
+          printDebug("Readln\n");
+          // potrebuju "Readln"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_key && *(key *)lex->data != k_readln) return EXIT_SYNTAX_ERROR;
+          // potrebuju "("
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
+          // potrebuju id
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
+          // potrebuju ")"
+          if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+          if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
+          break;
         default:
           result = EXIT_SYNTAX_ERROR;
           break;
@@ -735,16 +875,19 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  */
 int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 {
-  printDebug("Zacatek hlavniho kodu programu\n");
-  int result;
-  if (((result = fillToken(in, lex)) != EXIT_SUCCESS) ||
-      // naplneny token, pokud nic neselze
-   //   (strcmp("end", ((string *)lex->data)->str) == EXIT_SUCCESS) ||
-      // zkontroluje prazdne telo programu, kdy po "begin" nasleduje hned "end"
-      ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS))
-      // a projde telo programu -> pokud cokoliv z toho selze, vraci error
+  printDebug("Zacatek bloku kodu\n");
+  int result = EXIT_SUCCESS;
+  if ((result = fillToken(in, lex)) != EXIT_SUCCESS)
     return result;
-  printDebug("Konec Programu");
+  // naplneny token, pokud nic neselze
+  // zkontroluje prazdne telo programu, kdy po "begin" nasleduje hned "end"
+  if (lex->type == l_key && *(key *)lex->data == k_end )
+    { printDebug("Prazdny blok kodu\n"); return result; }
+  // a projde telo programu -> pokud cokoliv z toho selze, vraci error
+  if ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS)
+    return result;
+
+  printDebug("Konec bloku kodu\n");
   if ((lex->type != l_key) || (*(key *)lex->data != k_end))
     return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
 
@@ -777,6 +920,7 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
 
         if (((result = declareList(in, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
             ((result = function(in, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
+            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) || // nactu dalsi token (posun kvuli deklaracim funkci)
             ((result = body(in, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
         if (((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
@@ -795,7 +939,7 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
     }
   }
 
-  if (result == EXIT_SEMANTIC_ERROR) printErr("SEMANTIC ERROR on line %d: Check your program once more, please, wrong type assignment or use of undeclared variable.\n", in->line);
+  if (result == EXIT_SEMANTIC_ERROR) printErr("SEMANTIC ERROR on line %d: Variable type conflict, use of an undeclared variable or conflict redeclarations.\n", in->line);
   if (result == EXIT_SYNTAX_ERROR) printErr("SYNTAX ERROR on line %d: Check your program once more, please.\n", in->line);
   if (result == EXIT_INTERNAL_ERROR) printErr("INTERNAL ERROR on line %d: Something really bad happend. This is not your fault.\n", in->line);
   tokenFree(&lex);

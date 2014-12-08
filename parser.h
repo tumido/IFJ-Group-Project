@@ -14,6 +14,7 @@
 #include "scanner.h"
 #include "io.h"
 #include "ilist.h"
+//#include "interpret.h"
 //#include "ParStack.h"
 
 #define dINT 6
@@ -60,4 +61,6 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 int parser(struct input * in, btree * table, tListOfInstr * ilist);
 int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
 int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex);
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex);
 

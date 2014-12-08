@@ -46,6 +46,10 @@ struct node * SymbolTableCreateNode(char * name, key type, void * data)
       nd->data = (int *) malloc(sizeof(int));
       if (data != NULL) *((int *)nd->data) = *(int *)data;
       break;
+    case k_bool:
+      nd->data = (bool *) malloc(sizeof(bool));
+      if (data != NULL) *((bool *)nd->data) = *(bool *)data;
+      break;
     case k_real:
       nd->data = (double *) malloc(sizeof(double));
       if (data != NULL) *((double *)nd->data) = *(double *)data;
@@ -80,6 +84,8 @@ struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcPa
   ((funcData *)nd->data)->param = param;
   ((funcData *)nd->data)->retVal = type;
   if ((((funcData *)nd->data)->table = (btree *) malloc(sizeof(btree))) == NULL) return NULL;
+
+  SymbolTableInit(((funcData *)nd->data)->table);
 
   printDebug("Novy uzel pro funkci vytvoren\n");
   return nd;
@@ -130,6 +136,7 @@ int __SymbolTableDispose(struct node ** leaf)
 
     if ((*leaf)->type == k_function)
     {
+      SymbolTableDispose(((funcData *)(*leaf)->data)->table);
       FunctionParamsListDispose(((funcData *)(*leaf)->data)->param);
       free(((funcData *)(*leaf)->data)->table);
     }
