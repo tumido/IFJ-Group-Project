@@ -54,7 +54,7 @@ int returnValue(tVarValue *destination, tVarValue *source);
 /*
  * Interpretace konkretni instrukce
  */
-int instruction(tInst *);
+int instruction(tSymbolTable *ST, tListOfInstr *instrList);
 
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
@@ -74,4 +74,9 @@ int iWrite(tVarValue *source);
 /*
  * Funkce vykonava volani READ - cte ze stdin
  */
-int iRead();
+int iRead(tListOfInstr *L);
+
+/*
+ *Funkce vypise na stdout data ulozena na pozici instruction->addr1
+ */
+int iWrite(tListOfInstr *L);

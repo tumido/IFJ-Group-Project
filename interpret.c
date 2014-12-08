@@ -57,7 +57,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 {
   while(1);
   {
-    I = listGetData(instrList);
+    tInstr I = listGetData(instrList);
 
     switch (I->instType)
     {
@@ -81,12 +81,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * READ
  *
- * - I_READ, cil, zdroj, NULL
+ * - I_READ, zdroj, NULL, cil
  * - obsluhuje cteni ze stdin
  * - vola pomocnou funkci iRead
  */
       case I_READ:
-        iRead((operand1->data), (operand2->data));
+        iRead(I);
         break;
 
 /*
@@ -97,7 +97,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - vola pomocnou funkci iWrite
  */
       case I_WRITE:
-        iWrite(operand1->data);
+        iWrite(I);        //predavam promennou I, do ktere jsem na zacatku teto funkce ulozil aktivni instrukci
         break;
 
 /*
@@ -108,22 +108,31 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - zpracovava vyraz v podmince
  */
       case I_IF:
-        while (tListOfInstr->active != I_THEN) // dokud je co vyhodnocovat
+        while (I->instType != I_THEN) // dokud je co vyhodnocovat
         {
-          listNext(tListOfInstr *L); // posun na dalsi prvek seznamu
-          // ...
+          listNext(&instrList);                // posun na dalsi prvek seznamu
+          instruction(&ST, &instrList);
         }
-
-        // v tuto chvili mam skrze dalsi intrukce vyhodnocenou podminku,
-        // tudiz musim zjistit jak dopadla a podle toho se chovat
-
-        if(/* podminka pravdiva */)
+        listNext(&instrList)
+        if(/* podminka pravdiva */)       //podminka byla pravdiva
         {
-          // vykonavam dokud nenarazim na END_IF
+          while(I->instType != I_ELSE)          //podminka bypa pravdiva, budu provadet instrukce, dokud nenarazim na
+          {
+            listNext(&instrList);
+            instruction(&ST, &instrList);
+          }
+          while(I->instType != I_IF_END){listNext(&instrList);}   //preskakuju vetev ELSE
+          listNext(&instrList);
+          instruction(&ST, &instrList);                           //preskocil jsem cely else, ted uz jen provedu instrukci I_IF_END
         }
-        else /* podminka nepravdiva */
+        else // podminka nepravdiva, prubeh bude symetricky k predchozimu IFu. Nejprve preskocim vse az k ELSE a pote zacnu vykonavat instrukce
         {
-          // preskakuju dokud nenarazim na END_IF
+          while(I->instType != I_ELSE){listNext(&instrList);}     //preskakuju instrukce, dokud nedojedu az k ELSE
+          while(I->instType != I_IF_END)
+          {
+            listNext(&instrList);
+            instruction(&ST, &instrList);
+          }
         }
         break;
 
@@ -172,7 +181,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * ASSIGN
  *
- * - I_ASSIGN cil, zdroj, NULL
+ * - I_ASSIGN zdroj, NULL, cil
  * - intrukce prirazeni, operator =
  *
  * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
@@ -192,6 +201,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * SUBSTRING
  * - intrukce ulozi nekam podretezec v zadanem retezci
+ * I_SUBSTR,
  */
       case I_SUBSTR:
         break;
@@ -553,8 +563,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          int start = *AKTUALNI_INSTRUKCE->active->Instruction->addr2->start;                                            //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
-          int length = *AKTUALNI_INSTRUKCE->active->Instruction->addr2->length;
+          int start = L->addr2->start;                    //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
+          int length = L->addr2->length;
           int arrayLenght = strlen(textCopy);             //zjistim si, jak dlouhy retezec mi prisel
           int arraySize = arrayLenght - length - 1;       // promena, ktera yjisti, jak dlouhe pole budu potrebovat, urcene podle delky ocekavaneho podretezce,magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu
           char arrayCopy [arraySize];
@@ -676,20 +686,22 @@ bool isIntOrReal(void)
  * -----------------------------------------------------------------------------
  * - zapisuje na stdout
  */
-int iWrite(operand1->data)
+int iWrite(tListOfInstr *L)
 {
-  switch(operand1->type)
+  switch(L->instType)
   {
     case T_INTEGER:
-      printf("%d\n", operand1->data);
+      printf("%d\n", L->addr1);
       break;
     case T_REAL:
-      printf("%f\n", operand1->data);
+      printf("%f\n", L->addr1);
       break;
     case T_STRING:
-      printf("%s\n", operand1->data);
+      printf("%s\n", L->addr1);
       break;
     case T_BOOLEAN:
+      return EXIT_RUNTIME_ERROR;
+      break;
     default:
       return EXIT_TYPE_ERROR;
     break;
@@ -701,10 +713,10 @@ int iWrite(operand1->data)
  * -----------------------------------------------------------------------------
  * - cte ze stdin
  */
-int iRead();
+int iRead(tListOfInstr *L);
 {
-  // ... doplnit
-  switch(source->type)
+  char character;               //promenna do ktere pozdeji budu nacitat znaky
+  switch(L->instType)
   {
     case T_INTEGER:
       break;
@@ -713,8 +725,10 @@ int iRead();
     case T_STRING:
       break;
     case T_BOOLEAN:
-    default:
       return EXIT_TYPE_ERROR;
+      break;
+    default:
+      return EXIT_READ_STDIN_ERROR;
     break;
   }
 }
