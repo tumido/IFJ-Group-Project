@@ -69,6 +69,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * STOP
+ * 
+ * - I_STOP, NULL, NULL, NULL
  * - slouzi pro zastaveni provadeni cyklu
  */
       case I_STOP:
@@ -76,24 +78,30 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * READ
+ *
+ * - I_READ, cil, zdroj, NULL
  * - obsluhuje cteni ze stdin
  * - vola pomocnou funkci iRead
  */
       case I_READ: 
-        iRead(((tVarValue*) operand1->data), ((tVarValue*) operand2->data));
+        iRead((operand1->data), (operand2->data));
         break;
 
 /*
  * WRITE
+ *
+ * - I_WRITE, zdroj, NULL, NULL
  * - obsluhuje vypis na stdout
  * - vola pomocnou funkci iWrite
  */
       case I_WRITE:
-        iWrite((tVarValue*) result->data);
+        iWrite(operand1->data);
         break;
 
 /*
  * IF
+ *
+ * - I_IF, NULL, NULL, NULL
  * - znaci zacatek podminky
  * - zpracovava vyraz v podmince
  */       
@@ -119,6 +127,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * THEN
+ *
+ * - I_THEN, expression_result, NULL, NULL
  * - znaci konec vyhodnocovani podminky a prechod na telo
  * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
  */
@@ -126,23 +136,32 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
         else
         {
-          if (operand1->data == FALSE) return FALSE;
+          if(operand1->data == FALSE) return FALSE;
           else return TRUE;
         }
         break;
 
 /*
- * IF_END, JUMP
+ * IF_END
+ *
+ * - IF_END, NULL, NULL, NULL
  * - IF_END nic nedela, slouzi pro oznaceni konce tela podminky
- * - JUMP - oznaceni ze skaceme
- * ------- HOTOVO ------- nic vic tu nebude -------
  */
       case I_IF_END:
+
+/*
+ * JUMP
+ *
+ * - I_JUMP, NULL, NULL, NULL
+ * - oznaceni, ze skaceme
+ */
       case I_JUMP:
         break;
 
 /*
  * LABEL
+ *
+ * - I_LABEL, NULL, NULL, NULL
  * - oznaceni navesti, kam skaceme
  */
       case I_LABEL:
@@ -150,9 +169,22 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * ASSIGN
+ *
+ * - I_ASSIGN cil, zdroj, NULL
  * - intrukce prirazeni, operator =
+ * 
+ * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
+ * kouknout se na to do zadani, pripadne prolezt forum..
  */
       case I_ASSIGN:
+        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) operand1->data = operand2->data;
+        else if((operand1->type == T_REAL) && (operand2->type == T_REAL)) operand1->data = operand2->data;
+        else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN)) operand1->data = operand2->data;
+        else if((operand1->type == T_STRING) && (operand2->type == T_STRING)) operand1->data = operand2->data;
+        {
+          // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu..
+        }
+        else return EXIT_TYPE_ERROR;
         break;
 
 /*
@@ -171,6 +203,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * RETURN
+ *
+ * - I_RETURN, NULL, NULL, NULL
  * - instrukce navratu z volane funkce
  */
       case I_RETURN:
@@ -184,6 +218,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
+ * -----------------------------------------------------------------------------
  * Aritmeticke instrukce
  * -----------------------------------------------------------------------------
  * - mul, div, add, sub, con, inc, dec, neg
@@ -191,10 +226,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
  /*
  * MULTIPLY
- * vynasobi operand 1 a operand 2, vysledek ulozi do acc
+ *
+ * - I_MUL, operand1, operand2, vysledek
+ * - vynasobi operand 1 a operand 2, vysledek ulozi do result
  */
       case I_MUL:
-        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
         else
         {
           if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
@@ -206,10 +243,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * DIVIDE
- * vydeli operand 1 a operand 2, vysledek ulozi do acc
+ *
+ * - I_DIV, operand1, operand2, vysledek
+ * - vydeli operand 1 a operand 2, vysledek ulozi do result
  */
       case I_DIV:
-        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
         else
         {
           if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
@@ -222,10 +261,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * ADDICTION
- * secte operand 1 a operand 2, vysledek ulozi do acc
+ *
+ * - I_ADD, operand1, operand2, vysledek
+ * - secte operand 1 a operand 2, vysledek ulozi do result
  */
       case I_ADD:
-        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
         else
         {
           if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
@@ -237,10 +278,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * SUBTITION
- * odecte operand 1 a operand 2, vysledek ulozi do acc
+ *
+ * - I_SUB, operand1, operand2, vysledek
+ * - odecte od operandu1 operand2
  */
       case I_SUB:
-        if (!isIntOrReal) return EXIT_TYPE_ERROR;
+        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
         else
         {
           if(()operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
@@ -252,7 +295,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * CONCATENATE
- * konkatenace (zretezeni) oprandu 1 a operandu 2
+ *
+ * - I_CON, operand1, operand2, vysledek
+ * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
         if(!(operand1->type == T_STRING) && (operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
@@ -266,7 +311,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * INCREMENTATION
- * inkrementuje operand 2, vysledek v operandu 2
+ *
+ * - I_INC, NULL, operand2, NULL
+ * - inkrementuje operand 2, vysledek v operandu 2
  */
       case I_INC: // inkrementace
         if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
@@ -275,7 +322,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * DECREMENTATION
- * inkrementuje operand 2, vysledek v operandu 2
+ *
+ * - I_DEC, NULL, operand2, NULL
+ * - dekrementuje operand 2, vysledek v operandu 2
  */
       case I_DEC: // inkrementace
         if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
@@ -284,7 +333,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * NEGATION
- * neguje operand 2, vysledek v operandu 2
+ *
+ * - I_NEG, NULL, operand2, NULL
+ * - neguje operand 2, vysledek v operandu 2
  */
       case I_NEG: // negace, bude vubec potreba?
         if(!(operand2->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
@@ -292,6 +343,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
+ * -----------------------------------------------------------------------------
  * Instrukce porovnani
  * -----------------------------------------------------------------------------
  * - less, greater, les_equal, greater_equal, equal, not_equal
@@ -299,7 +351,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * LESS
- * operand 1 je mensi nez operand 2
+ *
+ * - I_LESS, operand1, operand2, vysledek
+ * - operand 1 je mensi nez operand 2
  */
       case I_LESS:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -322,7 +376,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * GREATER
- * operand 1 je vetsi nez operand 2
+ *
+ * - I_GREATER, operand1, operand2, vysledek
+ * - operand 1 je vetsi nez operand 2
  */
       case I_GREATER:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -345,7 +401,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * LESS OR EQUAL
- * operand 1 je mensi nebo roven operandu 2
+ *
+ * - I_LESS_EQUAL, operand1, operand2, vysledek
+ * - operand 1 je mensi nebo roven operandu 2
  */
       case I_LESS_EQUAL:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -368,7 +426,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * GREATER OR EQUAL
- * operand 1 je vetsi nebo roven operandu 2
+ *
+ * - I_GREATER_EQUAL, operand1, operand2, vysledek
+ * - operand 1 je vetsi nebo roven operandu 2
  */
       case I_GREATER_EQUAL:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -391,7 +451,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * EQUAL
- * operand 1 je roven operandu 2
+ *
+ * - I_EQUAL, operand1, operand2, vysledek
+ * - operand 1 je roven operandu 2
  */
       case I_EQUAL:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -419,7 +481,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * NOT EQUAL
- * operand 1 neni roven operandu 2
+ *
+ * - I_NOT_EQUAL, operand1, operand2, vysledek
+ * operand 1 neni roven (je ruzny od) operandu 2
  */
       case I_NOT_EQUAL:
         if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
@@ -446,6 +510,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
+ * -----------------------------------------------------------------------------
  * Intrukce na vraceni datoveho typu
  * -----------------------------------------------------------------------------
  * tomu teda moc nerozumim..
@@ -456,6 +521,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
+ * -----------------------------------------------------------------------------
  * Instrukce implenetujici vestavene funkce
  * -----------------------------------------------------------------------------
  * - copy, lenght,find, sort
@@ -463,14 +529,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * COPY
+ * !!! - syntaxi musi doplnit KUBA
+ * !!! - opravit indexovani (od 1)
+ *
  * - copy(s : string; i : integer; n : integer) : string
  * - vrati podretezec zadaneho retezce 's'
  * - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
  * - 'n' urcuje delku podretezce
  */
       case I_COPY:
-        if (!((operand1->type == T_STRING) && (operand2->type == T_REAL))) return EXIT_TYPE_ERROR;
-        else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
+        if(!((operand1->type == T_STRING) && (operand2->type == T_REAL))) return EXIT_TYPE_ERROR;
+        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
           /*
@@ -504,11 +573,13 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * LENGHT
+ *
+ * - I_LENGHT, NULL, retezec, vysledek
  * - length(s : string) : integer
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-        if (!(operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
+        if(!(operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
         else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
@@ -519,16 +590,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * FIND
+ *
+ * - I_FIND, zadany_retezec, hledany_podretezec, vysledek
  * - find(s : string; search : string) : integer
- * - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's'
- *   a vrati jeho pozici (pocitano od 1)
+ * - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' a vrati jeho pozici (pocitano od 1)
  * - pokud neni podretezec nalezen, vraci 0
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
-        if (!((operand1->type == T_STRING) && (operand2->type == T_STRING))) return EXIT_TYPE_ERROR;
-        else if ((!(operand1->data)) || (!(operand2->data))) return EXIT_NOT_INIT_ERROR;
-        else if (strlen(operand2->data) > strlen(operand1->data)) return EXIT_RUNTIME_ERROR;
+        if(!((operand1->type == T_STRING) && (operand2->type == T_STRING))) return EXIT_TYPE_ERROR;
+        else if((!(operand1->data)) || (!(operand2->data))) return EXIT_NOT_INIT_ERROR;
+        else if(strlen(operand2->data) > strlen(operand1->data)) return EXIT_RUNTIME_ERROR;
         else
         {
           result->type = T_INTEGER;
@@ -538,6 +610,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * SORT
+ *
+ * - I_SORT, NULL, retezec, vysledek
  * - sort(s : string) : string
  * - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
  *   hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
@@ -548,11 +622,11 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         // string je vlastne pole znaku, ze?
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
-        if (!(operand2->type == T_STRING) return EXIT_TYPE_ERROR;
-        else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
+        if(!(operand2->type == T_STRING) return EXIT_TYPE_ERROR;
+        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          if (strlen(operand2->data) == 1) result->data = operand2->data; // retezec ma delku 1, neni co radit
+          if(strlen(operand2->data) == 1) result->data = operand2->data; // retezec ma delku 1, neni co radit
           else
           {
             int n = strlen(operand2->data);
@@ -597,18 +671,18 @@ bool isIntOrReal(void)
  * -----------------------------------------------------------------------------
  * - zapisuje na stdout
  */
-int iWrite(tVarValue *source)
+int iWrite(operand1->data)
 {
-  switch(source->type)
+  switch(operand1->type)
   {
     case T_INTEGER:
-      printf("%d\n", source->integer);
+      printf("%d\n", operand1->data);
       break;
     case T_REAL:
-      printf("%f\n", source->real);
+      printf("%f\n", operand1->data);
       break;
     case T_STRING:
-      printf("%s\n", source->string);
+      printf("%s\n", operand1->data);
       break;
     case T_BOOLEAN:
     default:
