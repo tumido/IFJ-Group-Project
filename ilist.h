@@ -2,7 +2,7 @@
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  30/12/2014 18:15:58 PM
- *         Autori:  Tom·ö Coufal, Roman HalÌk, Yurij Hladyuk, Jakub JochlÌk
+ *         Autori:  Tom√°≈° Coufal, Roman Hal√≠k, Yurij Hladyuk, Jakub Jochl√≠k
  *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
  *        Projekt:  IFJ
  * =====================================================================
@@ -42,5 +42,5 @@ void listFirst(tListOfInstr *L); // zaktivuje prvni instrukci
 void listNext(tListOfInstr *L); // aktivni instrukci se stane nasledujici instrukce
 void listGoto(tListOfInstr *L, void *gotoInstr); // nastavime aktivni instrukci podle zadaneho ukazatele
 void *listGetPointerLast(tListOfInstr *L); // vrati ukazatel na posledni instrukci
-tInstr *listGetData(tListOfInstr *L); // vrati aktivni instrukci0
+tInstr *listGetData(tListOfInstr *L); // vrati aktivni instrukci
 #endif

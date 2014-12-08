@@ -72,7 +72,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - slouzi pro zastaveni provadeni cyklu
  */
       case I_STOP:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -82,7 +81,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_READ: 
         iRead(((tVarValue*) operand1->data), ((tVarValue*) operand2->data));
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -92,7 +90,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_WRITE:
         iWrite((tVarValue*) result->data);
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -118,8 +115,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           // preskakuju dokud nenarazim na END_IF
         }
-
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -151,7 +146,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - oznaceni navesti, kam skaceme
  */
       case I_LABEL:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -159,7 +153,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - intrukce prirazeni, operator =
  */
       case I_ASSIGN:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -167,7 +160,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - intrukce ulozi nekam podretezec v zadanem retezci
  */
       case I_SUBSTR: 
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -175,7 +167,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - intrukce volani uzivatelskych funkci
  */
       case I_CALL_FUNCTION:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -183,7 +174,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - instrukce navratu z volane funkce
  */
       case I_RETURN:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -191,7 +181,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - instrukce cyklu do-while
  */
       case I_DO_WHILE:
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -212,7 +201,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           else result->type = T_REAL; // real a real/int da real
 
           result->data = operand1->data * operand2->data;
-          return EXIT_SUCCESS;
         }
         break;
 
@@ -228,11 +216,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           else result->type = T_REAL; // real a real/int da real
 
           if(operand2->data == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
-          else
-          {
-            result->data = operand1->data / operand2->data;
-            return EXIT_SUCCESS;
-          }
+          else result->data = operand1->data / operand2->data;
         }
         break;
 
@@ -248,7 +232,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           else result->type = T_REAL; // real a real/int da real
 
           result->data = operand1->data + operand2->data;
-          return EXIT_SUCCESS;
         }
         break;
 
@@ -264,7 +247,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           else result->type = T_REAL; // real a real/int da real
 
           result->data = operand1->data - operand2->data;
-          return EXIT_SUCCESS;
         }
         break;
 
@@ -280,7 +262,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
           strcat(result->data, operand1->data);
           strcat(result->data, operand2->data);
         }
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -289,11 +270,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_INC: // inkrementace
         if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else
-        {
-          operand2->data = (operand2->data)++;
-          return EXIT_SUCCESS;
-        }
+        else operand2->data = (operand2->data)++;
         break;
 
 /*
@@ -302,11 +279,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_DEC: // inkrementace
         if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else
-        {
-          operand2->data = (operand2->data)--;
-          return EXIT_SUCCESS;
-        }
+        else operand2->data = (operand2->data)--;
         break;
 
 /*
@@ -315,11 +288,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_NEG: // negace, bude vubec potreba?
         if(!(operand2->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
-        else
-        {
-          operand2->data = ((operand2->data == FALSE)? TRUE : FALSE);
-          return EXIT_SUCCESS;
-        }
+        else operand2->data = ((operand2->data == FALSE)? TRUE : FALSE);
         break;
 
 /*
@@ -337,19 +306,16 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data < operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data < operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) < 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -363,19 +329,16 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data > operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data > operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) > 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -389,19 +352,16 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_BOOLEAN) && (operand2->type == T_REAL))
         {
           result->type = T_REAL;
           result->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) <= 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -415,19 +375,16 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) >= 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -441,25 +398,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) == 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -473,25 +426,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN))
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
         {
           result->type = T_BOOLEAN;
           result->data = (((strcmp(operand1->data, operand2->data)) != 0)? TRUE : FALSE);
-          return EXIT_SUCCESS;
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -504,8 +453,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * treba ani nebude potreba
  */
       case I_TYPE:
-
-        return EXIT_SUCCESS;
         break;
 
 /*
@@ -547,7 +494,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
            * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
            * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
            */
-          return EXIT_SUCCESS;
         }
         // vymyslet zpusob, jak v standardne 3 adresnem kodu predat krom instrukce
         // jeste 3 dalsi informace
@@ -568,7 +514,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_INTEGER;
           result->data = strlen(operand2->data);
-          return EXIT_SUCCESS;
         }
         break;
 
@@ -588,7 +533,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         {
           result->type = T_INTEGER;
           result->data = findSubtring();
-          return EXIT_SUCCESS;
         }
         break;
 
@@ -608,22 +552,18 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         else if (!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          if (strlen(operand2->data) == 1) // retezec ma delku 1, neni co radit
-          {
-            result->data = operand2->data;
-            return EXIT_SUCCESS;
-          }
+          if (strlen(operand2->data) == 1) result->data = operand2->data; // retezec ma delku 1, neni co radit
           else
           {
             int n = strlen(operand2->data);
 
             result->type = T_STRING;
             result->data = (shellSort(*operand2, n));
-            return EXIT_SUCCESS;
           }
         }
         break;
     }
+    return EXIT_SUCCESS;
   }
 }
 
@@ -637,7 +577,7 @@ int interpret(tInstList *)
 }
 
 /*
- * isIntorReal
+ * isIntOrReal
  * -----------------------------------------------------------------------------
  * - funkce na kontrolu typu integer a real v operandech 3AK
  * - vraci TRUE, jestlize se v operandech vyskytuji pouze typy int a real
@@ -706,6 +646,4 @@ int iRead();
  * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to
  *   zkusit nejak nasimulovat..
  * - dokoncit zbyvajici instrukce
- * - podivat se na funkci getSubString (Boyer-Mooreuv algoritmus), bylo by vhodne
- *   tu funkci konecne napsat
  */
