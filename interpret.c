@@ -128,7 +128,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * THEN
  *
- * - I_THEN, expression_result, NULL, NULL
+ * - I_THEN, NULL, NULL, expression_result
  * - znaci konec vyhodnocovani podminky a prechod na telo
  * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
  */
@@ -136,7 +136,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
         else
         {
-          if(operand1->data == FALSE) return FALSE;
+          if(result->data == FALSE) return FALSE;
           else return TRUE;
         }
         break;
@@ -312,34 +312,46 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * INCREMENTATION
  *
- * - I_INC, NULL, operand2, NULL
- * - inkrementuje operand 2, vysledek v operandu 2
+ * - I_INC, operand1, NULL, vysledek
+ * - inkrementuje operand 1, vysledek v result
  */
-      case I_INC: // inkrementace
-        if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else operand2->data = (operand2->data)++;
+      case I_INC:
+        if(!(operand1->type == T_INTEGER)) return EXIT_TYPE_ERROR;
+        else 
+        {
+          result->type = T_INTEGER;
+          result->data = (operand1->data)++;
+        }
         break;
 
 /*
  * DECREMENTATION
  *
- * - I_DEC, NULL, operand2, NULL
- * - dekrementuje operand 2, vysledek v operandu 2
+ * - I_DEC, operand1, NULL, vysledek
+ * - dekrementuje operand 1, vysledek v result
  */
-      case I_DEC: // inkrementace
-        if(!(operand2->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else operand2->data = (operand2->data)--;
+      case I_DEC:
+        if(!(operand1->type == T_INTEGER)) return EXIT_TYPE_ERROR;
+        else
+        {
+          result->type = T_INTEGER;
+          result->data = (operand1->data)--;
+        }
         break;
 
 /*
  * NEGATION
  *
- * - I_NEG, NULL, operand2, NULL
- * - neguje operand 2, vysledek v operandu 2
+ * - I_NEG, operand1, NULL, vysledek
+ * - neguje operand 1, vysledek v result
  */
-      case I_NEG: // negace, bude vubec potreba?
-        if(!(operand2->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
-        else operand2->data = ((operand2->data == FALSE)? TRUE : FALSE);
+      case I_NEG:
+        if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
+        else 
+        {
+          result->type = T_BOOLEAN;
+          result->data = ((operand1->data == FALSE)? TRUE : FALSE);
+        }
         break;
 
 /*
@@ -524,12 +536,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * Instrukce implenetujici vestavene funkce
  * -----------------------------------------------------------------------------
- * - copy, lenght,find, sort
+ * - copy, lenght, find, sort
  */
 
 /*
  * COPY
- * !!! - syntaxi musi doplnit KUBA
+ * !!! - syntaxi intrukce musi doplnit KUBA, nechce se mi to snazit chapat
  * !!! - opravit indexovani (od 1)
  *
  * - copy(s : string; i : integer; n : integer) : string
@@ -574,17 +586,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * LENGHT
  *
- * - I_LENGHT, NULL, retezec, vysledek
+ * - I_LENGHT, retezec, NULL, vysledek
  * - length(s : string) : integer
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-        if(!(operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
+        if(!(operand1->type == T_STRING)) return EXIT_TYPE_ERROR;
         else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
           result->type = T_INTEGER;
-          result->data = strlen(operand2->data);
+          result->data = strlen(operand1->data);
         }
         break;
 
@@ -611,9 +623,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * SORT
  *
- * - I_SORT, NULL, retezec, vysledek
+ * - I_SORT, retezec, NULL, vysledek
  * - sort(s : string) : string
- * - seradi znaky v retezci 's' tak, aby znak si nizsi ordinarni
+ * - seradi znaky v retezci 's' tak, aby znak s nizsi ordinarni
  *   hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
  * - vraci retezec obsahujici serazene znaky
  * - implementovano pomoci algoritmu shell sort
@@ -622,17 +634,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         // string je vlastne pole znaku, ze?
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
-        if(!(operand2->type == T_STRING) return EXIT_TYPE_ERROR;
+        if(!(operand1->type == T_STRING) return EXIT_TYPE_ERROR;
         else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          if(strlen(operand2->data) == 1) result->data = operand2->data; // retezec ma delku 1, neni co radit
+          if(strlen(operand1->data) == 1) result->data = operand1->data; // retezec ma delku 1, neni co radit
           else
           {
-            int n = strlen(operand2->data);
+            int n = strlen(operand1->data);
 
             result->type = T_STRING;
-            result->data = (shellSort(*operand2, n));
+            result->data = (shellSort(*operand1, n));
           }
         }
         break;

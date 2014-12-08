@@ -11,6 +11,21 @@
 
 void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist)
 // vlozi novou instrukci do seznamu instrukci
+
+/*
+ * KONVENCE INSTRUKCI
+ * -----------------------------------------------------------------------------
+ * - plati pro aritmeticke instrukce, instrukce porovnani a instrukce vestavenych funkci
+ * - specialni instrukce maji specianli konvece uvedene vzdy pred instrukci samotnou
+ *   - na prani muzu doplnit i sem, pro lepsi prehlednost
+ *
+ * - instrukce se dvema operandy:
+ * JMENO_INSTRUCE, OPERAND1, OPERAND2, VYSLEDEK
+ * 
+ * - instrukce s jednim operandem:
+ * JMENO_INSTRUKCE, OPERAND1, NULL, VYSLEDEK
+ */
+
 {
    tInstr I;
    I.instType = instType;
