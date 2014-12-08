@@ -889,10 +889,9 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
   // potrebuju zpracovat n parametru (dokud mi je token id nebo hodnota volam)
   void * data;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  while (lex->type == l_id || lex->type == l_sep || (lex->type == l_key &&
-        (*(key *)lex->data == k_int || *(key *)lex->data == k_real || *(key *)lex->data == k_string)))
+  while (lex->type == l_id || lex->type == l_int || lex->type == l_real || lex->type == l_str)
   {
-    if (lex->type == l_sep) continue;
+    printDebug("Parametr funkce write\n");
     if (lex->type == l_id)
     {
       if (((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || loc->type == k_function)
@@ -901,6 +900,10 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
     }
     else data = lex->data;
     // generateInstruction();
+    // nactu ","
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+    if (lex->type != l_sep) break;
+    //pokracuju s dalsim identifikatorem
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   // potrebuju ")"
