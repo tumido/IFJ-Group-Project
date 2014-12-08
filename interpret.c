@@ -181,7 +181,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * ASSIGN
  *
- * - I_ASSIGN zdroj, NULL, cil
+ * - I_ASSIGN cil, zdroj, NULL
+ *   - ja ti dam, Kubo, 'zdroj, NULL, cil'! Jeste jsem to na fb verejne diskutoval s Tomem :D 
+ *     A zapomnel si to prehodit v samotnem tele instrukce :P
  * - intrukce prirazeni, operator =
  *
  * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
