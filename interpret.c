@@ -13,8 +13,6 @@
 #include "ial.h" // kvuli funkci findSubstring a shellSort
 #include "ilist.h"
 
-
-
 /*
  * Klasifikace datového typu
  * -----------------------------------------------------------------------------
@@ -181,21 +179,21 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 /*
  * ASSIGN
  *
- * - I_ASSIGN cil, zdroj, NULL
- *   - ja ti dam, Kubo, 'zdroj, NULL, cil'! Jeste jsem to na fb verejne diskutoval s Tomem :D 
- *     A zapomnel si to prehodit v samotnem tele instrukce :P
+ * - I_ASSIGN zdroj, NULL, cil
  * - intrukce prirazeni, operator =
+ * - do cile (result) priradi hodnotu operandu 1
  *
  * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
  * kouknout se na to do zadani, pripadne prolezt forum..
  */
       case I_ASSIGN:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) operand1->data = operand2->data;
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL)) operand1->data = operand2->data;
-        else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN)) operand1->data = operand2->data;
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING)) operand1->data = operand2->data;
+        if((operand1->type == T_INTEGER) && (result->type == T_INTEGER)) result->data = operand1->data;
+        else if((operand1->type == T_REAL) && (result->type == T_REAL)) result->data = operand1->data;
+        else if((operand1->type == T_BOOLEAN) && (result->type == T_BOOLEAN)) result->data = operand1->data;
+        else if((operand1->type == T_STRING) && (result->type == T_STRING)) result->data = operand1->data;
         {
-          // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu..
+          // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
+          // nebo bude treba to delat po jednotlivych znacich..
         }
         else return EXIT_TYPE_ERROR;
         break;
@@ -555,10 +553,17 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * COPY
- * I_COPY,operand1, operand 2, result
+ * I_COPY, operand1, operand2, result
  * operand1 - retezec ze ktereho budu kopirovat
  * operand2 - struktura o dvou integerech
  * result - misto kam nahraji vysledny podretezec
+ *
+ * - copy(s : string; i : integer; n : integer) : string
+ * - vrati podretezec zadaneho retezce 's'
+ * - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
+ * - 'n' urcuje delku podretezce
+ *    - tohle tady nebylo pro srandu kralikum, ale pro dobrou orientaci, jak
+ *      je dana vestavena funkce specifikovana a jak funguje
  */
       case I_COPY:
         if(!((operand1->type == T_STRING))) return EXIT_TYPE_ERROR;
