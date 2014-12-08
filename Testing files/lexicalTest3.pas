@@ -9,7 +9,7 @@ begin
 end;
 
 begin
-  A := 1;
+  a := 1;
   if a < b then  begin a := b; end; else begin b := a; end;
   while a <b do begin a := a - end;
   a := 1;

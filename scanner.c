@@ -106,8 +106,8 @@ int strToDouble(token * lex)
  */
 int keyWordCheck(token * lex)
 {
-  const int KEYWORDS_COUNT =  20;
-  const char * KEYWORDS[] ={ "begin", "boolean", "do", "else", "end", "false", "find", "forward", "function", "if", "integer", "readln", "real", "sort", "string", "then", "true", "var", "while", "write" };
+  const int KEYWORDS_COUNT =  22;
+  const char * KEYWORDS[] ={ "begin", "boolean", "do", "else", "end", "false", "find", "forward", "function", "if", "integer", "readln", "real", "sort", "string", "then", "true", "var", "while", "write", "copy", "length" };
   for ( key i = k_begin; i < KEYWORDS_COUNT; i++)
   {
     if (strcmp(KEYWORDS[i], ((string *) lex->data)->str) == EXIT_SUCCESS)

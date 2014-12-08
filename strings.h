@@ -48,7 +48,7 @@ typedef enum
   k_if, k_int, k_readln,
   k_real, k_sort, k_string,
   k_then, k_true, k_var,
-  k_while, k_write
+  k_while, k_write, k_copy, k_length
 } key;
 
 #endif
