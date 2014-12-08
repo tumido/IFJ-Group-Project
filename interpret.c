@@ -13,6 +13,8 @@
 #include "ial.h" // kvuli funkci findSubstring a shellSort
 #include "ilist.h"
 
+
+
 /*
  * Klasifikace datového typu
  * -----------------------------------------------------------------------------
@@ -69,7 +71,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * STOP
- * 
+ *
  * - I_STOP, NULL, NULL, NULL
  * - slouzi pro zastaveni provadeni cyklu
  */
@@ -83,7 +85,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - obsluhuje cteni ze stdin
  * - vola pomocnou funkci iRead
  */
-      case I_READ: 
+      case I_READ:
         iRead((operand1->data), (operand2->data));
         break;
 
@@ -104,14 +106,14 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - I_IF, NULL, NULL, NULL
  * - znaci zacatek podminky
  * - zpracovava vyraz v podmince
- */       
+ */
       case I_IF:
         while (tListOfInstr->active != I_THEN) // dokud je co vyhodnocovat
         {
           listNext(tListOfInstr *L); // posun na dalsi prvek seznamu
           // ...
         }
-        
+
         // v tuto chvili mam skrze dalsi intrukce vyhodnocenou podminku,
         // tudiz musim zjistit jak dopadla a podle toho se chovat
 
@@ -172,7 +174,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  *
  * - I_ASSIGN cil, zdroj, NULL
  * - intrukce prirazeni, operator =
- * 
+ *
  * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
  * kouknout se na to do zadani, pripadne prolezt forum..
  */
@@ -191,7 +193,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * SUBSTRING
  * - intrukce ulozi nekam podretezec v zadanem retezci
  */
-      case I_SUBSTR: 
+      case I_SUBSTR:
         break;
 
 /*
@@ -317,7 +319,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_INC:
         if(!(operand1->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else 
+        else
         {
           result->type = T_INTEGER;
           result->data = (operand1->data)++;
@@ -347,7 +349,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  */
       case I_NEG:
         if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
-        else 
+        else
         {
           result->type = T_BOOLEAN;
           result->data = ((operand1->data == FALSE)? TRUE : FALSE);
@@ -541,46 +543,37 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * COPY
- * !!! - syntaxi intrukce musi doplnit KUBA, nechce se mi to snazit chapat
- * !!! - opravit indexovani (od 1)
- *
- * - copy(s : string; i : integer; n : integer) : string
- * - vrati podretezec zadaneho retezce 's'
- * - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
- * - 'n' urcuje delku podretezce
+ * I_COPY,operand1, operand 2, result
+ * operand1 - retezec ze ktereho budu kopirovat
+ * operand2 - struktura o dvou integerech
+ * result - misto kam nahraji vysledny podretezec
  */
       case I_COPY:
-        if(!((operand1->type == T_STRING) && (operand2->type == T_REAL))) return EXIT_TYPE_ERROR;
+        if(!((operand1->type == T_STRING))) return EXIT_TYPE_ERROR;
         else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
         else
         {
-          /*
-           * budu vychaztet zhruba z neceho takoveho: fceCopy(char* textCopy, int POCATECNI_PISMENO, int DELKA_PODRETEZCE) - pro pozdejsi hromadne prepsani
-           * vysledek bude PROZATIM ulozen v poli, ze ktereho si muzu vysledek ulozit kam budu chtit
-           * jakmile se dohodne zpusob predani paramteru (respektive jak to v tom triadresnym kodu prijde), udelam i zpracovani parametru
-           * prozatim budu uvazovat, ze uz mam dva integery, ktere mi urcuji podminky
-           */
-          int arrayLenght = strlen(textCopy);
-          int arraySize = arrayLenght - POCATECNI_PISMENO - 2;                 // magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu, plati pro vsechny magicke konstanty
+          int start = *AKTUALNI_INSTRUKCE->active->Instruction->addr2->start;                                            //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
+          int length = *AKTUALNI_INSTRUKCE->active->Instruction->addr2->length;
+          int arrayLenght = strlen(textCopy);             //zjistim si, jak dlouhy retezec mi prisel
+          int arraySize = arrayLenght - length - 1;       // promena, ktera yjisti, jak dlouhe pole budu potrebovat, urcene podle delky ocekavaneho podretezce,magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu
           char arrayCopy [arraySize];
-          for(int i = 0; i <= arraySize; i++)            //inicializace vysledneho pole
+          for(int i = 0; i <= arraySize; i++)             //inicializace vysledneho pole
             {arrayCopy[i] = '\0';}
-          for(int i = 0; i <= DELKA_PODRETEZCE; i++)                        //prepsani stringu do charu a vyhoyeni vysledku
-            arrayCopy[i] = textCopy[POCATECNI_PISMENO - 1];
-            POCATECNI_PISMENO++;
-            if(textCopy[i] == '\0')
-              i = DELKA_PODRETEZCE;
-          }
+          for(int i = 0; i <= length; i++)                //prepsani stringu do charu a vyhoyeni vysledku
+            {
+              arrayCopy[i] = textCopy[start];
+              start++;
+              if(textCopy[i] == '\0')
+                i = length;
+            }
+          //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na result, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
           /*
            * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
            * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
+           * na 100% je potreba tuto funkci otestovat, promene jsem prepisoval na dvakrat, nejsem is jist ze jsou prepsane spravne
            */
         }
-        // vymyslet zpusob, jak v standardne 3 adresnem kodu predat krom instrukce
-        // jeste 3 dalsi informace
-        // co takle si cisla 'i' a 'n' dat dohromady a oddelit teckou - udelat z
-        // nich vlastne real, ktery si pak rozkouskuju na dva integery a zahodim
-        // tecku? :) Momentalne me nanapada nic rozumnejsiho..
         break;
 
 /*
