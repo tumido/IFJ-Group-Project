@@ -137,7 +137,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - oznaceni, ze skaceme
  */
       case I_JUMP:
-        break;
 
 /*
  * LABEL
@@ -177,15 +176,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
- * SUBSTRING
- * - intrukce ulozi nekam podretezec v zadanem retezci
- * I_SUBSTR,
- * bude vubec potreba?
- */
-      case I_SUBSTR:
-        break;
-
-/*
  * CALL FUNCTION
  * - intrukce volani uzivatelskych funkci
  */
@@ -202,10 +192,20 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
- * WHILE DO
+ * WHILE
  * - instrukce cyklu while (provadeni nejake cinnosti porad dokola tak dlouho, dokud nejsem uspokojeny)
+ * - principielne to bude fungovat jako IF - overim podminku a kdyz plati, beru si dalsi a dalsi instrukce
+ *   v tele cyklu, dokud nenarazim na konec, a pak zase overim podminku atd atd
+ * - kdyz je podminka nesplnena, vyskocim ven
  */
-      case I_WHILE_DO:
+      case I_WHILE:
+        break;
+
+/*
+ * DO
+ * - sinalizuje konec vyhodnocovani podminky, vraci vysledek vyhodnoceni
+ */
+      case I_DO:
         break;
 
 /*
