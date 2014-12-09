@@ -37,6 +37,7 @@ struct node * SymbolTableCreateNode(char * name, key type, void * data)
   if ((nd = malloc(sizeof(struct node))) == NULL) return NULL;
 
   nd->type = type;
+  nd->defined = false;
   nd->rightNode = nd->leftNode = NULL;
   strncpy(nd->keyValue, name, BUFSIZE);
   name = NULL;
@@ -82,10 +83,12 @@ struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcPa
 
   ((funcData *)nd->data)->defined = defined;
   ((funcData *)nd->data)->param = param;
-  ((funcData *)nd->data)->retVal = type;
+  ((funcData *)nd->data)->retVal = NULL;
+  ((funcData *)nd->data)->retType = type;
   if ((((funcData *)nd->data)->table = (btree *) malloc(sizeof(btree))) == NULL) return NULL;
 
   SymbolTableInit(((funcData *)nd->data)->table);
+  listInit(&((funcData *)nd->data)->ilist);
 
   printDebug("Novy uzel pro funkci vytvoren\n");
   return nd;
@@ -139,6 +142,7 @@ int __SymbolTableDispose(struct node ** leaf)
       SymbolTableDispose(((funcData *)(*leaf)->data)->table);
       FunctionParamsListDispose(((funcData *)(*leaf)->data)->param);
       free(((funcData *)(*leaf)->data)->table);
+      listFree(&((funcData *)(*leaf)->data)->ilist);
     }
 
     free((*leaf)->data);

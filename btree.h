@@ -27,6 +27,7 @@ struct node
 {
   char keyValue[BUFSIZE]; // klic jmeno funkce, promenne
   void * data;
+  bool defined;
   key type;
 
   struct node * leftNode;
@@ -53,7 +54,8 @@ struct funcParam
 
 typedef struct
 {
-  key retVal; // navratova hodnota
+  key retType; // navratovy typ
+  void * retVal; // navratova hodnota
   btree * table; // lokalni tablulka symbolu
   struct funcParam * param; // linearni seznam parametru
   tListOfInstr ilist; // list instrukci funkce

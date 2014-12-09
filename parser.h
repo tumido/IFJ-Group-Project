@@ -14,7 +14,8 @@
 #include "scanner.h"
 #include "io.h"
 #include "ilist.h"
-//#include "interpret.h"
+#include "interpret.h"
+#include "constructs.h"
 //#include "ParStack.h"
 
 #define dINT 6
@@ -52,7 +53,7 @@
 
  //hlavicka syntaktickeho analyzatoru
 
-void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist);
+void generateInstruction(int instType, key type, void *addr1, void *addr2, void *addr3, tListOfInstr * ilist);
 
 
 /*   Syntakticka analyza
@@ -65,7 +66,7 @@ void generateInstruction(int instType, void *addr1, void *addr2, void *addr3, tL
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex);
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode);
 
 /*   Blok deklarace promennych
  * ---------------------------------------------------------------------
@@ -114,6 +115,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
  * - necha zpracovat deklaraci promenne, strednik a rekurzivne pokracuje
  * - zprostredkuje deklaraci promenne a jeji ulozeni do tabulky symbolu
  * - na vstupu mam token s identifikatorem
+ * - generuje instrukci prirazeni z lokalni tabulky do tabulky funkce
  *
  *   <paramsCall> -> "id" "," <paramsCall>
  *   <paramsCall> -> "id"
@@ -122,6 +124,8 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
 
 /*   Volani funkce
  * ---------------------------------------------------------------------
+ * - necha zpracovat parametry, pripoji na instruction list instrukce
+ *   funkce a na jejich konec zaradi insrukci prirazeni vysledku
  *   <callFunction> -> id "(" <paramsCall> ")"
  */
 int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex);
@@ -170,48 +174,3 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
  * <program> -> <decList> <funciton> <body> <EOF>
  */
 int parser(struct input * in, btree * table, tListOfInstr * ilist);
-
-/*   Zpracovani vestavnych funkci a prikazu
- * =====================================================================
- */
-
-/*   Vestavna funkce Write
- * ---------------------------------------------------------------------
- * - zpracovava neomezeny pocet argumentu
- * - kazdy argument vyhodnoti (zdali je to ID (platne, neni funkce) nebo
- *   hodnota) a zavola pro nej samostatnou write instrukci
- */
-int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-
-/*   Vestavna funkce readline
- * ---------------------------------------------------------------------
- * - vyhodnoti poskytnuty parametr a zapise do nej hodnotu ze vstupu
- *   resp. vytvori patricnou instrukci
- */
-int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-int embededFuncFind(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-
-/*   Prirazeni
- * ---------------------------------------------------------------------
- * - nacte si promennou do ktere se ma hodnota priradit a rozhodne,
- *   jestli bude volana funkce a nebo je to vyraz
- * - nasledne vola
- */
-int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-
-/*   Podminene vetveni
- * ---------------------------------------------------------------------
- * - zpracuje patricne tokeny a necha probehnout telo podminky
- * - JAK JSOU RESENE JUMPY??
- */
-int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
-
-/*   Cyklus while
- * ---------------------------------------------------------------------
- * - zpracuje patricne tokeny a necha probehnout telo cyklu
- * - JAK JSOU RESENE JUMPY??
- */
-int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex);

@@ -13,10 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "io.h"
+#include "strings.h"
 
 typedef struct
 {
   int instType;  // typ instrukce
+  key type;
   void *addr1; // adresa 1
   void *addr2; // adresa 2
   void *addr3; // adresa 3
