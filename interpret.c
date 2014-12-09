@@ -22,7 +22,7 @@
  * - instrukce navraceni datoveho typu
  * - instrukce vestavenych funkci
  */
-int instruction(tSymbolTable *ST, tListOfInstr *instrList)
+int instruction(tListOfInstr *instrList)
 {
   while(1);
   {
@@ -35,8 +35,8 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * Specialni instrukce
  * -----------------------------------------------------------------------------
- * - stop, read, write, if, then, if_end, jump, assign, substr, call_fuction,
- *   return, while_do
+ * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return, 
+ *   while_do
  */
 
 /*
@@ -199,6 +199,19 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - kdyz je podminka nesplnena, vyskocim ven
  */
       case I_WHILE:
+        while (I->instType != I_DO) // dokud je co vyhodnocovat
+        {
+          // posun na dalsi prvek seznamu
+        }
+
+        if(/* podminka pravdiva */)
+        {
+
+        }
+        else // podminka nepravdiva, koncim
+        {
+
+        }
         break;
 
 /*
@@ -516,17 +529,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * -----------------------------------------------------------------------------
- * Intrukce na vraceni datoveho typu
- * -----------------------------------------------------------------------------
- * tomu teda moc nerozumim..
- * je v ni dalsi switch a pripady pro kazdy typ, zatim nepisu
- * treba ani nebude potreba
- */
-      case I_TYPE:
-        break;
-
-/*
- * -----------------------------------------------------------------------------
  * Instrukce implenetujici vestavene funkce
  * -----------------------------------------------------------------------------
  * - copy, lenght, find, sort
@@ -544,8 +546,6 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * - vrati podretezec zadaneho retezce 's'
  * - 'i' udava zacatek pozadovaneho podretezce (pocitano od 1)
  * - 'n' urcuje delku podretezce
- *    - tohle tady nebylo pro srandu kralikum, ale pro dobrou orientaci, jak
- *      je dana vestavena funkce specifikovana a jak funguje
  */
       case I_COPY:
         if(!((operand1->type == T_STRING))) return EXIT_TYPE_ERROR;
@@ -734,5 +734,6 @@ int iRead(tListOfInstr *L);
  * - podivat se lepe na rozdil mezi chybou 4 a 5! 
  * - metodu BMA mame implmentovat dle varianty algoritmu popsane v ramci predmetu IAL
  *   takze cele prepsat do nejakeho prasackeho na dve veci reseni...
- * - stejne tak shell sort..
+ *   - tezky nezdar, v opore je v algoritmu chyba, podle me.. tak jsem na rozpacich,
+ *     jestli se to snazit implementovat s chybou, a pak ji nejak opravovat, nebo jak..
  */

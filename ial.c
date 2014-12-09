@@ -16,6 +16,7 @@
  * - provadi shellovo razeni n prvku v poli
  * - implemetace podle slajdu prof. Hoznika
  * - zatim neotestovano
+ * - strana 162
  * 
  * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
@@ -27,7 +28,7 @@ void shellSort(char *array, int n)
   
   while (step > 0) // cykli, pokud je krok vetsi/roven 1
   {
-    for (i = step; n - 1; i--) // i-- jsem si domyslel, ten zapis ve slajdech je divny..
+    for (i = step; i < n - 1; i++)
     {
       j = i - step + 1;
 
@@ -55,18 +56,21 @@ void shellSort(char *array, int n)
  *     zprava doleva
  *   - pro zabezpeceni rozeznani opakujicich se posloupnosti znaku ve vzoru slouzi
  *     tabulka 'dobrych' suffixu
+ *
+ * - je treba se na to cele jeste podivat a srovnat s oporou, ve ktere je to ale 
+ *   zrejme spatne..
  */
 
 /*
- * badCharacters
- * - naplni pole badChars 'spatnymi' znaky
+ * computeJumps
+ * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
  */
-void badCharacters(char *pattern, int patternLenght, int badChars[])
+void computeJumps(char *pattern, int patternLenght, int charJump[])
 {
   int i;
 
-  for (i = 0; i < SIZE; ++i) badChars[i] = patternLenght;
-  for (i = 0; i < patternLenght - 1; ++i) badChars[pattern[i]] = patternLenght - i - 1;
+  for (i = 0; i < SIZE; ++i) charJump[i] = patternLenght;
+  for (i = 0; i < patternLenght -1; ++i) charJump[pattern[i]] = patternLenght - 1 - i;
 }
 
 /*
@@ -135,11 +139,11 @@ int findSubString(char *pattern, char *text)
 {
   int rowLenght = strlen(text);
   int patternLenght = strlen(pattern);
-  int i, j, count, goodSuffix[SIZE], badChars[SIZE];
+  int i, j, count, goodSuffix[SIZE], charJump[SIZE];
 
   // vytvoreni tabulek
   goodSuffixes(pattern, patternLenght, goodSuffix);
-  badCharacters(pattern, patternLenght, badChars);
+  badCharacters(pattern, patternLenght, charJump);
 
   // hledani
   j = count = 0;
@@ -153,8 +157,8 @@ int findSubString(char *pattern, char *text)
     }
     else
     {
-      if (goodSuffix[i] < (badChars[text[i + j]] - patternLenght + 1 + i))
-        j += (badChars[text[i + j]] - patternLenght + 1 + i);
+      if (goodSuffix[i] < (charJump[text[i + j]] - patternLenght + 1 + i))
+        j += (charJump[text[i + j]] - patternLenght + 1 + i);
       else j += goodSuffix[i];
     }
   }
