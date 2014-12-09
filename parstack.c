@@ -51,4 +51,9 @@ int DataInit(sData *lex)
   return EXIT_SUCCESS;
 }
 
-
+void DataFree(sData *str)
+{
+  if (str->lexdata.type != l_int && str->lexdata.type != l_real && str->lexdata.type != l_key)
+    free(((string *) str->lexdata.data)->str);
+  free(str->lexdata.data);
+}

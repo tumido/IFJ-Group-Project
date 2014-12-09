@@ -207,7 +207,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     x--;
   }while (itemTop.TypTok != l_eof && itemAct.TypTok!=l_eof);
 
-
+  DataFree(&itemAct);
+  DataFree(&itemTop);
+  DataFree(&itemC);
+  DataFree(&itemD);
   return EXIT_INTERNAL_ERROR;
 }
 
