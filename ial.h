@@ -8,8 +8,7 @@
  * =====================================================================
  */
 
-// maximalni delka radky zpracovavaneho retezce, nad timto se bude treba
-// jeste zamyslet..
+// maximalni delka radky zpracovavaneho retezce
 #define SIZE 255 
 
 
