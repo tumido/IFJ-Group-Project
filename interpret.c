@@ -8,6 +8,13 @@
  * =====================================================================
  */
 
+/*
+ * -----------------------------------------------------------------------------
+ * NOVY ZPUSOB SYNTAXE INSTRUKCI
+ * -----------------------------------------------------------------------------
+ * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand 
+ */
+
 #include "io.h"
 #include "interpret.h"
 #include "ial.h" // kvuli funkci findSubstring a shellSort
@@ -36,13 +43,13 @@ int instruction(tListOfInstr *instrList)
  * Specialni instrukce
  * -----------------------------------------------------------------------------
  * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return, 
- *   while_do
+ *   while_do, clear
  */
 
 /*
  * STOP
  *
- * - I_STOP, NULL, NULL, NULL
+ * - I_STOP, NULL, NULL, NULL, NULL
  * - slouzi pro zastaveni provadeni cyklu
  */
       case I_STOP:
@@ -51,7 +58,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * READ
  *
- * - I_READ, zdroj, NULL, cil
+ * - I_READ, typ, zdroj, NULL, cil
  * - obsluhuje cteni ze stdin
  * - vola pomocnou funkci iRead
  */
@@ -62,7 +69,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * WRITE
  *
- * - I_WRITE, zdroj, NULL, NULL
+ * - I_WRITE, typ, zdroj, NULL, NULL
  * - obsluhuje vypis na stdout
  * - vola pomocnou funkci iWrite
  */
@@ -73,7 +80,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * IF
  *
- * - I_IF, NULL, NULL, NULL
+ * - I_IF, NULL, NULL, NULL, NULL
  * - znaci zacatek podminky
  * - zpracovava vyraz v podmince
  */
@@ -109,23 +116,19 @@ int instruction(tListOfInstr *instrList)
 /*
  * THEN
  *
- * - I_THEN, NULL, NULL, expression_result
+ * - I_THEN, NULL, NULL, NULL, expression_result
  * - znaci konec vyhodnocovani podminky a prechod na telo
  * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
  */
       case I_THEN: // znaci konec vyhodnocovani podminky a prechod na telo
-        if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
-        else
-        {
-          if(result->data == FALSE) return FALSE;
+          if((*(bool*))result == FALSE) return FALSE;
           else return TRUE;
-        }
         break;
 
 /*
  * IF_END
  *
- * - IF_END, NULL, NULL, NULL
+ * - IF_END, NULL, NULL, NULL, NULL
  * - IF_END nic nedela, slouzi pro oznaceni konce tela podminky
  */
       case I_IF_END:
@@ -133,7 +136,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * JUMP
  *
- * - I_JUMP, NULL, NULL, NULL
+ * - I_JUMP, NULL, NULL, NULL, NULL
  * - oznaceni, ze skaceme
  */
       case I_JUMP:
@@ -141,7 +144,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * LABEL
  *
- * - I_LABEL, NULL, NULL, NULL
+ * - I_LABEL, NULL, NULL, NULL, NULL
  * - oznaceni navesti, kam skaceme
  */
       case I_LABEL:
@@ -150,29 +153,17 @@ int instruction(tListOfInstr *instrList)
 /*
  * ASSIGN
  *
- * - I_ASSIGN zdroj, NULL, cil
+ * - I_ASSIGN, typ, zdroj, NULL, cil
  * - intrukce prirazeni, operator =
  * - do cile (result) priradi hodnotu operandu 1
- *
- * je treba doresit, jestli lze pri prirazeni realu do intu automaticky pretypovat, nebo radeji ne
- * kouknout se na to do zadani, pripadne prolezt forum..
  */
       case I_ASSIGN:
-        if((operand1->type == T_INTEGER) && (result->type == T_INTEGER)) result->data = operand1->data;
-        else if((operand1->type == T_REAL) && (result->type == T_REAL)) result->data = operand1->data;
-        else if((operand1->type == T_REAL) && (result->type == T_INTEGER))
-        {
-          result->type = T_REAL; // jedinny zvlastni pripad, nutno pretypovat
-          result->data = operand1->data;
-        }
-        else if((operand1->type == T_INTEGER) && (result->type == T_REAL)) result->data = operand1->data;
-        else if((operand1->type == T_BOOLEAN) && (result->type == T_BOOLEAN)) result->data = operand1->data;
-        else if((operand1->type == T_STRING) && (result->type == T_STRING)) result->data = operand1->data;
-        {
+        if(type == k_int) (*(int*)result) = (*(int*)operand1);
+        else if(type == k_real) (*(double*)result) = (*(double*)operand1);
+        else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
+        else if(type == k_string) (*(char*)result) = (*(char*)operand1);
           // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
           // nebo bude treba to delat po jednotlivych znacich..
-        }
-        else return EXIT_TYPE_ERROR;
         break;
 
 /*
@@ -185,7 +176,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * RETURN
  *
- * - I_RETURN, NULL, NULL, NULL
+ * - I_RETURN, NULL, NULL, NULL, NULL
  * - instrukce navratu z volane funkce
  */
       case I_RETURN:
@@ -222,6 +213,21 @@ int instruction(tListOfInstr *instrList)
         break;
 
 /*
+ * CLEAR
+ *
+ * - I_CLEAR, typ, operand1, NULL, NULL
+ * - uvolni obsah operandu 1
+ */
+      case I_CLEAR:
+        if(type == T_STRING)
+        {
+          free(*operand1);
+          free(*struktura);
+        }
+        else free(*operand1);
+        break;
+
+/*
  * -----------------------------------------------------------------------------
  * Aritmeticke instrukce
  * -----------------------------------------------------------------------------
@@ -231,37 +237,27 @@ int instruction(tListOfInstr *instrList)
  /*
  * MULTIPLY
  *
- * - I_MUL, operand1, operand2, vysledek
+ * - I_MUL, typ, operand1, operand2, vysledek
  * - vynasobi operand 1 a operand 2, vysledek ulozi do result
  */
       case I_MUL:
-        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
-        else
-        {
-          if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
-          else result->type = T_REAL; // real a real/int da real
-
-          result->data = operand1->data * operand2->data;
-        }
+        if(type == k_int) (*(int*)result) = (*(int*)operand1) * (*(int*)operand2);
+        else if(type == k_real) (*(double*)result) = (*(double*)operand1) * (*(double*)operand2);
         break;
 
 /*
  * DIVIDE
  *
- * - I_DIV, operand1, operand2, vysledek
+ * - I_DIV, typ, operand1, operand2, vysledek
  * - vydeli operand 1 a operand 2, vysledek ulozi do result
  * - pozor, vysledek bude vzdy REAL!
  */
       case I_DIV:
-        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
+        if((*(int*)operand2) == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
         else
         {
-          if(operand2->data == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
-          else
-          {
-            result->type = T_REAL;
-            result->data = operand1->data / operand2->data;
-          }
+          if(type == k_int) (*(int*)result) = (*(int*)operand1) / (*(int*)operand2);
+          else if(type == k_real) (*(double*)result) = (*(double*)operand1) / (*(double*)operand2);  
         }
         break;
 
@@ -272,14 +268,8 @@ int instruction(tListOfInstr *instrList)
  * - secte operand 1 a operand 2, vysledek ulozi do result
  */
       case I_ADD:
-        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
-        else
-        {
-          if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
-          else result->type = T_REAL; // real a real/int da real
-
-          result->data = operand1->data + operand2->data;
-        }
+          if(type == k_int) (*(int*)result) = (*(int*)operand1) + (*(int*)operand2);
+          else if(type == k_real) (*(double*)result) = (*(double*)operand1) + (*(double*)operand2);  
         break;
 
 /*
@@ -289,14 +279,8 @@ int instruction(tListOfInstr *instrList)
  * - odecte od operandu1 operand2
  */
       case I_SUB:
-        if(!isIntOrReal()) return EXIT_TYPE_ERROR;
-        else
-        {
-          if(()operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
-          else result->type = T_REAL; // real a real/int da real
-
-          result->data = operand1->data - operand2->data;
-        }
+          if(type == k_int) (*(int*)result) = (*(int*)operand1) - (*(int*)operand2);
+          else if(type == k_real) (*(double*)result) = (*(double*)operand1) - (*(double*)operand2);  
         break;
 
 /*
@@ -306,13 +290,8 @@ int instruction(tListOfInstr *instrList)
  * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
-        if(!(operand1->type == T_STRING) && (operand2->type == T_STRING)) return EXIT_TYPE_ERROR;
-        else
-        {
-          result->type = T_STRING;
-          strcat(result->data, operand1->data);
-          strcat(result->data, operand2->data);
-        }
+          strcat((*(char*)result), operand1); // tady opravdu nevim, jestli je to dobre..
+          strcat((*(char*)result), operand2);
         break;
 
 /*
@@ -322,12 +301,7 @@ int instruction(tListOfInstr *instrList)
  * - inkrementuje operand 1, vysledek v result
  */
       case I_INC:
-        if(!(operand1->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else
-        {
-          result->type = T_INTEGER;
-          result->data = (operand1->data)++;
-        }
+          (*(int*)result) = (*(int*)operand1)++;
         break;
 
 /*
@@ -337,12 +311,7 @@ int instruction(tListOfInstr *instrList)
  * - dekrementuje operand 1, vysledek v result
  */
       case I_DEC:
-        if(!(operand1->type == T_INTEGER)) return EXIT_TYPE_ERROR;
-        else
-        {
-          result->type = T_INTEGER;
-          result->data = (operand1->data)--;
-        }
+          (*(int*)result) = (*(int*)operand1)--;
         break;
 
 /*
@@ -352,12 +321,7 @@ int instruction(tListOfInstr *instrList)
  * - neguje operand 1, vysledek v result
  */
       case I_NEG:
-        if(!(operand1->type == T_BOOLEAN)) return EXIT_TYPE_ERROR;
-        else
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data == FALSE)? TRUE : FALSE);
-        }
+          (*(bool*)result) = (((*(bool*)operand1) == FALSE)? TRUE : FALSE);
         break;
 
 /*
@@ -370,161 +334,78 @@ int instruction(tListOfInstr *instrList)
 /*
  * LESS
  *
- * - I_LESS, operand1, operand2, vysledek
+ * - I_LESS, typ, operand1, operand2, vysledek
  * - operand 1 je mensi nez operand 2
  */
       case I_LESS:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data < operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data < operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) < 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) < (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) < (*(double*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) < 0)? TRUE : FALSE);
         break;
 
 /*
  * GREATER
  *
- * - I_GREATER, operand1, operand2, vysledek
+ * - I_GREATER, typ, operand1, operand2, vysledek
  * - operand 1 je vetsi nez operand 2
  */
       case I_GREATER:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data > operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data > operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) > 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) > (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) > (*(double*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) > 0)? TRUE : FALSE);
         break;
+
 
 /*
  * LESS OR EQUAL
  *
- * - I_LESS_EQUAL, operand1, operand2, vysledek
+ * - I_LESS_EQUAL, typ, operand1, operand2, vysledek
  * - operand 1 je mensi nebo roven operandu 2
  */
       case I_LESS_EQUAL:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_BOOLEAN) && (operand2->type == T_REAL))
-        {
-          result->type = T_REAL;
-          result->data = ((operand1->data <= operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) <= 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) <= (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) <= (*(double*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) <= 0)? TRUE : FALSE);
         break;
+
 
 /*
  * GREATER OR EQUAL
  *
- * - I_GREATER_EQUAL, operand1, operand2, vysledek
+ * - I_GREATER_EQUAL, typ, operand1, operand2, vysledek
  * - operand 1 je vetsi nebo roven operandu 2
  */
       case I_GREATER_EQUAL:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data >= operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) >= 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) >= (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) >= (*(double*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) >= 0)? TRUE : FALSE);
         break;
+
 
 /*
  * EQUAL
  *
- * - I_EQUAL, operand1, operand2, vysledek
+ * - I_EQUAL, typ, operand1, operand2, vysledek
  * - operand 1 je roven operandu 2
  */
       case I_EQUAL:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data == operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) == 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) == (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) == (*(double*)operand2))? TRUE : FALSE);
+        else if(type == k_bool) (*(bool*)result) = (((*(bool*)operand1) == (*(bool*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) == 0)? TRUE : FALSE);
         break;
 
 /*
  * NOT EQUAL
  *
- * - I_NOT_EQUAL, operand1, operand2, vysledek
+ * - I_NOT_EQUAL, typ, operand1, operand2, vysledek
  * operand 1 neni roven (je ruzny od) operandu 2
  */
       case I_NOT_EQUAL:
-        if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_REAL) && (operand2->type == T_REAL))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_BOOLEAN) && (operand2->type == T_BOOLEAN))
-        {
-          result->type = T_BOOLEAN;
-          result->data = ((operand1->data != operand2->data)? TRUE : FALSE);
-        }
-        else if((operand1->type == T_STRING) && (operand2->type == T_STRING))
-        {
-          result->type = T_BOOLEAN;
-          result->data = (((strcmp(operand1->data, operand2->data)) != 0)? TRUE : FALSE);
-        }
-        else return EXIT_TYPE_ERROR;
+        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) != (*(int*)operand2))? TRUE : FALSE);
+        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) != (*(double*)operand2))? TRUE : FALSE);
+        else if(type == k_bool) (*(bool*)result) = (((*(bool*)operand1) != (*(bool*)operand2))? TRUE : FALSE);
+        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) != 0)? TRUE : FALSE);
         break;
 
 /*
@@ -583,13 +464,7 @@ int instruction(tListOfInstr *instrList)
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-        if(!(operand1->type == T_STRING)) return EXIT_TYPE_ERROR;
-        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
-        else
-        {
-          result->type = T_INTEGER;
-          result->data = strlen(operand1->data);
-        }
+         (*(int*)result) = strlen((*(int*)operand1));
         break;
 
 /*
@@ -602,14 +477,7 @@ int instruction(tListOfInstr *instrList)
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
-        if(!((operand1->type == T_STRING) && (operand2->type == T_STRING))) return EXIT_TYPE_ERROR;
-        else if((!(operand1->data)) || (!(operand2->data))) return EXIT_NOT_INIT_ERROR;
-        else if(strlen(operand2->data) > strlen(operand1->data)) return EXIT_RUNTIME_ERROR;
-        else
-        {
-          result->type = T_INTEGER;
-          result->data = findSubtring();
-        }
+          (*(int*)result) = findSubtring();
         break;
 
 /*
@@ -626,18 +494,12 @@ int instruction(tListOfInstr *instrList)
         // string je vlastne pole znaku, ze?
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
-        if(!(operand1->type == T_STRING) return EXIT_TYPE_ERROR;
-        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
+        if(strlen(*(int*)operand1) == 1) (*(char*)result) = (*(char*)operand1); // retezec ma delku 1, neni co radit
         else
         {
-          if(strlen(operand1->data) == 1) result->data = operand1->data; // retezec ma delku 1, neni co radit
-          else
-          {
-            int n = strlen(operand1->data);
+          int n = strlen(*(int*)operand1);
 
-            result->type = T_STRING;
-            result->data = (shellSort(*operand1, n));
-          }
+          (*(char*)result) = (shellSort((*(int*)operand1), n));
         }
         break;
     }
@@ -652,22 +514,6 @@ int instruction(tListOfInstr *instrList)
 int interpret(tInstList *)
 {
   // ...
-}
-
-/*
- * isIntOrReal
- * -----------------------------------------------------------------------------
- * - funkce na kontrolu typu integer a real v operandech 3AK
- * - vraci TRUE, jestlize se v operandech vyskytuji pouze typy int a real
- * - jinak vraci FALSE
- */
-bool isIntOrReal(void)
-{
-  if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) return TRUE;
-  else if((operand1->type == T_INTEGER) && (operand2->type == T_REAL)) return TRUE;
-  else if((operand1->type == T_REAL) && (operand2->type == T_INTEGER)) return TRUE;
-  else if((operand1->type == T_REAL) && (operand2->type == T_REAL)) return TRUE;
-  else return FALSE;
 }
 
 /*
