@@ -16,7 +16,7 @@
 #include "ilist.h"
 #include "interpret.h"
 #include "constructs.h"
-//#include "ParStack.h"
+#include "parstack.h"
 
 #define dINT 6
 #define dREAL 7
@@ -26,30 +26,10 @@
 
 #define Right 20
 #define Left 21
-#define Staight 22
+#define Straight 22
 #define Err 23
 
-// precedencni tabulka
-//int Table [14][14] =
-// radek - vstupni token,
-// sloupec - znak na zasobniku
-//{  //        +     -    *     div    >     <    >=    <=     =    <>    (     )    i     $
-//* + */  {Right, Right,Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* - */  {Right, Right,Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* * */  {Right, Right,Right,Right,Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* div */{Right, Right,Right,Right,Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* > */  {Left,  Left, Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* < */  {Left,  Left, Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* >= */ {Left,  Left, Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* <= */ {Left,  Left, Left, Left, Right,Right,Right,Right,Right,Right,Left,Right,Left,Right,},
-//* = */  {Left,  Left, Left, Left, Left, Left, Left, Left, Right,Right,Left,Right,Left,Right,},
-//* <> */ {Left,  Left, Left, Left, Left, Left, Left, Left, Right,Right,Left,Right,Left,Right,},
-//* ( */  {Left,  Left, Left, Left, Left, Left, Left, Left, Left, Left, Left,Straight,Left,Err,},
-//* ) */  {Right, Right,Right,Right,Right,Right,Right,Right,Right,Right,Err,Right,Err,Right,},
-//* i */  {Right, Right,Right,Right,Right,Right,Right,Right,Right,Right,Err,Right,Err,Right,},
-//* $ */  {Left,  Left, Left, Left, Left, Left, Left, Left, Left, Left, Left,Err,Left,Err,},
 
-//};
 
  //hlavicka syntaktickeho analyzatoru
 

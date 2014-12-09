@@ -37,7 +37,7 @@ typedef enum
   l_gequal, l_equal, l_not,       // >=  =   <>
   l_lparenth, l_rparenth,         // (   )
   l_endl, l_eof, l_enddot,        // ;   EOF .
-  l_sep, l_reset = 99             // ,   chyba
+  l_sep, l_E, l_left, l_reset = 99             // ,   chyba
 } lexType;
 
 typedef enum
