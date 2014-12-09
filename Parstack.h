@@ -42,3 +42,5 @@ sData sTop (Stack *s);
 // zkontroluje jeslti je zasobnik prazdny
 // true pokud je prazdny
 int sEmpty(Stack *s);
+
+int DataInit(sData *lex);

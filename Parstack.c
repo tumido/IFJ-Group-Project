@@ -7,6 +7,7 @@
  *        Projekt:  IFJ
  * =====================================================================
  */
+#include "parstack.h"
 
 void sInit (Stack *s)
 {
@@ -38,5 +39,16 @@ int sEmpty(Stack *s)
     return (s->top == 0);
 }
 
+int DataInit(sData *lex)
+{
+  if (((lex->lexdata.data = (string *) malloc(sizeof(string))) == NULL) ||
+     ((((string *) lex->lexdata.data)->str = malloc(sizeof(char) * DETAIL_LENGHT)) == NULL ))
+    return EXIT_INTERNAL_ERROR;
+  lex->lexdata.type = l_reset;
+  ((string *) lex->lexdata.data)->str[0] = '\0';
+  ((string *) lex->lexdata.data)->length = 0;
+  ((string *) lex->lexdata.data)->alloc = DETAIL_LENGHT;
+  return EXIT_SUCCESS;
+}
 
 
