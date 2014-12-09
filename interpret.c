@@ -14,35 +14,6 @@
 #include "ilist.h"
 
 /*
- * Klasifikace datového typu
- * -----------------------------------------------------------------------------
- * - integer, real, boolean, string
- */
-int returnValue(tVarValue *destination, tVarValue *source)
-{
-  switch(source->type)
-  {
-    case T_INTEGER:
-      (*destination)->type = T_INTEGER;
-      (*destination)->integer = source->integer;
-      break;
-    case T_REAL:
-      (*destination)->type = T_REAL;
-      (*destination)->rea = source->real;
-      break;
-    case T_BOOLEAN:
-      (*destination)->type = T_BOOLEAN;
-      (*destination)->boolean = source->boolean;
-      break;
-    case T_STRING:
-      (*destination)->type = T_STRING;
-      (*destination)->string = source->string;
-      break;
-  }
-  return EXIT_SUCCESS;
-}
-
-/*
  * Interpretace konkretni instrukce
  * -----------------------------------------------------------------------------
  * - specialni instrukce
@@ -61,10 +32,11 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
     {
 
 /*
+ * -----------------------------------------------------------------------------
  * Specialni instrukce
  * -----------------------------------------------------------------------------
  * - stop, read, write, if, then, if_end, jump, assign, substr, call_fuction,
- *   do_while
+ *   return, while_do
  */
 
 /*
@@ -189,6 +161,12 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
       case I_ASSIGN:
         if((operand1->type == T_INTEGER) && (result->type == T_INTEGER)) result->data = operand1->data;
         else if((operand1->type == T_REAL) && (result->type == T_REAL)) result->data = operand1->data;
+        else if((operand1->type == T_REAL) && (result->type == T_INTEGER))
+        {
+          result->type = T_REAL; // jedinny zvlastni pripad, nutno pretypovat
+          result->data = operand1->data;
+        }
+        else if((operand1->type == T_INTEGER) && (result->type == T_REAL)) result->data = operand1->data;
         else if((operand1->type == T_BOOLEAN) && (result->type == T_BOOLEAN)) result->data = operand1->data;
         else if((operand1->type == T_STRING) && (result->type == T_STRING)) result->data = operand1->data;
         {
@@ -202,6 +180,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  * SUBSTRING
  * - intrukce ulozi nekam podretezec v zadanem retezci
  * I_SUBSTR,
+ * bude vubec potreba?
  */
       case I_SUBSTR:
         break;
@@ -223,10 +202,10 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
         break;
 
 /*
- * DO WHILE
- * - instrukce cyklu do-while
+ * WHILE DO
+ * - instrukce cyklu while (provadeni nejake cinnosti porad dokola tak dlouho, dokud nejsem uspokojeny)
  */
-      case I_DO_WHILE:
+      case I_WHILE_DO:
         break;
 
 /*
@@ -258,16 +237,18 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
  *
  * - I_DIV, operand1, operand2, vysledek
  * - vydeli operand 1 a operand 2, vysledek ulozi do result
+ * - pozor, vysledek bude vzdy REAL!
  */
       case I_DIV:
         if(!isIntOrReal()) return EXIT_TYPE_ERROR;
         else
         {
-          if((operand1->type == T_INTEGER) && (operand2->type == T_INTEGER)) result->type = T_INTEGER;
-          else result->type = T_REAL; // real a real/int da real
-
           if(operand2->data == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
-          else result->data = operand1->data / operand2->data;
+          else
+          {
+            result->type = T_REAL;
+            result->data = operand1->data / operand2->data;
+          }
         }
         break;
 
@@ -553,6 +534,7 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList)
 
 /*
  * COPY
+ *
  * I_COPY, operand1, operand2, result
  * operand1 - retezec ze ktereho budu kopirovat
  * operand2 - struktura o dvou integerech
@@ -713,6 +695,7 @@ int iWrite(tListOfInstr *L)
       return EXIT_TYPE_ERROR;
     break;
   }
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -738,6 +721,7 @@ int iRead(tListOfInstr *L);
       return EXIT_READ_STDIN_ERROR;
     break;
   }
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -746,4 +730,9 @@ int iRead(tListOfInstr *L);
  * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to
  *   zkusit nejak nasimulovat..
  * - dokoncit zbyvajici instrukce
+ *
+ * - podivat se lepe na rozdil mezi chybou 4 a 5! 
+ * - metodu BMA mame implmentovat dle varianty algoritmu popsane v ramci predmetu IAL
+ *   takze cele prepsat do nejakeho prasackeho na dve veci reseni...
+ * - stejne tak shell sort..
  */
