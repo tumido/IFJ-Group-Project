@@ -14,7 +14,7 @@
 #include "scanner.h"
 #include "io.h"
 #include "ilist.h"
-#include "interpret.h"
+//#include "interpret.h"
 #include "constructs.h"
 #include "parstack.h"
 
@@ -22,6 +22,7 @@
 #define dREAL 7
 #define dSTR 8
 #define dBOOL 9
+#define EE 24
 
 
 #define Right 20
@@ -46,7 +47,7 @@ void generateInstruction(int instType, key type, void *addr1, void *addr2, void 
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode);
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal);
 
 /*   Blok deklarace promennych
  * ---------------------------------------------------------------------
@@ -100,7 +101,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
  *   <paramsCall> -> "id" "," <paramsCall>
  *   <paramsCall> -> "id"
  */
-int paramsCall(struct input * in, btree * table, token * lex, funcData * function, struct funcParam * param);
+int paramsCall(struct input * in, btree * table, tListOfInstr * ilist,  token * lex, funcData * function, struct funcParam * param);
 
 /*   Volani funkce
  * ---------------------------------------------------------------------

@@ -97,14 +97,14 @@ int retIndex (lexType typ)
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal)
 {
   printDebug("Spoustim analyzu vyrazu\n");
-  int result;
+  int result = EXIT_SUCCESS;
   Stack s;
   sInit (&s);
     token NLex;
-    if (tokenInit(&NLex) != EXIT_SUCCESS) return result ;
+    if ((result = tokenInit(&NLex)) != EXIT_SUCCESS) return result;
 
   sData itemAct;
   sData itemTop;
@@ -496,7 +496,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 {
   printDebug("Funkce\n");
   int result = EXIT_SUCCESS;
-  struct node * nd = NULL; // vytvorime zaznam v tabulce symbolu
+  struct node * nd = NULL, * new; // vytvorime zaznam v tabulce symbolu
 
   // Prvni token musi byt klicove slovo "function"
   if ((lex->type != l_key)  || (*(key *)lex->data != k_function ))
@@ -591,7 +591,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     __SymbolTableDispose(&nd);
     return EXIT_INTERNAL_ERROR;
   }
-  __SymbolTableInsert(&table->global, nd); // vlozime symbol
+  SymbolTableInsert(table, nd); // vlozime symbol
 
   if (*(key *)lex->data == k_forward) // token je "forward", potrebuju ";"
   {
@@ -605,6 +605,15 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     // inicializuju ilist a TS funkce
     listInit(&(((funcData *)nd->data)->ilist));
     SymbolTableInitLocal(((funcData *)nd->data)->table, table);
+    while (firstParam != NULL)
+    {
+      if ((new = SymbolTableCreateNode(firstParam->keyValue, firstParam->type, NULL)) == NULL)
+      {
+        __SymbolTableDispose(&new);
+        return EXIT_INTERNAL_ERROR;
+      }
+      SymbolTableInsert(((funcData *)nd->data)->table, new); // vlozime nove vytvoreny symbol bez hodnoty
+    }
     // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
     if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
         ((result = body(in, table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
@@ -623,17 +632,18 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
  *   <paramsCall> -> "id" "," <paramsCall>
  *   <paramsCall> -> "id"
  */
-int paramsCall(struct input * in, btree * table, token * lex, funcData * function, struct funcParam * param)
+int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * lex, funcData * function, struct funcParam * param)
 {
   printDebug("Zpracovavam parametry volani\n");
   int result;
+  bool isOrd = false;
 
   if (param == NULL) { printDebug("Vsechny argumenty nacteny\n"); return EXIT_SUCCESS; } // mam spravny pocet parametru -> konec
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
 
-  struct node * nd, * new;
-  void * data = lex->data;
+  struct node * nd, * paramNode;
+  void * data;
   switch (lex->type)
   {
     case l_id: // prisel identifikator, musim ho najit (a musi byt stejneho typu) v tabulce a pouzit jeho hodnotu
@@ -651,23 +661,28 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
          ( lex->type == l_str && param->type != k_string) ||
          ( lex->type == l_key && param->type != k_bool))
         return EXIT_TYPE_ERROR;
-      if ((new = SymbolTableCreateNode(param->keyValue, param->type, data)) == NULL)
-      {
-        __SymbolTableDispose(&new);
-        return EXIT_INTERNAL_ERROR;
-      }
-      SymbolTableInsert(function->table, new); // vlozime nove vytvoreny symbol se zkopirovanou hodnotou odkazovaneho
-      // TOTO JE BLBE, musi se to resit assingem!
+      isOrd = true;
+      data = lex->data; // ulozim si data a hacknu lex->type, aby mi nedelal u stringu free
+      lex->data = NULL;
+      lex->type = l_int;
       break;
     default:
       return EXIT_SYNTAX_ERROR;
   }
   printDebug("Parametr volani nacten\n");
 
+  if ((paramNode = SymbolTableSearch(function->table, param->keyValue)) == NULL)
+  {
+    printDebug("Parametr funkce nenalezen v lokalni tabulce, nemas delat hacky Coufale..\n");
+    return EXIT_INTERNAL_ERROR;
+  }
+  generateInstruction(I_ASSIGN,param->type, data, NULL, paramNode->data, ilist);
+  if (isOrd) generateInstruction(I_CLEAN, param->type, data, NULL, NULL, ilist);
+
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_sep) return EXIT_SYNTAX_ERROR; // neni carka, ale nemam vsechny parametry -> chyba
 
-  return paramsCall(in, table, lex, function, param->next);
+  return paramsCall(in, table, ilist,  lex, function, param->next);
 }
 
 /*   Volani funkce
@@ -696,7 +711,7 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
       if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
     }
     // zpracovani parametru
-    if ((result = paramsCall(in, table, lex, (funcData *)nd->data, ((funcData *)nd->data)->param)) != EXIT_SUCCESS)
+    if ((result = paramsCall(in, table, ilist, lex, (funcData *)nd->data, ((funcData *)nd->data)->param)) != EXIT_SUCCESS)
       return result;
     // nacteme pravou zavorku a konec
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }

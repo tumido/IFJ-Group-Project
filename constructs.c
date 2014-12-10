@@ -2,9 +2,9 @@
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  12/09/2014 09:43:47 PM
- *          Autor:  Tomáš Coufal
- *          Login:  xcoufa09
- *        Projekt:  
+ *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
+ *        Projekt:  IFJ
  * =====================================================================
  */
 
@@ -45,7 +45,7 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
     {
       data = lex->data;
       switch(lex->type)
-      { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break;}
+      { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break; default: return EXIT_INTERNAL_ERROR;}
     }
     generateInstruction(I_WRITE, type, data, NULL, NULL, ilist);
     // nactu ","

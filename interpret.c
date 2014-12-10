@@ -15,10 +15,7 @@
  * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand 
  */
 
-#include "io.h"
 #include "interpret.h"
-#include "ial.h" // kvuli funkci findSubstring a shellSort
-#include "ilist.h"
 
 /*
  * Interpretace konkretni instrukce
@@ -31,9 +28,9 @@
  */
 int instruction(tListOfInstr *instrList)
 {
-  while(1);
+  while(1)
   {
-    tInstr I = listGetData(instrList);
+    tInstr * I = listGetData(instrList);
 
     switch (I->instType)
     {
@@ -45,7 +42,7 @@ int instruction(tListOfInstr *instrList)
  * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return, 
  *   while_do, clear
  */
-
+// NA CO JE INSTRUKCE STOP, IF, THEN, IF_END, RETURN, WHILE_DO?
 /*
  * STOP
  *
@@ -161,9 +158,17 @@ int instruction(tListOfInstr *instrList)
         if(type == k_int) (*(int*)result) = (*(int*)operand1);
         else if(type == k_real) (*(double*)result) = (*(double*)operand1);
         else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
-        else if(type == k_string) (*(char*)result) = (*(char*)operand1);
-          // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
-          // nebo bude treba to delat po jednotlivych znacich..
+        else if(type == k_string)
+        {
+          if (((string *)result)->alloc < ((string *)operand1)->alloc)
+          {
+            ((string *)result)->alloc = ((string *)operand1)->alloc;
+            if ((((string *)result)->str = realloc(sizeof(char) * ((string *)operand1)->alloc)) == NULL)
+              return EXIT_INTERNAL_ERROR;
+          }
+          strncpy(((string *)result)->str, ((string *)operand1)->str, ((string *)result)->alloc);
+          ((string *)result)->length = ((string *)operand1)->length;
+        }
         break;
 
 /*
@@ -219,12 +224,9 @@ int instruction(tListOfInstr *instrList)
  * - uvolni obsah operandu 1
  */
       case I_CLEAR:
-        if(type == T_STRING)
-        {
-          free(*operand1);
-          free(*struktura);
-        }
-        else free(*operand1);
+        if(type == t_string)
+          free(((string *)operand1)->str);
+        free(operand1);
         break;
 
 /*
