@@ -26,8 +26,10 @@
  * - specialni instrukce
  * - aritmeticke instrukce
  * - instrukce porovnani
- * - instrukce navraceni datoveho typu
  * - instrukce vestavenych funkci
+ *
+ * - u instrukci pracujicimi s pouze jednim datovym typem netreba tento datovy
+ *   typ znat, predpokladam osetreni parserem, ze posila pouze platny datovy typ
  */
 int instruction(tListOfInstr *instrList)
 {
@@ -219,7 +221,7 @@ int instruction(tListOfInstr *instrList)
  * - uvolni obsah operandu 1
  */
       case I_CLEAR:
-        if(type == T_STRING)
+        if(type == k_string)
         {
           free(*operand1);
           free(*struktura);
@@ -253,7 +255,7 @@ int instruction(tListOfInstr *instrList)
  * - pozor, vysledek bude vzdy REAL!
  */
       case I_DIV:
-        if((*(int*)operand2) == 0) return EXIT_DIVISION_BY_ZERO_ERROR;
+        if(((*(int*)operand2) == 0) || ((*(double*)operand2) == 0.0)) return EXIT_DIVISION_BY_ZERO_ERROR; // nulou delit neumime
         else
         {
           if(type == k_int) (*(int*)result) = (*(int*)operand1) / (*(int*)operand2);
@@ -264,7 +266,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * ADDICTION
  *
- * - I_ADD, operand1, operand2, vysledek
+ * - I_ADD, typ, operand1, operand2, vysledek
  * - secte operand 1 a operand 2, vysledek ulozi do result
  */
       case I_ADD:
@@ -275,7 +277,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * SUBTITION
  *
- * - I_SUB, operand1, operand2, vysledek
+ * - I_SUB, typ, operand1, operand2, vysledek
  * - odecte od operandu1 operand2
  */
       case I_SUB:
@@ -286,7 +288,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * CONCATENATE
  *
- * - I_CON, operand1, operand2, vysledek
+ * - I_CON, NULL, operand1, operand2, vysledek
  * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
@@ -297,7 +299,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * INCREMENTATION
  *
- * - I_INC, operand1, NULL, vysledek
+ * - I_INC, NULL, operand1, NULL, vysledek
  * - inkrementuje operand 1, vysledek v result
  */
       case I_INC:
@@ -307,7 +309,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * DECREMENTATION
  *
- * - I_DEC, operand1, NULL, vysledek
+ * - I_DEC, NULL, operand1, NULL, vysledek
  * - dekrementuje operand 1, vysledek v result
  */
       case I_DEC:
@@ -317,7 +319,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * NEGATION
  *
- * - I_NEG, operand1, NULL, vysledek
+ * - I_NEG, NULL, operand1, NULL, vysledek
  * - neguje operand 1, vysledek v result
  */
       case I_NEG:
@@ -399,7 +401,7 @@ int instruction(tListOfInstr *instrList)
  * NOT EQUAL
  *
  * - I_NOT_EQUAL, typ, operand1, operand2, vysledek
- * operand 1 neni roven (je ruzny od) operandu 2
+ * - operand 1 neni roven (je ruzny od) operandu 2
  */
       case I_NOT_EQUAL:
         if(type == k_int) (*(bool*)result) = (((*(int*)operand1) != (*(int*)operand2))? TRUE : FALSE);
@@ -418,7 +420,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * COPY
  *
- * I_COPY, operand1, operand2, result
+ * I_COPY, NULL, operand1, operand2, result
  * operand1 - retezec ze ktereho budu kopirovat
  * operand2 - struktura o dvou integerech
  * result - misto kam nahraji vysledny podretezec
@@ -429,37 +431,32 @@ int instruction(tListOfInstr *instrList)
  * - 'n' urcuje delku podretezce
  */
       case I_COPY:
-        if(!((operand1->type == T_STRING))) return EXIT_TYPE_ERROR;
-        else if(!(operand1->data)) return EXIT_NOT_INIT_ERROR;
-        else
-        {
-          int start = L->addr2->start;                    //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
-          int length = L->addr2->length;
-          int arrayLenght = strlen(textCopy);             //zjistim si, jak dlouhy retezec mi prisel
-          int arraySize = arrayLenght - length - 1;       // promena, ktera yjisti, jak dlouhe pole budu potrebovat, urcene podle delky ocekavaneho podretezce,magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu
-          char arrayCopy [arraySize];
-          for(int i = 0; i <= arraySize; i++)             //inicializace vysledneho pole
-            {arrayCopy[i] = '\0';}
-          for(int i = 0; i <= length; i++)                //prepsani stringu do charu a vyhoyeni vysledku
-            {
-              arrayCopy[i] = textCopy[start];
-              start++;
-              if(textCopy[i] == '\0')
-                i = length;
-            }
-          //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na result, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
-          /*
-           * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
-           * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
-           * na 100% je potreba tuto funkci otestovat, promene jsem prepisoval na dvakrat, nejsem is jist ze jsou prepsane spravne
-           */
-        }
+        int start = L->addr2->start;                    //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
+        int length = L->addr2->length;
+        int arrayLenght = strlen(textCopy);             //zjistim si, jak dlouhy retezec mi prisel
+        int arraySize = arrayLenght - length - 1;       // promena, ktera yjisti, jak dlouhe pole budu potrebovat, urcene podle delky ocekavaneho podretezce,magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu
+        char arrayCopy [arraySize];
+        for(int i = 0; i <= arraySize; i++)             //inicializace vysledneho pole
+          {arrayCopy[i] = '\0';}
+        for(int i = 0; i <= length; i++)                //prepsani stringu do charu a vyhoyeni vysledku
+          {
+            arrayCopy[i] = textCopy[start];
+            start++;
+            if(textCopy[i] == '\0')
+              i = length;
+          }
+        //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na result, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
+        /*
+         * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
+         * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
+         * na 100% je potreba tuto funkci otestovat, promene jsem prepisoval na dvakrat, nejsem is jist ze jsou prepsane spravne
+         */
         break;
 
 /*
  * LENGHT
  *
- * - I_LENGHT, retezec, NULL, vysledek
+ * - I_LENGHT, NULL, retezec, NULL, vysledek
  * - length(s : string) : integer
  * - vrati delku retezce zadaneho parametrem 's'
  */
@@ -483,7 +480,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * SORT
  *
- * - I_SORT, retezec, NULL, vysledek
+ * - I_SORT, NULL, retezec, NULL, vysledek
  * - sort(s : string) : string
  * - seradi znaky v retezci 's' tak, aby znak s nizsi ordinarni
  *   hodnotou vzdy predchazel znaku s vyssi ordinarni hodnotou
@@ -523,24 +520,9 @@ int interpret(tInstList *)
  */
 int iWrite(tListOfInstr *L)
 {
-  switch(L->instType)
-  {
-    case T_INTEGER:
-      printf("%d\n", L->addr1);
-      break;
-    case T_REAL:
-      printf("%f\n", L->addr1);
-      break;
-    case T_STRING:
-      printf("%s\n", L->addr1);
-      break;
-    case T_BOOLEAN:
-      return EXIT_RUNTIME_ERROR;
-      break;
-    default:
-      return EXIT_TYPE_ERROR;
-    break;
-  }
+  if(type == k_int) printf("%d\n", (*(int*))operand1);
+  else if(type == k_real) printf("%f\n", (*(double*))operand1);
+  else printf("%c\n", (*(char*))operand1);
   return EXIT_SUCCESS;
 }
 
@@ -551,6 +533,7 @@ int iWrite(tListOfInstr *L)
  */
 int iRead(tListOfInstr *L);
 {
+  // tu je to treba cele predelat a konecne dokoncit..
   char character;               //promenna do ktere pozdeji budu nacitat znaky
   switch(L->instType)
   {
@@ -577,7 +560,6 @@ int iRead(tListOfInstr *L);
  *   zkusit nejak nasimulovat..
  * - dokoncit zbyvajici instrukce
  *
- * - podivat se lepe na rozdil mezi chybou 4 a 5! 
  * - metodu BMA mame implmentovat dle varianty algoritmu popsane v ramci predmetu IAL
  *   takze cele prepsat do nejakeho prasackeho na dve veci reseni...
  *   - tezky nezdar, v opore je v algoritmu chyba, podle me.. tak jsem na rozpacich,

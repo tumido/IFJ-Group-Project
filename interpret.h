@@ -46,16 +46,10 @@
 #define I_SORT 32
 #define I_CLEAN 33
 
-
-/*
- * Klasifikace datového typu
- */
-int returnValue(tVarValue *destination, tVarValue *source);
-
 /*
  * Interpretace konkretni instrukce
  */
-int instruction(tSymbolTable *ST, tListOfInstr *instrList);
+int instruction(tListOfInstr *instrList);
 
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
@@ -63,14 +57,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList);
 int interpret(tInstList *);
 
 /*
- * Funkce na kontrolu typu integer a real v operandech 3AK
- */
-bool isIntOrReal(void);
-
-/*
  * Funkce vykonava volani WRITE - zapisuje na stdout
  */
-int iWrite(tVarValue *source);
+int iWrite(tListOfInstr *L);
 
 /*
  * Funkce vykonava volani READ - cte ze stdin
