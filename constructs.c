@@ -272,7 +272,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   printDebug("Vetveni\n");
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL, )) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, NULL)) != EXIT_SUCCESS))
     { return result; }
   // musim si nekde pamatovat navesti, jak to resi interpret ??
   // nasleduje "then"
@@ -307,7 +307,7 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   // mam "while"
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL,)) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, NULL)) != EXIT_SUCCESS))
     { return result; }
   // potrebuju "do"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }

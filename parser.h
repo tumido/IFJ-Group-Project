@@ -14,7 +14,7 @@
 #include "scanner.h"
 #include "io.h"
 #include "ilist.h"
-//#include "interpret.h"
+#include "interpret.h"
 #include "constructs.h"
 #include "parstack.h"
 

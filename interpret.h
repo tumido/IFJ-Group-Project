@@ -59,6 +59,7 @@
 #define I_LENGHT 33
 #define I_FIND 34
 #define I_SORT 35
+#define I_CLEAN 36
 
 
 /*
@@ -69,7 +70,7 @@ int instruction(tListOfInstr *instrList);
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  */
-int interpret(tInstList *);
+int interpret(tListOfInstr *  I);
 
 /*
  * Funkce vykonava volani WRITE - zapisuje na stdout
