@@ -8,13 +8,6 @@
  * =====================================================================
  */
 
-/*
- * -----------------------------------------------------------------------------
- * NOVY ZPUSOB SYNTAXE INSTRUKCI
- * -----------------------------------------------------------------------------
- * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand
- */
-
 #include "interpret.h"
 
 /*
@@ -73,11 +66,11 @@ int instruction(tListOfInstr *instrList)
  * - operand 1 rozhoduje o skoku, operand 2 je adresa instrukce, na kterou skaceme  
  */
       case I_JUMP:
-          if(((*(bool*))I->addr1) == TRUE) return EXIT_SUCCESS;
-          else
-          {
-             // jump na adresu danou operandem 2
-          }
+        if(((*(bool*))I->addr1) == TRUE) return EXIT_SUCCESS;
+        else
+        {
+          // jump na adresu danou operandem 2
+        }
         break;
 
 /*
@@ -139,7 +132,7 @@ int instruction(tListOfInstr *instrList)
       case I_MUL:
         if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) * (*(int*)I->addr2);
         else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) * (*(double*)I->addr2);
-        else return EXIT_RUNTIME_ERROR;
+        else return EXIT_RUNTIME_ERROR; // kde se to tu vzalo a proc to tu je? neresi to parser?
         break;
 
 /*
@@ -166,9 +159,9 @@ int instruction(tListOfInstr *instrList)
  * - secte operand 1 a operand 2, vysledek ulozi do I->addr3
  */
       case I_ADD:
-          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) + (*(int*)I->addr2);
-          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) + (*(double*)I->addr2);
-          else return EXIT_RUNTIME_ERROR;
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) + (*(int*)I->addr2);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) + (*(double*)I->addr2);
+        else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
@@ -178,9 +171,9 @@ int instruction(tListOfInstr *instrList)
  * - odecte od operandu1 I->addr2
  */
       case I_SUB:
-          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - (*(int*)I->addr2);
-          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) - (*(double*)I->addr2);
-          else return EXIT_RUNTIME_ERROR;
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - (*(int*)I->addr2);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) - (*(double*)I->addr2);
+        else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
@@ -190,8 +183,8 @@ int instruction(tListOfInstr *instrList)
  * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
-          strcat((*(char*)I->addr3), (*(char*)I->addr1); // tady opravdu nevim, jestli je to dobre/asi ROMAN..,,,,,,,,ja bych to udelal stejne / KUBA
-          strcat((*(char*)I->addr3), (*(char*)I->addr2);
+        strcat((*(char*)I->addr3), (*(char*)I->addr1); // tady opravdu nevim, jestli je to dobre/asi ROMAN..,,,,,,,,ja bych to udelal stejne / KUBA
+        strcat((*(char*)I->addr3), (*(char*)I->addr2);
         break;
 
 /*
@@ -201,7 +194,7 @@ int instruction(tListOfInstr *instrList)
  * - inkrementuje operand 1, vysledek v I->addr3
  */
       case I_INC:
-          (*(int*)I->addr3) = ++(*(int*)I->addr1);
+        (*(int*)I->addr3) = ++(*(int*)I->addr1);
         break;
 
 /*
@@ -211,7 +204,7 @@ int instruction(tListOfInstr *instrList)
  * - dekrementuje operand 1, vysledek v I->addr3
  */
       case I_DEC:
-          (*(int*)I->addr3) = --(*(int*)I->addr1);
+        (*(int*)I->addr3) = --(*(int*)I->addr1);
         break;
 
 /*
@@ -221,8 +214,8 @@ int instruction(tListOfInstr *instrList)
  * - neguje operand 1, vysledek v I->addr3
  */
       case I_NEG:
-          if(I->instType == k_bool)(*(bool*)I->addr3) = (((*(bool*)I->addr1) == FALSE)? TRUE : FALSE);
-          else if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - 2 * (*(int*)I->addr1);  //negace integeru by Kuba, muze byt?
+        if(I->instType == k_bool)(*(bool*)I->addr3) = (((*(bool*)I->addr1) == FALSE)? TRUE : FALSE);
+        else if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - 2 * (*(int*)I->addr1);  //negace integeru by Kuba, muze byt?
         break;
 
 /*
@@ -360,7 +353,7 @@ int instruction(tListOfInstr *instrList)
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-         (*(int*)I->addr3) = strlen((*(char*)I->addr1));
+        (*(int*)I->addr3) = strlen((*(char*)I->addr1));
         break;
 
 /*
@@ -373,7 +366,7 @@ int instruction(tListOfInstr *instrList)
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
-          (*(char*)I->addr3) = findSubtring();
+        (*(char*)I->addr3) = findSubtring();
         break;
 
 /*
@@ -404,6 +397,7 @@ int instruction(tListOfInstr *instrList)
 }
 
 /*
+ * -----------------------------------------------------------------------------
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  * -----------------------------------------------------------------------------
  */
