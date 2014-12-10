@@ -15,10 +15,7 @@
  * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand
  */
 
-#include "io.h"
 #include "interpret.h"
-#include "ial.h" // kvuli funkci findSubstring a shellSort
-#include "ilist.h"
 
 /*
  * Interpretace konkretni instrukce
@@ -33,7 +30,7 @@
  */
 int instruction(tListOfInstr *instrList)
 {
-  while(1);
+  while(1)
   {
     tInstr * I = listGetData(instrList);
 
@@ -47,7 +44,7 @@ int instruction(tListOfInstr *instrList)
  * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return,
  *   while_do, clear
  */
-
+// NA CO JE INSTRUKCE STOP, IF, THEN, IF_END, RETURN, WHILE_DO?
 /*
  * STOP
  *
@@ -160,6 +157,7 @@ int instruction(tListOfInstr *instrList)
  * - do cile (I->addr3) priradi hodnotu operandu 1
  */
       case I_ASSIGN:
+<<<<<<< HEAD
         if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1);
         else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1);
         else if(I->instType == k_bool) (*(bool*)I->addr3) = (*(bool*)I->addr1);
@@ -167,6 +165,9 @@ int instruction(tListOfInstr *instrList)
           // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
           // nebo bude treba to delat po jednotlivych znacich..
                   if(type == k_int) (*(int*)result) = (*(int*)operand1);
+=======
+        if(type == k_int) (*(int*)result) = (*(int*)operand1);
+>>>>>>> origin/master
         else if(type == k_real) (*(double*)result) = (*(double*)operand1);
         else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
         else if(type == k_string)
@@ -235,12 +236,15 @@ int instruction(tListOfInstr *instrList)
  * - uvolni obsah operandu 1
  */
       case I_CLEAR:
+<<<<<<< HEAD
         if(I->instType == k_string)
         {
           free(*I->addr1);
           free(*struktura);
         }
         else free(*I->addr1);
+=======
+>>>>>>> origin/master
         if(type == t_string)
           free(((string *)operand1)->str);
         free(operand1);
