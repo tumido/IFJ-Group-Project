@@ -97,9 +97,9 @@ int retIndex (lexType typ)
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode)
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
 {
-  printDebug("Vyhodnoceni vyrazu << NAMAPOVAT NA JURUV KOD\n");
+  printDebug("Spoustim analyzu vyrazu \n");
   int result;
   Stack s;
   sInit (&s);
@@ -110,13 +110,15 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   sData itemTop;
   sData itemC;
   sData itemD;
+  sData itemE;
   if (DataInit(&itemAct) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemTop) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemC) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemD) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
+  if (DataInit(&itemE) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   itemAct.TypTok=l_eof;
   sPush (&s,itemAct);
-  printDebug("Inicializuji zasobnik a vlozim zarazku\n");
+  printDebug("Inicializuji zasobnik a vkladam zarazku\n");
   itemTop=sTop(&s);
   struct node *nd;
   printDebug("Kontrola prvniho lexemu\n");
@@ -129,7 +131,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
 
   if (lex->type==l_id)
   {
-    printDebug("Prvni lex je ID, jdu hledat ve stromu\n");
+    printDebug("Prvni lexem je ID, jdu hledat ve stromu\n");
     if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
     return EXIT_SEMANTIC_ERROR;
     // ulozim si ze stromu hodnoty
@@ -141,38 +143,74 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
    // jestli je token int,real,str ulozim si hodnotu a typ
   else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
   {
-    printDebug("Prvni lex je int,real,str, bool\n");
+    printDebug("Prvni lexem je int,real,str, bool\n");
     //itemAct.lexdata.data = nextLex->data;
     //itemAct.lexdata.type = nextLex->type;
     itemAct.TypTok = l_id;
   }
   else
   {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-    printDebug("Prvni lex neni promenna ani cislo\n");
+    printDebug("Prvni lexem neni promenna ani cislo\n");
     itemAct.TypTok=lex->type;
   }
-      int x=2;
-      int f=prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)];
-      printf ("%d %d\n",itemTop.TypTok,itemAct.TypTok);
-      printf ("%d %d\n",retIndex(itemTop.TypTok),retIndex(itemAct.TypTok));
-      printf ("%d\n",f);
   do
   {
     switch (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)])
-     case Left:
+    {
+       case Err:
+           return EXIT_SYNTAX_ERROR;
+
+       case Straight:
+           sPush(&s,itemAct);
+           itemTop=sTop(&s);
+           if (NLex.data==NULL)
+           {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
+           else{lex->data=NLex.data;lex->type=NLex.type; NLex.data=NULL;}
+
+          if (lex->type==l_id)
+          {
+          printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
+          if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
+          return EXIT_SEMANTIC_ERROR;
+          // ulozim si ze stromu hodnoty
+          //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
+          //itemAct.lexdata.type = nd->type; // a typ (int,boolean,real,str)
+          itemAct.TypTok = l_id;
+          }
+          //printDebug("tady jeste jsu\n");
+          // jestli je token int,real,str ulozim si hodnotu a typ
+         else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
+         {
+          printDebug("dalsi lexem je int,real,str, bool\n");
+          //itemAct.lexdata.data = nextLex->data;
+          //itemAct.lexdata.type = nextLex->type;
+          itemAct.TypTok = l_id;
+         }
+        else
+        {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
+         printDebug("dalsi lexem neni promenna ani cislo\n");
+         itemAct.TypTok=lex->type;
+        }
+       break;
+
+       case Left:
+        printDebug("Uplatnuji Leve pravidlo\n");
        itemTop=sTop(&s);  // co je nahore?
        itemC.TypTok=l_left; // nastavim si <
        if (itemTop.TypTok==l_E)  // jestli je nahore E
        { // zamenime E za <E
+        printDebug("Zamena E za <E\n");
         itemTop=sPop(&s);
         sPush (&s,itemC);
         sPush (&s,itemTop);
        }
        else // na vrcholu neni E, dame tam <
        {
+        printDebug("Pridavam < do zasobniku\n");
         sPush (&s,itemC);
        }
        // nakonec vlozime token
+       printDebug("Vkladam token do zasobniku\n");
        sPush (&s,itemAct);
        if (NLex.data==NULL)
         {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
@@ -181,7 +219,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
        itemTop=sTop(&s);
        if (lex->type==l_id)
        {
-        printDebug("dalsi lex je ID, jdu hledat ve stromu\n");
+        printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
         if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
         return EXIT_SEMANTIC_ERROR;
         // ulozim si ze stromu hodnoty
@@ -193,24 +231,126 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         // jestli je token int,real,str ulozim si hodnotu a typ
        else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
        {
-        printDebug("dalsi lex je int,real,str, bool\n");
+        printDebug("dalsi lexem je int,real,str, bool\n");
         //itemAct.lexdata.data = nextLex->data;
         //itemAct.lexdata.type = nextLex->type;
         itemAct.TypTok = l_id;
         }
        else
        {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-        printDebug("dalsi lex neni promenna ani cislo\n");
+        printDebug("dalsi lexem neni promenna ani cislo\n");
         itemAct.TypTok=lex->type;
        }
       break;
-    x--;
-  }while (itemTop.TypTok != l_eof && itemAct.TypTok!=l_eof);
 
-  DataFree(&itemAct);
-  DataFree(&itemTop);
-  DataFree(&itemC);
-  DataFree(&itemD);
+     case Right:
+        printDebug("Uplatnuji prave pravidlo\n");
+        itemTop=sTop(&s); // kouknu se co je nahore
+        switch (itemTop.TypTok)
+        {   // nahore je i, redukujeme na E
+          case l_id:
+            itemD=sPop(&s); // popneme to
+            itemC=sPop(&s);// popneme pryc <
+            if (itemTop.lexdata.data==NULL) return EXIT_SEMANTIC_ERROR;
+            itemD.TypTok=l_E ; // zmenime i na E, data zustanou
+            itemTop=sTop(&s);  // priradime na top to co je pred E
+            sPush (&s,itemD);   // pushneme E
+            printDebug("Redukuji <i na E\n");
+            break;
+          case l_lparenth:
+            printDebug("Vrchol je )\n");
+            sPop(&s); // odstranim )
+            itemC=sPop(&s); // odstranim E
+            sPop(&s); // odstranim (
+            sPop (&s); // odstranim <
+            sPush(&s,itemC); // dam tam zpatky E
+            break;
+          // na vrchu je E
+          case l_E:
+             printDebug("Vrchol je E, kontroluji operaci\n");
+            itemTop=sPop(&s); // popneme E
+            itemD=sPop(&s); // popneme operaci
+            itemC=sPop(&s); // popneme druhy E
+            itemE=sPop(&s); // tady by melo byt <
+            switch (itemD.TypTok)
+            {
+             case l_add:
+                 printDebug("Operace je scitani\n");
+                /* if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 // musim nastavit vysledek na typ int
+                 // int + real = real
+                 printDebug("int+int\n");
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
+                 // na typ real
+                 // real + int = real
+                 printDebug("real+int\n");
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
+                 // typ real
+                 //real+real=real
+                 printDebug("int+real\n");
+                else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                // real
+                // str+str str (konkatenace)
+                printDebug("real+real\n");
+                else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                //str
+                printDebug("str+str\n");
+                else return EXIT_SEMANTIC_ERROR;*/
+                itemTop=sTop(&s);
+                 sPush(&s,itemC);
+                 break;
+              case l_mul:
+                 printDebug("Operace je nasobeni\n");
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
+                 break;
+             case l_div:
+                 printDebug("Operace je deleni\n");
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
+                 break;
+             case l_sub:
+                 printDebug("Operace je odcitani\n");
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
+                 break;
+            case l_less:
+                printDebug("Operace je mensi");
+              // if(generateInstruction(I_LESS
+                break;
+            case l_greater:
+                printDebug("Operace je vetsi");
+              // if(generateInstruction(I_LESS
+                break;
+            case l_gequal:
+                printDebug("Operace je vetsirovno\n");
+             //if(generateInstruction(I_GREATEQ,
+               break;
+            case l_lequal:
+                printDebug("Operace je mensirovno\n");
+             //if(generateInstruction(I_LESSEQ,
+                 break;
+            case l_equal:
+                printDebug("Operace je rovna se\n");
+             //if(generateInstruction(I_EQ ..
+                 break;
+            case l_not:
+                printDebug("Operace je nerovna se\n");
+             //if(generateInstruction(I_NOTEQ
+                 break;
+
+             default: break;
+
+            }
+          default: break;
+        }
+    }// switch prTable
+  }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
+ // DataFree(&itemAct);
+ // DataFree(&itemTop);
+  //DataFree(&itemC);
+  //DataFree(&itemD);
+
   return EXIT_INTERNAL_ERROR;
 }
 
