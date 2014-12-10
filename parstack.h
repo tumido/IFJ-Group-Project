@@ -44,3 +44,4 @@ sData sTop (Stack *s);
 int sEmpty(Stack *s);
 
 int DataInit(sData *lex);
+void DataFree(sData *str);
