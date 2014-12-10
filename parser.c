@@ -517,6 +517,7 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
         return EXIT_INTERNAL_ERROR;
       }
       SymbolTableInsert(function->table, new); // vlozime nove vytvoreny symbol se zkopirovanou hodnotou odkazovaneho
+      // TOTO JE BLBE, musi se to resit assingem!
       break;
     default:
       return EXIT_SYNTAX_ERROR;
@@ -560,7 +561,8 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
     // nacteme pravou zavorku a konec
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
-    generateInstruction(I_CALL_FUNCTION, k_function, NULL, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
+    generateInstruction(I_CALL_FUNCTION, k_function, nd->data, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
+    generateInstruction(I_ASSIGN, retNode->type, ((funcData *)nd->data)->retVal, NULL, retNode->data, ilist); // prirazeni navratove hodnoty funkce do lhodonty
     return EXIT_SUCCESS;
   }
   else if (lex->type == l_key) // vestavne funkce

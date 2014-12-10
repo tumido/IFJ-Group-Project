@@ -41,7 +41,12 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
       data = loc->data;
       type = loc->type;
     }
-    else { data = lex->data; type = lex->type; }
+    else
+    {
+      data = lex->data;
+      switch(lex->type)
+      { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break;}
+    }
     generateInstruction(I_WRITE, type, data, NULL, NULL, ilist);
     // nactu ","
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -104,7 +109,7 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
   {
     if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
       return EXIT_NOT_DEFINED_ERROR;
-    if (what->type == k_string) return EXIT_TYPE_ERROR;
+    if (what->type != k_string) return EXIT_TYPE_ERROR;
     data = what->data;
   }
   else if (lex->type == l_str)
@@ -114,6 +119,7 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
     lex->data = NULL;
     isOrd = true;
   }
+  else return EXIT_TYPE_ERROR;
   // potrebuju ")"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_rparenth)
@@ -126,15 +132,92 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
   if (isOrd) generateInstruction(I_CLEAN , k_string, data, NULL, NULL, ilist);
   return result;
 }
-int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex, struct node * loc)
+{
+  int result = EXIT_SUCCESS;
+  struct node * what;
+  bool isOrd = false;
+  printDebug("Copy\n");
+  // potrebuju "("
+  string * data;
+  if (loc->type != k_string) return EXIT_TYPE_ERROR;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
+  // potrebuju id stringu
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type == l_id)
+  {
+    if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+      return EXIT_NOT_DEFINED_ERROR;
+    if (what->type != k_string) return EXIT_TYPE_ERROR;
+    data = what->data;
+  }
+  else if (lex->type == l_str) // nebo string
+  {
+    data = lex->data;
+    lex->type = l_int;
+    lex->data = NULL;
+    isOrd = true;
+  }
+  else return EXIT_TYPE_ERROR;
+  // potrebuju zadat rozsah (id nebo int)
+  long long * range;
+  if ((range = malloc (sizeof(long long))) == NULL) return EXIT_INTERNAL_ERROR;
+
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type == l_id)
+  {
+    if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+      return EXIT_NOT_DEFINED_ERROR;
+    if (what->type != k_int) return EXIT_TYPE_ERROR;
+    *range = *(int *)what->data;
+  }
+  else if (lex->type == l_int) // nebo int
+  {
+    data = lex->data;
+    lex->type = l_int;
+    lex->data = NULL;
+    isOrd = true;
+  }
+  else return EXIT_TYPE_ERROR;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type == l_id)
+  {
+    if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+      return EXIT_NOT_DEFINED_ERROR;
+    if (what->type != k_int) return EXIT_TYPE_ERROR;
+    *range = (*(int *)what->data << sizeof(int)) || *range;
+  }
+  else if (lex->type == l_int) // nebo int
+  {
+    data = lex->data;
+    lex->type = l_int;
+    lex->data = NULL;
+    isOrd = true;
+  }
+  else return EXIT_TYPE_ERROR;
+  // potrebuju ")"
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type != l_rparenth)
+  {
+    if (lex->type == l_sep) return EXIT_TYPE_ERROR;
+    return EXIT_SYNTAX_ERROR;
+  }
+  // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
+  generateInstruction(I_COPY, k_string, &data, NULL, loc->data, ilist);
+  if (isOrd)
+  {
+    generateInstruction(I_CLEAN , k_string, data, NULL, NULL, ilist);
+    generateInstruction(I_CLEAN , k_int, range, NULL, NULL, ilist);
+  }
+  return result;
+}
+
+int embededFuncFind(struct input * in, btree * table, tListOfInstr * ilist, token * lex, struct node * loc)
 {
   return EXIT_INTERNAL_ERROR;
 }
-int embededFuncFind(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
-{
-  return EXIT_INTERNAL_ERROR;
-}
-int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, token * lex, struct node * loc)
 {
   return EXIT_INTERNAL_ERROR;
 }
@@ -175,8 +258,6 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
   else result = evalExpression(in, table, ilist, lex, NULL, loc); // jinak (je to hodnota, cokoliv) volan evalExpression
 
   if (result != EXIT_SUCCESS) return result;
-
-  generateInstruction();
   return result;
 }
 
