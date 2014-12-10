@@ -27,7 +27,7 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
   // potrebuju zpracovat n parametru (dokud mi je token id nebo hodnota volam)
-  void * data;
+  void * data; key type;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   while (lex->type == l_id || lex->type == l_int || lex->type == l_real || lex->type == l_str ||
       (lex->type == l_key && (*(key *)lex->data == k_true || *(key *)lex->data == k_false)))
@@ -39,9 +39,10 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
       if (((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || loc->type == k_function)
         return EXIT_NOT_DEFINED_ERROR;
       data = loc->data;
+      type = loc->type;
     }
-    else data = lex->data;
-     generateInstruction(I_WRITE, data, NULL, NULL, ilist);
+    else { data = lex->data; type = lex->type; }
+    generateInstruction(I_WRITE, type, data, NULL, NULL, ilist);
     // nactu ","
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_sep) break;
@@ -82,7 +83,7 @@ int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, to
     return EXIT_SYNTAX_ERROR;
   }
   // volam instrukci
-  generateInstruction(I_READ, NULL, NULL, loc, ilist);
+  generateInstruction(I_READ, loc->type, NULL, NULL, loc, ilist);
   return result;
 }
 
@@ -90,6 +91,7 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
 {
   int result = EXIT_SUCCESS;
   struct node * what;
+  bool isOrd = false;
   printDebug("Length\n");
   // potrebuju "("
   string * data;
@@ -108,7 +110,9 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
   else if (lex->type == l_str)
   {
     data = lex->data;
+    lex->type = l_int;
     lex->data = NULL;
+    isOrd = true;
   }
   // potrebuju ")"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
@@ -117,8 +121,9 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
     if (lex->type == l_sep) return EXIT_TYPE_ERROR;
     return EXIT_SYNTAX_ERROR;
   }
-  // volam instrukci
+  // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
   generateInstruction(I_ASSIGN, k_int, &data->length, NULL, loc->data, ilist);
+  if (isOrd) generateInstruction(I_CLEAN , k_string, data, NULL, NULL, ilist);
   return result;
 }
 int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
@@ -157,13 +162,13 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
   if (lex->type == l_key && (*(key *)lex->data == k_sort ||
         *(key *)lex->data == k_find ||
         *(key *)lex->data == k_length ||
-        *(key *)lex->data == k_copy)) result = callFunction(in, table, ilist, lex, NULL, );
+        *(key *)lex->data == k_copy)) result = callFunction(in, table, ilist, lex, NULL, loc);
   else if (lex->type == l_id) // mam identifikator, ale jeste nevim, jestli chci vyhodnocovat vyraz nebo volat vestavnou funkci
   {
     token tmp; // pokud bude dalsi token zavorka volam funkci
     tokenInit(&tmp);
     if ((result = fillToken(in,&tmp)) != EXIT_SUCCESS){ return result; }
-    if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp, );
+    if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp, loc);
     else result = evalExpression(in, table, ilist, lex, &tmp, loc);
     tokenFree(&tmp);
   }
@@ -171,7 +176,7 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
 
   if (result != EXIT_SUCCESS) return result;
 
-  // generateInstruction();
+  generateInstruction();
   return result;
 }
 

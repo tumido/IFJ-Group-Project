@@ -501,6 +501,13 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
     case l_int:
     case l_real:
     case l_str:
+    case l_key: //pokud zadana hondota neodpovida typu parametru.. hnus fialovej, kdo to takhle nadeklaroval? ja...
+      if (lex->type == l_key && *(key *)lex->data != k_true && *(key *)lex->type != k_false) return EXIT_SYNTAX_ERROR;
+      if ((lex->type == l_int && param->type != k_int) ||
+         ( lex->type == l_real && param->type != k_real) ||
+         ( lex->type == l_str && param->type != k_string) ||
+         ( lex->type == l_key && param->type != k_bool))
+        return EXIT_TYPE_ERROR;
       if ((new = SymbolTableCreateNode(param->keyValue, param->type, data)) == NULL)
       {
         __SymbolTableDispose(&new);
@@ -523,12 +530,12 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
  * ---------------------------------------------------------------------
  *   <callFunction> -> id "(" <paramsCall> ")"
  */
-int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode)
 {
   int result = EXIT_SUCCESS;
   printDebug("Volani funkce\n");
   struct node * nd;
-  if (lex->type == l_id)
+  if (lex->type == l_id) // uzivatelem definovana funkce
   {
     // musim overit, ze identifikator existuje a je definovana funkce
     if ((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
@@ -550,16 +557,17 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
     // nacteme pravou zavorku a konec
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
+    generateInstruction(I_CALL_FUNCTION, k_function, NULL, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
     return EXIT_SUCCESS;
   }
-  else if (lex->type == l_key)
+  else if (lex->type == l_key) // vestavne funkce
   {
     switch (*(key *)lex->data)
     {
-      case k_sort: return embededFuncSort(in, table, ilist, lex, nd);
-      case k_find: return embededFuncFind(in, table, ilist, lex, nd);
-      case k_length: return embededFuncLength(in, table, ilist, lex, nd);
-      case k_copy: return embededFuncCopy(in, table, ilist, lex, nd);
+      case k_sort: return embededFuncSort(in, table, ilist, lex, retNode);
+      case k_find: return embededFuncFind(in, table, ilist, lex, retNode);
+      case k_length: return embededFuncLength(in, table, ilist, lex, retNode);
+      case k_copy: return embededFuncCopy(in, table, ilist, lex, retNode);
       default:
         return EXIT_SYNTAX_ERROR;
     }

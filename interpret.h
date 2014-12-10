@@ -44,6 +44,7 @@
 #define I_TYPE 30
 #define I_COPY 31
 #define I_SORT 32
+#define I_CLEAN 33
 
 
 /*

@@ -108,7 +108,7 @@ int paramsCall(struct input * in, btree * table, token * lex, funcData * functio
  *   funkce a na jejich konec zaradi insrukci prirazeni vysledku
  *   <callFunction> -> id "(" <paramsCall> ")"
  */
-int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex);
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode);
 
 /*   Zpracovani prikazu programu
  * ---------------------------------------------------------------------
