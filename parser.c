@@ -718,21 +718,22 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
     if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
     generateInstruction(I_CALL_FUNCTION, k_function, nd->data, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
     generateInstruction(I_ASSIGN, retNode->type, ((funcData *)nd->data)->retVal, NULL, retNode->data, ilist); // prirazeni navratove hodnoty funkce do lhodonty
-    return EXIT_SUCCESS;
   }
   else if (lex->type == l_key) // vestavne funkce
   {
     switch (*(key *)lex->data)
     {
-      case k_sort: return embededFuncSort(in, table, ilist, lex, retNode);
-      case k_find: return embededFuncFind(in, table, ilist, lex, retNode);
-      case k_length: return embededFuncLength(in, table, ilist, lex, retNode);
-      case k_copy: return embededFuncCopy(in, table, ilist, lex, retNode);
+      case k_sort: result =  embededFuncSort(in, table, ilist, lex, retNode);
+      case k_find: result = embededFuncFind(in, table, ilist, lex, retNode);
+      case k_length: result = embededFuncLength(in, table, ilist, lex, retNode);
+      case k_copy: result = embededFuncCopy(in, table, ilist, lex, retNode);
       default:
         return EXIT_SYNTAX_ERROR;
     }
   }
-  return EXIT_SYNTAX_ERROR;
+  else return EXIT_SYNTAX_ERROR;
+  if (result != EXIT_SUCCESS || ((result = fillToken(in, lex)) != EXIT_SUCCESS)) return result;
+  return result;
 }
 
 /*   Zpracovani prikazu programu
@@ -796,7 +797,6 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
 
   // pokud dalsi token je strednik tzn ze bude
   // nasledovat dalsi prikaz
-  if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
   if (lex->type == l_endl)
   {
     printDebug("Nasleduje prikaz\n");

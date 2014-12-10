@@ -282,9 +282,6 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
-  // pak ";"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   // pak "else"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key && *(key *)lex->data != k_else) return EXIT_SYNTAX_ERROR;
@@ -292,6 +289,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   return result;
 }
 
@@ -317,5 +315,6 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
   // jump back na podminku
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   return result;
 }
