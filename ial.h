@@ -11,7 +11,6 @@
 // maximalni delka radky zpracovavaneho retezce
 #define SIZE 255 
 
-
 /*
  * Funkce vykonavajici radici algoritmus shell sort
  */
@@ -23,7 +22,7 @@ void shellSort(int *array, int n);
  * - naplni pole badChars 'spatnymi' znaky, tedy takovymi, ktere se nevyskytuji
  *   ve hledanem podretezci
  */
-void badCharacters(char *pattern, int patternLenght, int badChars[]);
+void computeJumps(char *pattern, int patternLenght, int charJump[]);
 
 /*
  * suffixes

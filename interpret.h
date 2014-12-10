@@ -31,43 +31,40 @@
 #define I_READ 5
 #define I_WRITE 6
 #define I_IF 7
-#define I_IF_END 8
-#define I_JUMP 9
-#define I_LABEl 10
-#define I_ASSIGN 11
-#define I_SUBSTR 12
+#define I_THEN 8
+#define I_IF_END 9
+#define I_JUMP 10
+#define I_LABEL 11
+#define I_ASSIGN 12
 #define I_CALL_FUNCTION 13
 #define I_RETURN 14
-#define I_DO_WHILE 15
-#define I_MUL 16
-#define I_DIV 17
-#define I_ADD 18
-#define I_SUB 29
-#define I_CON 20
-#define I_INC 21
-#define I_DEC 22
-#define I_NEG 23
-#define I_LESS 24
-#define I_GREATER 25
-#define I_LESS_EQUAL 26
-#define I_GREATER_EQUAL 27
-#define I_EQUAL 28
-#define I_NOT_EQUAL 29
-#define I_TYPE 30
-#define I_COPY 31
-#define I_SORT 32
-#define I_CLEAN 33
+#define I_WHILE 15
+#define I_DO 16
+#define I_CLEAR 17
+#define I_MUL 18
+#define I_DIV 19
+#define I_ADD 20
+#define I_SUB 21
+#define I_CON 22
+#define I_INC 23
+#define I_DEC 24
+#define I_NEG 25
+#define I_LESS 26
+#define I_GREATER 27
+#define I_LESS_EQUAL 28
+#define I_GREATER_EQUAL 29
+#define I_EQUAL 30
+#define I_NOT_EQUAL 31
+#define I_COPY 32
+#define I_LENGHT 33
+#define I_FIND 34
+#define I_SORT 35
 
-
-/*
- * Klasifikace datového typu
- */
-int returnValue(tVarValue *destination, tVarValue *source);
 
 /*
  * Interpretace konkretni instrukce
  */
-int instruction(tSymbolTable *ST, tListOfInstr *instrList);
+int instruction(tListOfInstr *instrList);
 
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
@@ -75,14 +72,9 @@ int instruction(tSymbolTable *ST, tListOfInstr *instrList);
 int interpret(tInstList *);
 
 /*
- * Funkce na kontrolu typu integer a real v operandech 3AK
- */
-bool isIntOrReal(void);
-
-/*
  * Funkce vykonava volani WRITE - zapisuje na stdout
  */
-int iWrite(tVarValue *source);
+int iWrite(tListOfInstr *L);
 
 /*
  * Funkce vykonava volani READ - cte ze stdin
