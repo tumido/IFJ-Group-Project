@@ -15,7 +15,10 @@
  * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand
  */
 
+#include "io.h"
 #include "interpret.h"
+#include "ial.h" // kvuli funkci findSubstring a shellSort
+#include "ilist.h"
 
 /*
  * Interpretace konkretni instrukce
@@ -25,7 +28,7 @@
  * - instrukce porovnani
  * - instrukce vestavenych funkci
  *
- * - u instrukci pracujicimi s pouze jednim datovym I->instTypem netreba tento datovy
+ * - u instrukci pracujicimi s pouze jednim datovym typem netreba tento datovy
  *   typ znat, predpokladam osetreni parserem, ze posila pouze platny datovy typ
  */
 int instruction(tListOfInstr *instrList)
@@ -154,33 +157,15 @@ int instruction(tListOfInstr *instrList)
  *
  * - I_ASSIGN, typ, zdroj, NULL, cil
  * - intrukce prirazeni, operator =
- * - do cile (I->addr3) priradi hodnotu operandu 1
+ * - do cile I->addr3 priradi hodnotu operandu 1
  */
       case I_ASSIGN:
-<<<<<<< HEAD
-        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1);
-        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1);
-        else if(I->instType == k_bool) (*(bool*)I->addr3) = (*(bool*)I->addr1);
-        else if(I->instType == k_string) (*(char*)I->addr3) = (*(char*)I->addr1);
+        if(type == k_int) (*(int*)result) = (*(int*)I->addr1);
+        else if(type == k_real) (*(double*)result) = (*(double*)I->addr1);
+        else if(type == k_bool) (*(bool*)result) = (*(bool*)I->addr1);
+        else if(type == k_string) (*(char*)result) = (*(char*)I->addr1);
           // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
           // nebo bude treba to delat po jednotlivych znacich..
-                  if(type == k_int) (*(int*)result) = (*(int*)operand1);
-=======
-        if(type == k_int) (*(int*)result) = (*(int*)operand1);
->>>>>>> origin/master
-        else if(type == k_real) (*(double*)result) = (*(double*)operand1);
-        else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
-        else if(type == k_string)
-        {
-          if (((string *)result)->alloc < ((string *)operand1)->alloc)
-          {
-            ((string *)result)->alloc = ((string *)operand1)->alloc;
-            if ((((string *)result)->str = realloc(sizeof(char) * ((string *)operand1)->alloc)) == NULL)
-              return EXIT_INTERNAL_ERROR;
-          }
-          strncpy(((string *)result)->str, ((string *)operand1)->str, ((string *)result)->alloc);
-          ((string *)result)->length = ((string *)operand1)->length;
-        }
         break;
 
 /*
@@ -236,18 +221,12 @@ int instruction(tListOfInstr *instrList)
  * - uvolni obsah operandu 1
  */
       case I_CLEAR:
-<<<<<<< HEAD
-        if(I->instType == k_string)
+        if(type == k_string)
         {
           free(*I->addr1);
           free(*struktura);
         }
         else free(*I->addr1);
-=======
->>>>>>> origin/master
-        if(type == t_string)
-          free(((string *)operand1)->str);
-        free(operand1);
         break;
 
 /*

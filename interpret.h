@@ -8,26 +8,6 @@
  * =====================================================================
  */
 
-<<<<<<< HEAD
- #ifndef INTERPRET_INCLUDED
-=======
-
-#ifndef INTERPRET_INCLUDED
->>>>>>> origin/master
-#define INTERPRET_INCLUDED
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include "strings.h"
-#include "io.h"
-#include "ial.h" // kvuli funkci findSubstring a shellSort
-#include "ilist.h"
-
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/master
 // datove typy
 #define T_INTEGER 0
 #define T_REAL 1
