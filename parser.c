@@ -613,6 +613,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
         return EXIT_INTERNAL_ERROR;
       }
       SymbolTableInsert(((funcData *)nd->data)->table, new); // vlozime nove vytvoreny symbol bez hodnoty
+      firstParam = firstParam->next;
     }
     // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
     if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
