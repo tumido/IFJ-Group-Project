@@ -13,7 +13,7 @@
 /*
  * Funkce shellSort
  * -----------------------------------------------------------------------------
- * - provadi shellovo razeni n prvku v poli
+ * - provadi shellovo razeni 'n' prvku v poli
  * - implemetace podle slajdu prof. Hoznika
  * - zatim neotestovano
  * - strana 162
