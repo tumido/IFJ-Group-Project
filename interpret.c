@@ -12,7 +12,7 @@
  * -----------------------------------------------------------------------------
  * NOVY ZPUSOB SYNTAXE INSTRUKCI
  * -----------------------------------------------------------------------------
- * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand 
+ * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand
  */
 
 #include "io.h"
@@ -28,14 +28,14 @@
  * - instrukce porovnani
  * - instrukce vestavenych funkci
  *
- * - u instrukci pracujicimi s pouze jednim datovym typem netreba tento datovy
+ * - u instrukci pracujicimi s pouze jednim datovym I->instTypem netreba tento datovy
  *   typ znat, predpokladam osetreni parserem, ze posila pouze platny datovy typ
  */
 int instruction(tListOfInstr *instrList)
 {
   while(1);
   {
-    tInstr I = listGetData(instrList);
+    tInstr * I = listGetData(instrList);
 
     switch (I->instType)
     {
@@ -44,7 +44,7 @@ int instruction(tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * Specialni instrukce
  * -----------------------------------------------------------------------------
- * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return, 
+ * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return,
  *   while_do, clear
  */
 
@@ -90,7 +90,7 @@ int instruction(tListOfInstr *instrList)
         while (I->instType != I_THEN) // dokud je co vyhodnocovat
         {
           listNext(&instrList);                // posun na dalsi prvek seznamu
-          instruction(&ST, &instrList);
+          instruction(&instrList);
         }
         listNext(&instrList)
         if(/* podminka pravdiva */)       //podminka byla pravdiva
@@ -98,11 +98,11 @@ int instruction(tListOfInstr *instrList)
           while(I->instType != I_ELSE)          //podminka bypa pravdiva, budu provadet instrukce, dokud nenarazim na
           {
             listNext(&instrList);
-            instruction(&ST, &instrList);
+            instruction(&instrList);
           }
           while(I->instType != I_IF_END){listNext(&instrList);}   //preskakuju vetev ELSE
           listNext(&instrList);
-          instruction(&ST, &instrList);                           //preskocil jsem cely else, ted uz jen provedu instrukci I_IF_END
+          instruction(&instrList);                           //preskocil jsem cely else, ted uz jen provedu instrukci I_IF_END
         }
         else // podminka nepravdiva, prubeh bude symetricky k predchozimu IFu. Nejprve preskocim vse az k ELSE a pote zacnu vykonavat instrukce
         {
@@ -110,7 +110,7 @@ int instruction(tListOfInstr *instrList)
           while(I->instType != I_IF_END)
           {
             listNext(&instrList);
-            instruction(&ST, &instrList);
+            instruction(&instrList);
           }
         }
         break;
@@ -118,12 +118,12 @@ int instruction(tListOfInstr *instrList)
 /*
  * THEN
  *
- * - I_THEN, NULL, NULL, NULL, expression_result
+ * - I_THEN, NULL, NULL, NULL, expression_I->addr3
  * - znaci konec vyhodnocovani podminky a prechod na telo
  * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
  */
       case I_THEN: // znaci konec vyhodnocovani podminky a prechod na telo
-          if((*(bool*))result == FALSE) return FALSE;
+          if((*(bool*))I->addr3 == FALSE) return FALSE;
           else return TRUE;
         break;
 
@@ -157,15 +157,29 @@ int instruction(tListOfInstr *instrList)
  *
  * - I_ASSIGN, typ, zdroj, NULL, cil
  * - intrukce prirazeni, operator =
- * - do cile (result) priradi hodnotu operandu 1
+ * - do cile (I->addr3) priradi hodnotu operandu 1
  */
       case I_ASSIGN:
-        if(type == k_int) (*(int*)result) = (*(int*)operand1);
-        else if(type == k_real) (*(double*)result) = (*(double*)operand1);
-        else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
-        else if(type == k_string) (*(char*)result) = (*(char*)operand1);
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1);
+        else if(I->instType == k_bool) (*(bool*)I->addr3) = (*(bool*)I->addr1);
+        else if(I->instType == k_string) (*(char*)I->addr3) = (*(char*)I->addr1);
           // tady to asi bude slozitejsi, nevim, jestli lze prostoduse priradit string do stringu,
           // nebo bude treba to delat po jednotlivych znacich..
+                  if(type == k_int) (*(int*)result) = (*(int*)operand1);
+        else if(type == k_real) (*(double*)result) = (*(double*)operand1);
+        else if(type == k_bool) (*(bool*)result) = (*(bool*)operand1);
+        else if(type == k_string)
+        {
+          if (((string *)result)->alloc < ((string *)operand1)->alloc)
+          {
+            ((string *)result)->alloc = ((string *)operand1)->alloc;
+            if ((((string *)result)->str = realloc(sizeof(char) * ((string *)operand1)->alloc)) == NULL)
+              return EXIT_INTERNAL_ERROR;
+          }
+          strncpy(((string *)result)->str, ((string *)operand1)->str, ((string *)result)->alloc);
+          ((string *)result)->length = ((string *)operand1)->length;
+        }
         break;
 
 /*
@@ -217,16 +231,19 @@ int instruction(tListOfInstr *instrList)
 /*
  * CLEAR
  *
- * - I_CLEAR, typ, operand1, NULL, NULL
+ * - I_CLEAR, typ, I->addr1, NULL, NULL
  * - uvolni obsah operandu 1
  */
       case I_CLEAR:
-        if(type == k_string)
+        if(I->instType == k_string)
         {
-          free(*operand1);
+          free(*I->addr1);
           free(*struktura);
         }
-        else free(*operand1);
+        else free(*I->addr1);
+        if(type == t_string)
+          free(((string *)operand1)->str);
+        free(operand1);
         break;
 
 /*
@@ -239,91 +256,96 @@ int instruction(tListOfInstr *instrList)
  /*
  * MULTIPLY
  *
- * - I_MUL, typ, operand1, operand2, vysledek
- * - vynasobi operand 1 a operand 2, vysledek ulozi do result
+ * - I_MUL, typ, I->addr1, I->addr2, vysledek
+ * - vynasobi operand 1 a operand 2, vysledek ulozi do I->addr3
  */
       case I_MUL:
-        if(type == k_int) (*(int*)result) = (*(int*)operand1) * (*(int*)operand2);
-        else if(type == k_real) (*(double*)result) = (*(double*)operand1) * (*(double*)operand2);
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) * (*(int*)I->addr2);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) * (*(double*)I->addr2);
+        else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
  * DIVIDE
  *
- * - I_DIV, typ, operand1, operand2, vysledek
- * - vydeli operand 1 a operand 2, vysledek ulozi do result
+ * - I_DIV, typ, I->addr1, I->addr2, vysledek
+ * - vydeli operand 1 a operand 2, vysledek ulozi do I->addr3
  * - pozor, vysledek bude vzdy REAL!
  */
       case I_DIV:
-        if(((*(int*)operand2) == 0) || ((*(double*)operand2) == 0.0)) return EXIT_DIVISION_BY_ZERO_ERROR; // nulou delit neumime
+        if(((*(int*)I->addr2) == 0) || ((*(double*)I->addr2) == 0.0)) return EXIT_DIVISION_BY_ZERO_ERROR; // nulou delit neumime
         else
         {
-          if(type == k_int) (*(int*)result) = (*(int*)operand1) / (*(int*)operand2);
-          else if(type == k_real) (*(double*)result) = (*(double*)operand1) / (*(double*)operand2);  
+          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) / (*(int*)I->addr2);
+          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) / (*(double*)I->addr2);
+          else return EXIT_RUNTIME_ERROR;
         }
         break;
 
 /*
  * ADDICTION
  *
- * - I_ADD, typ, operand1, operand2, vysledek
- * - secte operand 1 a operand 2, vysledek ulozi do result
+ * - I_ADD, typ, I->addr1, I->addr2, vysledek
+ * - secte operand 1 a operand 2, vysledek ulozi do I->addr3
  */
       case I_ADD:
-          if(type == k_int) (*(int*)result) = (*(int*)operand1) + (*(int*)operand2);
-          else if(type == k_real) (*(double*)result) = (*(double*)operand1) + (*(double*)operand2);  
+          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) + (*(int*)I->addr2);
+          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) + (*(double*)I->addr2);
+          else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
  * SUBTITION
  *
- * - I_SUB, typ, operand1, operand2, vysledek
- * - odecte od operandu1 operand2
+ * - I_SUB, typ, I->addr1, I->addr2, vysledek
+ * - odecte od operandu1 I->addr2
  */
       case I_SUB:
-          if(type == k_int) (*(int*)result) = (*(int*)operand1) - (*(int*)operand2);
-          else if(type == k_real) (*(double*)result) = (*(double*)operand1) - (*(double*)operand2);  
+          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - (*(int*)I->addr2);
+          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) - (*(double*)I->addr2);
+          else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
  * CONCATENATE
  *
- * - I_CON, NULL, operand1, operand2, vysledek
+ * - I_CON, NULL, I->addr1, I->addr2, vysledek
  * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
-          strcat((*(char*)result), operand1); // tady opravdu nevim, jestli je to dobre..
-          strcat((*(char*)result), operand2);
+          strcat((*(char*)I->addr3), (*(char*)I->addr1); // tady opravdu nevim, jestli je to dobre/asi ROMAN..,,,,,,,,ja bych to udelal stejne / KUBA
+          strcat((*(char*)I->addr3), (*(char*)I->addr2);
         break;
 
 /*
  * INCREMENTATION
  *
- * - I_INC, NULL, operand1, NULL, vysledek
- * - inkrementuje operand 1, vysledek v result
+ * - I_INC, NULL, I->addr1, NULL, vysledek
+ * - inkrementuje operand 1, vysledek v I->addr3
  */
       case I_INC:
-          (*(int*)result) = (*(int*)operand1)++;
+          (*(int*)I->addr3) = ++(*(int*)I->addr1);
         break;
 
 /*
  * DECREMENTATION
  *
- * - I_DEC, NULL, operand1, NULL, vysledek
- * - dekrementuje operand 1, vysledek v result
+ * - I_DEC, NULL, I->addr1, NULL, vysledek
+ * - dekrementuje operand 1, vysledek v I->addr3
  */
       case I_DEC:
-          (*(int*)result) = (*(int*)operand1)--;
+          (*(int*)I->addr3) = --(*(int*)I->addr1);
         break;
 
 /*
  * NEGATION
  *
- * - I_NEG, NULL, operand1, NULL, vysledek
- * - neguje operand 1, vysledek v result
+ * - I_NEG, typ, I->addr1, NULL, vysledek
+ * - neguje operand 1, vysledek v I->addr3
  */
       case I_NEG:
-          (*(bool*)result) = (((*(bool*)operand1) == FALSE)? TRUE : FALSE);
+          if(I->instType == k_bool)(*(bool*)I->addr3) = (((*(bool*)I->addr1) == FALSE)? TRUE : FALSE);
+          else if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - 2 * (*(int*)I->addr1);  //negace integeru, muze byt?
         break;
 
 /*
@@ -336,78 +358,78 @@ int instruction(tListOfInstr *instrList)
 /*
  * LESS
  *
- * - I_LESS, typ, operand1, operand2, vysledek
+ * - I_LESS, typ, I->addr1, I->addr2, vysledek
  * - operand 1 je mensi nez operand 2
  */
       case I_LESS:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) < (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) < (*(double*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) < 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) < (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) < (*(double*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) < 0)? TRUE : FALSE);
         break;
 
 /*
  * GREATER
  *
- * - I_GREATER, typ, operand1, operand2, vysledek
+ * - I_GREATER, typ, I->addr1, I->addr2, vysledek
  * - operand 1 je vetsi nez operand 2
  */
       case I_GREATER:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) > (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) > (*(double*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) > 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) > (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) > (*(double*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) > 0)? TRUE : FALSE);
         break;
 
 
 /*
  * LESS OR EQUAL
  *
- * - I_LESS_EQUAL, typ, operand1, operand2, vysledek
+ * - I_LESS_EQUAL, typ, I->addr1, I->addr2, vysledek
  * - operand 1 je mensi nebo roven operandu 2
  */
       case I_LESS_EQUAL:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) <= (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) <= (*(double*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) <= 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) <= (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) <= (*(double*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) <= 0)? TRUE : FALSE);
         break;
 
 
 /*
  * GREATER OR EQUAL
  *
- * - I_GREATER_EQUAL, typ, operand1, operand2, vysledek
+ * - I_GREATER_EQUAL, typ, I->addr1, I->addr2, vysledek
  * - operand 1 je vetsi nebo roven operandu 2
  */
       case I_GREATER_EQUAL:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) >= (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) >= (*(double*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) >= 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) >= (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) >= (*(double*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) >= 0)? TRUE : FALSE);
         break;
 
 
 /*
  * EQUAL
  *
- * - I_EQUAL, typ, operand1, operand2, vysledek
+ * - I_EQUAL, typ, I->addr1, I->addr2, vysledek
  * - operand 1 je roven operandu 2
  */
       case I_EQUAL:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) == (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) == (*(double*)operand2))? TRUE : FALSE);
-        else if(type == k_bool) (*(bool*)result) = (((*(bool*)operand1) == (*(bool*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) == 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) == (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) == (*(double*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_bool) (*(bool*)I->addr3) = (((*(bool*)I->addr1) == (*(bool*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) == 0)? TRUE : FALSE);
         break;
 
 /*
  * NOT EQUAL
  *
- * - I_NOT_EQUAL, typ, operand1, operand2, vysledek
+ * - I_NOT_EQUAL, typ, I->addr1, I->addr2, vysledek
  * - operand 1 neni roven (je ruzny od) operandu 2
  */
       case I_NOT_EQUAL:
-        if(type == k_int) (*(bool*)result) = (((*(int*)operand1) != (*(int*)operand2))? TRUE : FALSE);
-        else if(type == k_real) (*(bool*)result) = (((*(double*)operand1) != (*(double*)operand2))? TRUE : FALSE);
-        else if(type == k_bool) (*(bool*)result) = (((*(bool*)operand1) != (*(bool*)operand2))? TRUE : FALSE);
-        else (type == k_string) (*(bool*)result) = (((strcmp((*(char*)operand1), (*(char*)operand2))) != 0)? TRUE : FALSE);
+        if(I->instType == k_int) (*(bool*)I->addr3) = (((*(int*)I->addr1) != (*(int*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_real) (*(bool*)I->addr3) = (((*(double*)I->addr1) != (*(double*)I->addr2))? TRUE : FALSE);
+        else if(I->instType == k_bool) (*(bool*)I->addr3) = (((*(bool*)I->addr1) != (*(bool*)I->addr2))? TRUE : FALSE);
+        else (I->instType == k_string) (*(bool*)I->addr3) = (((strcmp((*(char*)I->addr1), (*(char*)I->addr2))) != 0)? TRUE : FALSE);
         break;
 
 /*
@@ -420,10 +442,10 @@ int instruction(tListOfInstr *instrList)
 /*
  * COPY
  *
- * I_COPY, NULL, operand1, operand2, result
- * operand1 - retezec ze ktereho budu kopirovat
- * operand2 - struktura o dvou integerech
- * result - misto kam nahraji vysledny podretezec
+ * I_COPY, NULL, I->addr1, I->addr2, I->addr3
+ * I->addr1 - retezec ze ktereho budu kopirovat
+ * I->addr2 - struktura o dvou integerech
+ * I->addr3 - misto kam nahraji vysledny podretezec
  *
  * - copy(s : string; i : integer; n : integer) : string
  * - vrati podretezec zadaneho retezce 's'
@@ -445,7 +467,7 @@ int instruction(tListOfInstr *instrList)
             if(textCopy[i] == '\0')
               i = length;
           }
-        //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na result, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
+        //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na I->addr3, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
         /*
          * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
          * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
@@ -461,7 +483,7 @@ int instruction(tListOfInstr *instrList)
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-         (*(int*)result) = strlen((*(int*)operand1));
+         (*(int*)I->addr3) = strlen((*(char*)I->addr1));
         break;
 
 /*
@@ -474,7 +496,7 @@ int instruction(tListOfInstr *instrList)
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
-          (*(int*)result) = findSubtring();
+          (*(char*)I->addr3) = findSubtring();
         break;
 
 /*
@@ -491,12 +513,12 @@ int instruction(tListOfInstr *instrList)
         // string je vlastne pole znaku, ze?
         // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
 
-        if(strlen(*(int*)operand1) == 1) (*(char*)result) = (*(char*)operand1); // retezec ma delku 1, neni co radit
+        if(strlen(*(int*)I->addr1) == 1) (*(char*)I->addr3) = (*(char*)I->addr1); // retezec ma delku 1, neni co radit
         else
         {
-          int n = strlen(*(int*)operand1);
+          int n = strlen(*(char*)I->addr1);
 
-          (*(char*)result) = (shellSort((*(int*)operand1), n));
+          (*(char*)I->addr3) = (shellSort((*(int*)I->addr1), n));
         }
         break;
     }
@@ -520,9 +542,9 @@ int interpret(tInstList *)
  */
 int iWrite(tListOfInstr *L)
 {
-  if(type == k_int) printf("%d\n", (*(int*))operand1);
-  else if(type == k_real) printf("%f\n", (*(double*))operand1);
-  else printf("%c\n", (*(char*))operand1);
+  if(I->instType == k_int) printf("%d\n", (*(int*))I->addr1);
+  else if(I->instType == k_real) printf("%f\n", (*(double*))I->addr1);
+  else printf("%c\n", (*(char*))I->addr1);
   return EXIT_SUCCESS;
 }
 
@@ -535,7 +557,7 @@ int iRead(tListOfInstr *L);
 {
   // tu je to treba cele predelat a konecne dokoncit..
   char character;               //promenna do ktere pozdeji budu nacitat znaky
-  switch(L->instType)
+  switch(L->instI->instType)
   {
     case T_INTEGER:
       break;
@@ -544,7 +566,7 @@ int iRead(tListOfInstr *L);
     case T_STRING:
       break;
     case T_BOOLEAN:
-      return EXIT_TYPE_ERROR;
+      return EXIT_I->instType_ERROR;
       break;
     default:
       return EXIT_READ_STDIN_ERROR;

@@ -8,6 +8,18 @@
  * =====================================================================
  */
 
+ #ifndef INTERPRET_INCLUDED
+#define INTERPRET_INCLUDED
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include "strings.h"
+#include "io.h"
+#include "ial.h" // kvuli funkci findSubstring a shellSort
+#include "ilist.h"
+
+
 // datove typy
 #define T_INTEGER 0
 #define T_REAL 1
@@ -47,6 +59,7 @@
 #define I_LENGHT 33
 #define I_FIND 34
 #define I_SORT 35
+#define I_CLEAN 36
 
 
 /*
@@ -57,7 +70,7 @@ int instruction(tListOfInstr *instrList);
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  */
-int interpret(tInstList *);
+int interpret(tListOfInstr *  I);
 
 /*
  * Funkce vykonava volani WRITE - zapisuje na stdout
@@ -73,3 +86,4 @@ int iRead(tListOfInstr *L);
  *Funkce vypise na stdout data ulozena na pozici instruction->addr1
  */
 int iWrite(tListOfInstr *L);
+#endif

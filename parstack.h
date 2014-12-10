@@ -8,6 +8,13 @@
  * =====================================================================
  */
 
+#ifndef PARSTACK_DEFINED
+#define PARSTACK_DEFINED
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include "strings.h"
 #include "scanner.h"
 #define MaxStackSize 100
 
@@ -45,3 +52,4 @@ int sEmpty(Stack *s);
 
 int DataInit(sData *lex);
 void DataFree(sData *str);
+#endif

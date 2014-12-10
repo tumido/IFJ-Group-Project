@@ -2,12 +2,14 @@
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  12/09/2014 09:44:50 PM
- *          Autor:  Tomáš Coufal
- *          Login:  xcoufa09
- *        Projekt:  
+ *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
+ *        Projekt:  IFJ
  * =====================================================================
  */
 
+#ifndef CONSTRUCTS_INCLUDED
+#define CONSTRUCTS_INCLUDED
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -69,3 +71,4 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
  * - JAK JSOU RESENE JUMPY??
  */
 int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+#endif
