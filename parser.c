@@ -99,7 +99,7 @@ int retIndex (lexType typ)
  */
 int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex)
 {
-  printDebug("Spoustim analyzu vyrazu \n");
+  printDebug("Spoustim analyzu vyrazu\n");
   int result;
   Stack s;
   sInit (&s);
