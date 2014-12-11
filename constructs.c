@@ -369,12 +369,17 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
 {
   int result = EXIT_SUCCESS;
   printDebug("Vetveni\n");
+  bool * condition;
+  tListItem ** sign, ** sign2;
+  if ((condition = malloc(sizeof(bool))) == NULL) return EXIT_INTERNAL_ERROR;
+  if ((sign = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
+  if ((sign2 = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL, NULL)) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
     { return result; }
-  printDebug("|||");
-  // musim si nekde pamatovat navesti, jak to resi interpret ??
+  // provedu podmineny jump (pokud je podminka nepravda, skacu)
+  generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   // nasleduje "then"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key && *(key *)lex->data != k_then) return EXIT_SYNTAX_ERROR;
@@ -383,6 +388,8 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
   // pak "else"
+  generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
+  *sign = ilist->last;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key && *(key *)lex->data != k_else) return EXIT_SYNTAX_ERROR;
   //nasledovat musi begin
@@ -390,6 +397,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+  *sign2 = ilist->last;
   return result;
 }
 
@@ -402,11 +410,18 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
 {
   int result = EXIT_SUCCESS;
   printDebug("Cyklus\n");
+  bool * condition;
+  tListItem ** sign, ** sign2;
+  if ((condition = malloc(sizeof(bool))) == NULL) return EXIT_INTERNAL_ERROR;
+  if ((sign = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
+  if ((sign2 = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
   // mam "while"
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL, NULL)) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
     { return result; }
+  generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
+  *sign2 = ilist->last;
   // potrebuju "do"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_key && *(key *)lex->data != k_do) return EXIT_SYNTAX_ERROR;
@@ -415,6 +430,8 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
   // jump back na podminku
+  generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
+  *sign = ilist->last; // sem skoci pokud while neplati
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   return result;
 }
