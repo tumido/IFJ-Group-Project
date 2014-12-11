@@ -35,7 +35,7 @@
 #define I_MUL 10
 #define I_DIV 11
 #define I_ADD 12
-#define I_SUB 12
+#define I_SUB 13
 #define I_CON 14
 #define I_INC 15
 #define I_DEC 16
