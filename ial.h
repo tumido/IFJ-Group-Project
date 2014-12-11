@@ -17,30 +17,33 @@
 void shellSort(int *array, int n);
 
 /*
- * badCharacters
- * - pomocna funkce BM algormitmu
- * - naplni pole badChars 'spatnymi' znaky, tedy takovymi, ktere se nevyskytuji
- *   ve hledanem podretezci
+ * compute jumps
+ * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
  */
 void computeJumps(char *pattern, int patternLenght, int charJump[]);
 
 /*
- * suffixes
- * - pomocna funkce BM algormitmu
- * - vypocte suffixy pro zadany vzor (pattern)
+ * compute match jump
+ * - funkce pro posunuti v ramci vzorku 
+ * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
  */
-void suffixes(char *pattern, int patternLenght, int *suffix);
-
-/*
- * goodSuffixes
- * - pomocna funkce BM algormitmu
- * - naplni pole spravnymi suffixy
- */
-void goodSuffixes(char *pattern, int patternLenght, int goodSuffix[]);
+void computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
 
 /*
  * findSubString
- * - hlavni ridici funkce celeho Boyer-Mooreova algoritmu, spousti pomocne funkce
+ * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
  * - vraci index prvniho vyskytu zadaneho podretezce, nebo by alespon mela..
  */
-int findSubString(char *pattern, char *text);
+int findSubString(char *pattern, char *text,  int charJump[], int matchJump[]);
+
+/*
+ * min
+ * - funkce vrati mensi ze dvou cisel
+ */
+int min(int a, int b);
+
+/*
+ * max
+ * - funkce vrati mensi ze dvou cisel
+ */
+int max(int a, int b);
