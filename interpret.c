@@ -394,7 +394,7 @@ int instruction(tListOfInstr *instrList)
  * - I_FIND, zadany_retezec, hledany_podretezec, vysledek
  * - find(s : string; search : string) : integer
  * - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' a vrati jeho pozici (pocitano od 1)
- * - pokud neni podretezec nalezen, vraci 0
+ * - pokud neni podretezec nalezen, vraci -1
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
@@ -426,13 +426,13 @@ int instruction(tListOfInstr *instrList)
     }
     return EXIT_SUCCESS;
   }
-  ;
 }
 
 /*
  * -----------------------------------------------------------------------------
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  * -----------------------------------------------------------------------------
+ * - jak to tak vypada, nebude vubec potreba..
  */
 int interpret(tListOfInstr *)
 {
@@ -442,9 +442,7 @@ int interpret(tListOfInstr *)
 /*
  * iWRITE
  * -----------------------------------------------------------------------------
- * - zapisuje na stdout
- *
- * - má se nějak vypisovat i bool? třeba jen jako 0 a 1??
+ * - vypisuje hodnotu addr1
  */
 int iWrite(tListOfInstr *I)
 {
@@ -492,9 +490,7 @@ int iRead(tInstr *I)
       I->addr3 = scanf("%c", &ch);
 
       while(ch = getchar() != (EOF || '\n'))
-      {
         strcat(tmp, ch);
-      }
       strcpy(I->addr3, tmp);
       break;
   }
@@ -504,12 +500,6 @@ int iRead(tInstr *I)
 /*
  * TODO:
  * - kodit, makat, modlit se
- * - nejakym zpusobem vyzkouset praci se zasobnikem a frontou, nejlepe si to
- *   zkusit nejak nasimulovat..
  * - dokoncit zbyvajici instrukce
- *
- * - metodu BMA mame implmentovat dle varianty algoritmu popsane v ramci predmetu IAL
- *   takze cele prepsat do nejakeho prasackeho na dve veci reseni...
- *   - tezky nezdar, v opore je v algoritmu chyba, podle me.. tak jsem na rozpacich,
- *     jestli se to snazit implementovat s chybou, a pak ji nejak opravovat, nebo jak..
+ * - odzkouset instrukce vestavenych funkci
  */

@@ -15,10 +15,6 @@
  * -----------------------------------------------------------------------------
  * - provadi shellovo razeni 'n' prvku v poli
  * - implemetace podle slajdu prof. Hoznika
- * - zatim neotestovano
- * - strana 162
- * 
- * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
 void shellSort(char *array, int n)
 {
@@ -32,7 +28,7 @@ void shellSort(char *array, int n)
     {
       j = i - step + 1;
 
-      while ((j >= 1) && (array[j] > array[j + step])) // bubble pruchod
+      while ((j >= 0) && (array[j] > array[j + step])) // bubble pruchod
       {
         tmp = array[j];
         array[j] = array[j + step];
@@ -48,7 +44,7 @@ void shellSort(char *array, int n)
  * Funkce findSubString
  * -----------------------------------------------------------------------------
  * - vyhledava podretezec zadane delky 'n' v retezci 's'
- * - implementovano pomoci boyer-mooreova algoritmu:
+ * - implementovano pomoci boyer-mooreova algoritmu v opore:
  *   - prochazi text zleva doprava a porovnava vzor s textem zprava doleva
  *   - jestlize znak na aktualni pozici ve vzorku neni (pozna na zaklade tabulky
  *     spatnych znaku), preskoci na index vetsi o delku vzorku
@@ -57,6 +53,29 @@ void shellSort(char *array, int n)
  *   - pro zabezpeceni rozeznani opakujicich se posloupnosti znaku ve vzoru slouzi
  *     'compute march jumps'
  */
+
+
+/*
+ * smaller
+ * - funkce vrati mensi ze dvou integeru
+ */
+int smaller(int a, int b)
+{
+  if(a < b) return a;
+  else if (a > b) return b;
+  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
+}
+
+/*
+ * bigger
+ * - funkce vrati mensi ze dvou integeru
+ */
+int bigger(int a, int b)
+{
+  if(a < b) return b;
+  else if (a > b) return a;
+  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
+}
 
 int charJump[];
 
@@ -95,7 +114,7 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
 
       while ((q < m) && (pattern[k] != pattern[q]))
       {
-        matchJump[q] = min(matchJump[q], m - k);
+        matchJump[q] = smaller(matchJump[q], m - k);
         q = backup[q];
       }
 
@@ -103,7 +122,7 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
       q--;
     }
 
-    for (k = 0; k < q; k++) matchJump[k] = min(matchJump[k], m + q - k);
+    for (k = 0; k < q; k++) matchJump[k] = smaller(matchJump[k], m + q - k);
 
     qq = backup[q];
 
@@ -111,7 +130,7 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
     {
       while (q < qq)
       {
-        matchJump[q] = min(matchJump[q], qq - q + m); // funkce vraci mensi ze dvou
+        matchJump[q] = smaller(matchJump[q], qq - q + m);
         q = q + 1;
       }
       qq = backup[qq];
@@ -122,7 +141,8 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
 /*
  * findSubString
  * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
- * - vraci index prvniho vyskytu zadaneho podretezce, nebo by alespon mela..
+ * - vraci index prvniho vyskytu zadaneho podretezce
+ * - v pripade nenalezeni, vraci -1
  */
 int findSubString(char *pattern, char *text,  int charJump[], int matchJump[])
 {
@@ -131,6 +151,10 @@ int findSubString(char *pattern, char *text,  int charJump[], int matchJump[])
   
   j = patternLenght;
   k = patternLenght;
+  
+  // volani pomocnych funkci
+  computeJumps(char *pattern, int patternLenght, int charJump[]);
+  computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
 
   while ((j < SIZE) && (k > 0))
   {
@@ -141,37 +165,13 @@ int findSubString(char *pattern, char *text,  int charJump[], int matchJump[])
     }
     else
     {
-      j = j + max(charJump[text[j]], matchJump[k]); // vybere vetsi = vyhodnejsi posun
+      j = j + bigger(charJump[text[j]], matchJump[k]); // vybereme vetsi = vyhodnejsi posun
       k = patternLenght;
     }
   }
 
   if (k == 0) return (j + 1); // nasla se shoda
-  else return (SIZE + 1); // nenasla se shoda
-}
-
-/*
- * min
- * - funkce vrati mensi ze dvou cisel
- * - ano, je to hloupy nazev
- */
-int min(int a, int b)
-{
-  if(a < b) return a;
-  else if (a > b) return b;
-  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
-}
-
-/*
- * max
- * - funkce vrati mensi ze dvou cisel
- * - ano, je to hloupy nazev
- */
-int max(int a, int b)
-{
-  if(a < b) return b;
-  else if (a > b) return a;
-  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
+  else return -1; // nenasla se shoda
 }
 
 /*
