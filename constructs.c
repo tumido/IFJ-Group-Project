@@ -356,7 +356,6 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
     tokenFree(&tmp);
   }
   else result = evalExpression(in, table, ilist, lex, NULL, loc); // jinak (je to hodnota, cokoliv) volan evalExpression
-
   return result;
 }
 
@@ -377,12 +376,11 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
-    { return result; }
+    {return result; }
   // provedu podmineny jump (pokud je podminka nepravda, skacu)
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   // nasleduje "then"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_then) return EXIT_SYNTAX_ERROR;
+  if (lex->type != l_key && *(key *)lex->data != k_then) {return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
@@ -398,6 +396,9 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
   *sign2 = ilist->last;
+  generateInstruction(I_CLEAR, k_bool, condition, NULL, NULL, ilist);
+  generateInstruction(I_CLEAR, k_int, sign, NULL, NULL, ilist);
+  generateInstruction(I_CLEAR, k_int, sign2, NULL, NULL, ilist);
   return result;
 }
 
@@ -433,5 +434,8 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last; // sem skoci pokud while neplati
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+  generateInstruction(I_CLEAR, k_bool, condition, NULL, NULL, ilist);
+  generateInstruction(I_CLEAR, k_int, sign, NULL, NULL, ilist);
+  generateInstruction(I_CLEAR, k_int, sign2, NULL, NULL, ilist);
   return result;
 }

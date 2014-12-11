@@ -132,7 +132,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   if (lex->type==l_id)
   {
     printDebug("Prvni lexem je ID, jdu hledat ve stromu\n");
-    if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
+    if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
     return EXIT_SEMANTIC_ERROR;
     // ulozim si ze stromu hodnoty
     //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
@@ -170,7 +170,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           if (lex->type==l_id)
           {
           printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
-          if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
+          if ( (nd=SymbolTableSearch (table,((string *) lex->data)->str))==NULL)
           return EXIT_SEMANTIC_ERROR;
           // ulozim si ze stromu hodnoty
           //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
@@ -220,7 +220,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
        if (lex->type==l_id)
        {
         printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
-        if ( (nd=SymbolTableSearch (table,((string *) lex->type)->str))==NULL)
+        if ( (nd=SymbolTableSearch (table,((string *) lex->data)->str))==NULL)
         return EXIT_SEMANTIC_ERROR;
         // ulozim si ze stromu hodnoty
         //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
@@ -315,11 +315,11 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  sPush(&s,itemC);
                  break;
             case l_less:
-                printDebug("Operace je mensi");
+                printDebug("Operace je mensi\n");
               // if(generateInstruction(I_LESS
                 break;
             case l_greater:
-                printDebug("Operace je vetsi");
+                printDebug("Operace je vetsi\n");
               // if(generateInstruction(I_LESS
                 break;
             case l_gequal:
@@ -679,7 +679,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
     return EXIT_INTERNAL_ERROR;
   }
   generateInstruction(I_ASSIGN,param->type, data, NULL, paramNode->data, ilist);
-  if (isOrd) generateInstruction(I_CLEAN, param->type, data, NULL, NULL, ilist);
+  if (isOrd) generateInstruction(I_CLEAR, param->type, data, NULL, NULL, ilist);
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_sep) return EXIT_SYNTAX_ERROR; // neni carka, ale nemam vsechny parametry -> chyba
