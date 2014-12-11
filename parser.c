@@ -124,28 +124,71 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   printDebug("Kontrola prvniho lexemu\n");
   if (nextLex==NULL)
    {
+    printDebug("Byl obdrzen pouze jeden lexem\n");
     NLex.data=NULL;
    }
   else
-    {NLex.data=nextLex->data; NLex.type=nextLex->type;}
+    {
+     printDebug("Obdrzel jsem dva lexemy\n");
+     NLex.data=nextLex->data; 
+     NLex.type=nextLex->type;
+    }
 
   if (lex->type==l_id)
   {
-    printDebug("Prvni lexem je ID, jdu hledat ve stromu\n");
+    printDebug("Prvni lexem je ID, jdu hledat ve strome\n");
     if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
     return EXIT_SEMANTIC_ERROR;
     // ulozim si ze stromu hodnoty
-    //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
-    //itemAct.lexdata.type = nd->type; // a typ (int,boolean,real,str)
+    if  (nd->type == k_int)
+    {
+      printDebug("Prvni lexem je int\n");
+      itemAct.lexdata.type=l_int;
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));      
+    }
+    else if  (nd->type == k_real)
+    {
+      printDebug("Prvni lexem je double\n");
+      itemAct.lexdata.type=l_real;
+      *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));      
+    }
+    else if  (nd->type == k_string)
+    {
+      printDebug("Prvni lexem je retezec\n");
+      itemAct.lexdata.type=l_str;
+      *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));      
+    }
+    else if  (nd->type == k_bool)
+    {
+      printDebug("Prvni lexem je bool\n");
+      itemAct.lexdata.type=l_bool;
+      *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));      
+    }
+    else return EXIT_SYNTAX_ERROR;
    itemAct.TypTok = l_id;
   }
    //printDebug("tady jeste jsu\n");
    // jestli je token int,real,str ulozim si hodnotu a typ
-  else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
+  else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
   {
-    printDebug("Prvni lexem je int,real,str, bool\n");
-    //itemAct.lexdata.data = nextLex->data;
-    //itemAct.lexdata.type = nextLex->type;
+    if  (lex->type == l_int)
+    {
+      printDebug("Prvni lexem je int\n");
+      itemAct.lexdata.type=lex->type;
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));      
+    }
+    else if  (lex->type == l_real)
+    {
+      printDebug("Prvni lexem je double\n");
+      itemAct.lexdata.type=lex->type;
+      *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));      
+    }
+    else if  (lex->type == l_str)
+    {
+      printDebug("Prvni lexem je retezec\n");
+      itemAct.lexdata.type=lex->type;
+      *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));      
+    }
     itemAct.TypTok = l_id;
   }
   else
@@ -161,86 +204,160 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
            return EXIT_SYNTAX_ERROR;
 
        case Straight:
-           sPush(&s,itemAct);
-           itemTop=sTop(&s);
-           if (NLex.data==NULL)
-           {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
-           else{lex->data=NLex.data;lex->type=NLex.type; NLex.data=NULL;}
-
-          if (lex->type==l_id)
-          {
-          printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
-          if ( (nd=SymbolTableSearch (table,((string *) lex->data)->str))==NULL)
+         sPush(&s,itemAct);
+         itemTop=sTop(&s);
+         if (NLex.data==NULL)
+         {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
+         else{lex->data=NLex.data;lex->type=NLex.type; NLex.data=NULL;}
+         
+         if (lex->type==l_id)
+         {
+          printDebug("Dalsi lexem je ID, jdu hledat ve strome\n");
+          if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
           return EXIT_SEMANTIC_ERROR;
           // ulozim si ze stromu hodnoty
-          //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
-          //itemAct.lexdata.type = nd->type; // a typ (int,boolean,real,str)
-          itemAct.TypTok = l_id;
+          if  (nd->type == k_int)
+          {
+          printDebug("Dalsi lexem je int\n");
+          itemAct.lexdata.type=l_int;
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));      
           }
-          //printDebug("tady jeste jsu\n");
-          // jestli je token int,real,str ulozim si hodnotu a typ
-         else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
-         {
-          printDebug("dalsi lexem je int,real,str, bool\n");
-          //itemAct.lexdata.data = nextLex->data;
-          //itemAct.lexdata.type = nextLex->type;
+          else if  (nd->type == k_real)
+          {
+          printDebug("Dalsi lexem je double\n");
+          itemAct.lexdata.type=l_real;
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));      
+          }
+          else if  (nd->type == k_string)
+          {
+          printDebug("Dalsi lexem je retezec\n");
+          itemAct.lexdata.type=l_str;
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));      
+          }
+          else if  (nd->type == k_bool)
+          {
+          printDebug("Dalsi lexem je bool\n");
+          itemAct.lexdata.type=l_bool;
+          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));      
+          }
+          else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
          }
-        else
-        {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-         printDebug("dalsi lexem neni promenna ani cislo\n");
-         itemAct.TypTok=lex->type;
+         // jestli je token int,real,str ulozim si hodnotu a typ
+        else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
+        {
+         if  (lex->type == l_int)
+         {
+         printDebug("Dalsi lexem je int\n");
+         itemAct.lexdata.type=lex->type;
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));      
+         }
+         else if  (lex->type == l_real)
+         {
+         printDebug("Dalsi lexem je double\n");
+         itemAct.lexdata.type=lex->type;
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));      
+         }
+         else if  (lex->type == l_str)
+         {
+         printDebug("Dalsi lexem je retezec\n");
+         itemAct.lexdata.type=lex->type;
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));      
+         }
+         itemAct.TypTok = l_id;
         }
+       else
+       {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
+        printDebug("Dalsi lexem neni promenna ani cislo\n");
+        itemAct.TypTok=lex->type;
+       }
        break;
 
        case Left:
         printDebug("Uplatnuji Leve pravidlo\n");
-       itemTop=sTop(&s);  // co je nahore?
-       itemC.TypTok=l_left; // nastavim si <
-       if (itemTop.TypTok==l_E)  // jestli je nahore E
-       { // zamenime E za <E
-        printDebug("Zamena E za <E\n");
-        itemTop=sPop(&s);
-        sPush (&s,itemC);
-        sPush (&s,itemTop);
-       }
-       else // na vrcholu neni E, dame tam <
-       {
-        printDebug("Pridavam < do zasobniku\n");
-        sPush (&s,itemC);
-       }
-       // nakonec vlozime token
-       printDebug("Vkladam token do zasobniku\n");
-       sPush (&s,itemAct);
-       if (NLex.data==NULL)
+        itemTop=sTop(&s);  // co je nahore?
+        itemC.TypTok=l_left; // nastavim si <
+        if (itemTop.TypTok==l_E)  // jestli je nahore E
+        { // zamenime E za <E
+         printDebug("Zamena E za <E\n");
+         itemTop=sPop(&s);
+         sPush (&s,itemC);
+         sPush (&s,itemTop);
+        }
+        else // na vrcholu neni E, dame tam <
+        {
+         printDebug("Pridavam < do zasobniku\n");
+         sPush (&s,itemC);
+        }
+        // nakonec vlozime token
+        printDebug("Vkladam token do zasobniku\n");
+        sPush (&s,itemAct);
+        if (NLex.data==NULL)
         {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
-       else{lex->data=NLex.data;lex->type=NLex.type; NLex.data=NULL;}
+        else{lex->data=NLex.data;lex->type=NLex.type; NLex.data=NULL;}
 
-       itemTop=sTop(&s);
-       if (lex->type==l_id)
-       {
-        printDebug("dalsi lexem je ID, jdu hledat ve stromu\n");
-        if ( (nd=SymbolTableSearch (table,((string *) lex->data)->str))==NULL)
-        return EXIT_SEMANTIC_ERROR;
-        // ulozim si ze stromu hodnoty
-        //itemAct.lexdata.data = nd->data; // ulozime si hodnotu
-        //itemAct.lexdata.type = nd->type; // a typ (int,boolean,real,str)
-        itemAct.TypTok = l_id;
+        itemTop=sTop(&s);
+        if (lex->type==l_id)
+        {
+          printDebug("Dalsi lexem je ID, jdu hledat ve strome\n");
+          if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
+          return EXIT_SEMANTIC_ERROR;
+          // ulozim si ze stromu hodnoty
+          if  (nd->type == k_int)
+          {
+          printDebug("Dalsi lexem je int\n");
+          itemAct.lexdata.type=l_int;
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));      
+          }
+          else if  (nd->type == k_real)
+          {
+          printDebug("Dalsi lexem je double\n");
+          itemAct.lexdata.type=l_real;
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));      
+          }
+          else if  (nd->type == k_string)
+          {
+          printDebug("Dalsi lexem je retezec\n");
+          itemAct.lexdata.type=l_str;
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));      
+          }
+          else if  (nd->type == k_bool)
+          {
+          printDebug("Dalsi lexem je bool\n");
+          itemAct.lexdata.type=l_bool;
+          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));      
+          }
+          else return EXIT_SYNTAX_ERROR;
+          itemAct.TypTok = l_id;
+         }
+         // jestli je token int,real,str ulozim si hodnotu a typ
+        else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
+        {
+         if  (lex->type == l_int)
+         {
+         printDebug("Dalsi lexem je int\n");
+         itemAct.lexdata.type=lex->type;
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));      
+         }
+         else if  (lex->type == l_real)
+         {
+         printDebug("Dalsi lexem je double\n");
+         itemAct.lexdata.type=lex->type;
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));      
+         }
+         else if  (lex->type == l_str)
+         {
+         printDebug("Dalsi lexem je retezec\n");
+         itemAct.lexdata.type=lex->type;
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));      
+         }
+         itemAct.TypTok = l_id;
         }
-        //printDebug("tady jeste jsu\n");
-        // jestli je token int,real,str ulozim si hodnotu a typ
-       else if(lex->type == l_int || lex->type == l_real || lex->type == l_str || lex->type==l_bool)
-       {
-        printDebug("dalsi lexem je int,real,str, bool\n");
-        //itemAct.lexdata.data = nextLex->data;
-        //itemAct.lexdata.type = nextLex->type;
-        itemAct.TypTok = l_id;
+        else
+        {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
+         printDebug("Dalsi lexem neni promenna ani cislo\n");
+         itemAct.TypTok=lex->type;
         }
-       else
-       {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-        printDebug("dalsi lexem neni promenna ani cislo\n");
-        itemAct.TypTok=lex->type;
-       }
       break;
 
      case Right:
