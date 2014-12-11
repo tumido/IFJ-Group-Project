@@ -8,13 +8,6 @@
  * =====================================================================
  */
 
-/*
- * -----------------------------------------------------------------------------
- * NOVY ZPUSOB SYNTAXE INSTRUKCI
- * -----------------------------------------------------------------------------
- * INSTRUKCE, typ (k_int || k_string || k_bool || k_real || (k_function)), op1, op2, cilovyOperand
- */
-
 #include "interpret.h"
 
 /*
@@ -41,18 +34,8 @@ int instruction(tListOfInstr *instrList)
  * -----------------------------------------------------------------------------
  * Specialni instrukce
  * -----------------------------------------------------------------------------
- * - stop, read, write, if, then, if_end, jump, assign, call_fuction, return,
- *   while_do, clear
+ * - read, write, jump, assign, call_fuction, clear
  */
-// NA CO JE INSTRUKCE STOP, IF, THEN, IF_END, RETURN, WHILE_DO?
-/*
- * STOP
- *
- * - I_STOP, NULL, NULL, NULL, NULL
- * - slouzi pro zastaveni provadeni cyklu
- */
-      case I_STOP:
-        break;
 
 /*
  * READ
@@ -77,76 +60,17 @@ int instruction(tListOfInstr *instrList)
         break;
 
 /*
- * IF
- *
- * - I_IF, NULL, NULL, NULL, NULL
- * - znaci zacatek podminky
- * - zpracovava vyraz v podmince
- */
-      case I_IF:
-        while (I->instType != I_THEN) // dokud je co vyhodnocovat
-        {
-          listNext(&instrList);                // posun na dalsi prvek seznamu
-          instruction(&instrList);
-        }
-        listNext(&instrList)
-        if(/* podminka pravdiva */)       //podminka byla pravdiva
-        {
-          while(I->instType != I_ELSE)          //podminka bypa pravdiva, budu provadet instrukce, dokud nenarazim na
-          {
-            listNext(&instrList);
-            instruction(&instrList);
-          }
-          while(I->instType != I_IF_END){listNext(&instrList);}   //preskakuju vetev ELSE
-          listNext(&instrList);
-          instruction(&instrList);                           //preskocil jsem cely else, ted uz jen provedu instrukci I_IF_END
-        }
-        else // podminka nepravdiva, prubeh bude symetricky k predchozimu IFu. Nejprve preskocim vse az k ELSE a pote zacnu vykonavat instrukce
-        {
-          while(I->instType != I_ELSE){listNext(&instrList);}     //preskakuju instrukce, dokud nedojedu az k ELSE
-          while(I->instType != I_IF_END)
-          {
-            listNext(&instrList);
-            instruction(&instrList);
-          }
-        }
-        break;
-
-/*
- * THEN
- *
- * - I_THEN, NULL, NULL, NULL, expression_I->addr3
- * - znaci konec vyhodnocovani podminky a prechod na telo
- * - vraci vyhodnoceny vyraz podminky (ktery vsak zpracovava instrukce IF)
- */
-      case I_THEN: // znaci konec vyhodnocovani podminky a prechod na telo
-          if((*(bool*))I->addr3 == FALSE) return FALSE;
-          else return TRUE;
-        break;
-
-/*
- * IF_END
- *
- * - IF_END, NULL, NULL, NULL, NULL
- * - IF_END nic nedela, slouzi pro oznaceni konce tela podminky
- */
-      case I_IF_END:
-
-/*
  * JUMP
  *
- * - I_JUMP, NULL, NULL, NULL, NULL
- * - oznaceni, ze skaceme
+ * - I_JUMP, NULL, I->addr1, I->addr2, NULL
+ * - operand 1 rozhoduje o skoku, operand 2 je adresa instrukce, na kterou skaceme  
  */
       case I_JUMP:
-
-/*
- * LABEL
- *
- * - I_LABEL, NULL, NULL, NULL, NULL
- * - oznaceni navesti, kam skaceme
- */
-      case I_LABEL:
+        if(((*(bool*))I->addr1) == TRUE) return EXIT_SUCCESS;
+        else
+        {
+          // jump na adresu danou operandem 2
+        }
         break;
 
 /*
@@ -181,45 +105,6 @@ int instruction(tListOfInstr *instrList)
         break;
 
 /*
- * RETURN
- *
- * - I_RETURN, NULL, NULL, NULL, NULL
- * - instrukce navratu z volane funkce
- */
-      case I_RETURN:
-        break;
-
-/*
- * WHILE
- * - instrukce cyklu while (provadeni nejake cinnosti porad dokola tak dlouho, dokud nejsem uspokojeny)
- * - principielne to bude fungovat jako IF - overim podminku a kdyz plati, beru si dalsi a dalsi instrukce
- *   v tele cyklu, dokud nenarazim na konec, a pak zase overim podminku atd atd
- * - kdyz je podminka nesplnena, vyskocim ven
- */
-      case I_WHILE:
-        while (I->instType != I_DO) // dokud je co vyhodnocovat
-        {
-          // posun na dalsi prvek seznamu
-        }
-
-        if(/* podminka pravdiva */)
-        {
-
-        }
-        else // podminka nepravdiva, koncim
-        {
-
-        }
-        break;
-
-/*
- * DO
- * - sinalizuje konec vyhodnocovani podminky, vraci vysledek vyhodnoceni
- */
-      case I_DO:
-        break;
-
-/*
  * CLEAR
  *
  * - I_CLEAR, typ, I->addr1, NULL, NULL
@@ -247,7 +132,7 @@ int instruction(tListOfInstr *instrList)
       case I_MUL:
         if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) * (*(int*)I->addr2);
         else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) * (*(double*)I->addr2);
-        else return EXIT_RUNTIME_ERROR;
+        else return EXIT_RUNTIME_ERROR; // kde se to tu vzalo a proc to tu je? neresi to parser?
         break;
 
 /*
@@ -274,9 +159,9 @@ int instruction(tListOfInstr *instrList)
  * - secte operand 1 a operand 2, vysledek ulozi do I->addr3
  */
       case I_ADD:
-          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) + (*(int*)I->addr2);
-          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) + (*(double*)I->addr2);
-          else return EXIT_RUNTIME_ERROR;
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) + (*(int*)I->addr2);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) + (*(double*)I->addr2);
+        else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
@@ -286,9 +171,9 @@ int instruction(tListOfInstr *instrList)
  * - odecte od operandu1 I->addr2
  */
       case I_SUB:
-          if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - (*(int*)I->addr2);
-          else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) - (*(double*)I->addr2);
-          else return EXIT_RUNTIME_ERROR;
+        if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - (*(int*)I->addr2);
+        else if(I->instType == k_real) (*(double*)I->addr3) = (*(double*)I->addr1) - (*(double*)I->addr2);
+        else return EXIT_RUNTIME_ERROR;
         break;
 
 /*
@@ -298,8 +183,8 @@ int instruction(tListOfInstr *instrList)
  * - konkatenace (zretezeni) oprandu 1 a operandu 2
  */
       case I_CON:
-          strcat((*(char*)I->addr3), (*(char*)I->addr1); // tady opravdu nevim, jestli je to dobre/asi ROMAN..,,,,,,,,ja bych to udelal stejne / KUBA
-          strcat((*(char*)I->addr3), (*(char*)I->addr2);
+        strcat((*(char*)I->addr3), (*(char*)I->addr1); // tady opravdu nevim, jestli je to dobre/asi ROMAN..,,,,,,,,ja bych to udelal stejne / KUBA
+        strcat((*(char*)I->addr3), (*(char*)I->addr2);
         break;
 
 /*
@@ -309,7 +194,7 @@ int instruction(tListOfInstr *instrList)
  * - inkrementuje operand 1, vysledek v I->addr3
  */
       case I_INC:
-          (*(int*)I->addr3) = ++(*(int*)I->addr1);
+        (*(int*)I->addr3) = ++(*(int*)I->addr1);
         break;
 
 /*
@@ -319,7 +204,7 @@ int instruction(tListOfInstr *instrList)
  * - dekrementuje operand 1, vysledek v I->addr3
  */
       case I_DEC:
-          (*(int*)I->addr3) = --(*(int*)I->addr1);
+        (*(int*)I->addr3) = --(*(int*)I->addr1);
         break;
 
 /*
@@ -329,8 +214,8 @@ int instruction(tListOfInstr *instrList)
  * - neguje operand 1, vysledek v I->addr3
  */
       case I_NEG:
-          if(I->instType == k_bool)(*(bool*)I->addr3) = (((*(bool*)I->addr1) == FALSE)? TRUE : FALSE);
-          else if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - 2 * (*(int*)I->addr1);  //negace integeru, muze byt?
+        if(I->instType == k_bool)(*(bool*)I->addr3) = (((*(bool*)I->addr1) == FALSE)? TRUE : FALSE);
+        else if(I->instType == k_int) (*(int*)I->addr3) = (*(int*)I->addr1) - 2 * (*(int*)I->addr1);  //negace integeru by Kuba, muze byt?
         break;
 
 /*
@@ -468,7 +353,7 @@ int instruction(tListOfInstr *instrList)
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-         (*(int*)I->addr3) = strlen((*(char*)I->addr1));
+        (*(int*)I->addr3) = strlen((*(char*)I->addr1));
         break;
 
 /*
@@ -481,7 +366,7 @@ int instruction(tListOfInstr *instrList)
  * - implementovano pomoci Boyer-Moorova algoritmu
  */
       case I_FIND:
-          (*(char*)I->addr3) = findSubtring();
+        (*(char*)I->addr3) = findSubtring();
         break;
 
 /*
@@ -503,7 +388,7 @@ int instruction(tListOfInstr *instrList)
         {
           int n = strlen(*(char*)I->addr1);
 
-          (*(char*)I->addr3) = (shellSort((*(int*)I->addr1), n));
+          (*(char*)I->addr3) = (shellSort((*(char*)I->addr1), n));
         }
         break;
     }
@@ -512,6 +397,7 @@ int instruction(tListOfInstr *instrList)
 }
 
 /*
+ * -----------------------------------------------------------------------------
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  * -----------------------------------------------------------------------------
  */
@@ -524,12 +410,24 @@ int interpret(tInstList *)
  * iWRITE
  * -----------------------------------------------------------------------------
  * - zapisuje na stdout
+ *
+ * - má se nějak vypisovat i bool? třeba jen jako 0 a 1??
  */
 int iWrite(tListOfInstr *L)
 {
-  if(I->instType == k_int) printf("%d\n", (*(int*))I->addr1);
-  else if(I->instType == k_real) printf("%f\n", (*(double*))I->addr1);
-  else printf("%c\n", (*(char*))I->addr1);
+  switch(I->instType)
+    case k_int:
+      printf("%d", (*(int*))I->addr1);
+      break;
+
+    case k_real:
+      printf("%g", (*(double*))I->addr1);
+      break;
+
+    case k_string:
+      printf("%c", (*(char*))I->addr1);
+      break;
+
   return EXIT_SUCCESS;
 }
 
@@ -537,26 +435,33 @@ int iWrite(tListOfInstr *L)
  * iREAD
  * -----------------------------------------------------------------------------
  * - cte ze stdin
+ * - musi jeste umet preskakovat mezery a tabulatory az do konce radku/vstupu
  */
 int iRead(tListOfInstr *L);
 {
-  // tu je to treba cele predelat a konecne dokoncit..
-  char character;               //promenna do ktere pozdeji budu nacitat znaky
-  switch(L->instI->instType)
-  {
-    case T_INTEGER:
+  switch(I->instType)
+    case k_int:
+      int num = 0;
+      I->addr3 = scanf("%d" &num);
       break;
-    case T_REAL:
+
+    case k_real:
+      double num = 0.0;
+      I->addr3 = scanf("%lf" &num);
       break;
-    case T_STRING:
+
+    case k_string:
+      char ch[];
+      char tmp[256];
+      I->addr3 = scanf("%c" &ch);
+
+      while(ch = getchar() != (EOF || '\n'))
+      {
+        strcat(tmp, ch);
+      }
+      strcpy(I->addr3, tmp); 
       break;
-    case T_BOOLEAN:
-      return EXIT_I->instType_ERROR;
-      break;
-    default:
-      return EXIT_READ_STDIN_ERROR;
-    break;
-  }
+
   return EXIT_SUCCESS;
 }
 
