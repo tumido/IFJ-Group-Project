@@ -257,13 +257,14 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             sPush (&s,itemD);   // pushneme E
             printDebug("Redukuji <i na E\n");
             break;
-          case l_lparenth:
-            printDebug("Vrchol je )\n");
+          case l_rparenth:
+            printDebug("Vrchol je ), vyraz byl v zavorce\n");
             sPop(&s); // odstranim )
             itemC=sPop(&s); // odstranim E
             sPop(&s); // odstranim (
             sPop (&s); // odstranim <
-            sPush(&s,itemC); // dam tam zpatky E
+            itemTop=sTop(&s), // nahore je to co je pred E
+            sPush(&s,itemC); // dam tam zpatky E 
             break;
           // na vrchu je E
           case l_E:
@@ -350,8 +351,9 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
  // DataFree(&itemTop);
   //DataFree(&itemC);
   //DataFree(&itemD);
+  printDebug("Vracim se z analyzy!\n");
 
-  return EXIT_INTERNAL_ERROR;
+  return EXIT_SUCCESS;
 }
 
 /*   Blok deklarace promennych
