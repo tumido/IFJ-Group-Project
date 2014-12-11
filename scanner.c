@@ -143,8 +143,6 @@ int fillToken(struct input * in, token * lex)
   while (read)
   {
     z = fgetc(in->file);
-
-    if (z == '\n') (in->line)++; // nepresne, obcas o jeden radek mimo, pokud bude cas, muzem si hrat...
     switch(state)
     {
       case s_begin: // zakladni stav automatu, za zaklade pismene rozhodne co by to mohlo byt za lexem
@@ -244,9 +242,11 @@ int fillToken(struct input * in, token * lex)
         break;
       default: read = false; retVal = EXIT_INTERNAL_ERROR;
     }
+    if (z == '\n' && in->newline == false) { (in->line)++; in->newline = true; }
+    else if (in->newline) in->newline = false;
   }
   // doslo-li k problemu behem nacitani vypisu hlaseni
-  if (retVal == EXIT_LEXICAL_ERROR) { printErr("LEXICAL ERROR on line %d: What did you mean by \"%s%c\" ? Expected %s.\n", in->line, ((string *) lex->data)->str, z, expected);}
+  if (retVal == EXIT_LEXICAL_ERROR) { printErr("LEXICAL ERROR on line %d (excluding blank lines): What did you mean by \"%s%c\" ? Expected %s.\n", in->line, ((string *) lex->data)->str, z, expected);}
   else if (lex->type == l_int) { strToInt(lex); }
   else if (lex->type == l_real) { strToDouble(lex); }
   else if (lex->type == l_id) { keyWordCheck(lex); }

@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 {
   struct input in;
   in.line = 1;
+  in.newline = false;
 
   if (argc != 2)
   {

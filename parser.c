@@ -597,7 +597,6 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   {
     printDebug("Dopredna deklarace\n");
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-    if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   }
   else
   {
@@ -619,7 +618,9 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
         ((result = body(in, table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
       return result;
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
+  if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return function(in, table, ilist, lex);
 }
@@ -698,9 +699,9 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
   if (lex->type == l_id) // uzivatelem definovana funkce
   {
     // musim overit, ze identifikator existuje a je definovana funkce
-    if ((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+    if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || (((funcData *)nd->data)->defined) == false)
       return EXIT_NOT_DEFINED_ERROR;
-    if ((nd->type != k_function) || (((funcData *)nd->data)->defined) == false)
+    if (nd->type != k_function)
       return EXIT_TYPE_ERROR;
     // nactu oteviraci zavorku
     if (nextLex != NULL)
@@ -724,12 +725,12 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
   {
     switch (*(key *)lex->data)
     {
-      case k_sort: result =  embededFuncSort(in, table, ilist, lex, retNode);
-      case k_find: result = embededFuncFind(in, table, ilist, lex, retNode);
-      case k_length: result = embededFuncLength(in, table, ilist, lex, retNode);
-      case k_copy: result = embededFuncCopy(in, table, ilist, lex, retNode);
+      case k_sort: result =  embededFuncSort(in, table, ilist, lex, retNode); break;
+      case k_find: result = embededFuncFind(in, table, ilist, lex, retNode); break;
+      case k_length: result = embededFuncLength(in, table, ilist, lex, retNode); break;
+      case k_copy: result = embededFuncCopy(in, table, ilist, lex, retNode); break;
       default:
-        return EXIT_SYNTAX_ERROR;
+        return EXIT_SYNTAX_ERROR; break;
     }
   }
   else return EXIT_SYNTAX_ERROR;
@@ -826,7 +827,10 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
   // naplneny token, pokud nic neselze
   // zkontroluje prazdne telo programu, kdy po "begin" nasleduje hned "end"
   if (lex->type == l_key && *(key *)lex->data == k_end )
-    { printDebug("Prazdny blok kodu\n"); return result; }
+  {
+    printDebug("Prazdny blok kodu\n"); return result;
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  }
   // a projde telo programu -> pokud cokoliv z toho selze, vraci error
   if ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS)
     return result;
@@ -864,11 +868,9 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
 
         if (((result = declareList(in, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
             ((result = function(in, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
-            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) || // nactu dalsi token (posun kvuli deklaracim funkci)
             ((result = body(in, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
-        if (((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
-           (lex.type == l_enddot) ||
+        if ((lex.type == l_enddot) ||
            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
            (lex.type == l_eof)) { result = EXIT_SYNTAX_ERROR; break; } // na konci programu musi byt . a pak EOF
 
@@ -883,9 +885,11 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
     }
   }
 
-  if (result == EXIT_SEMANTIC_ERROR) printErr("SEMANTIC ERROR on line %d: Variable type conflict, use of an undeclared variable or conflict redeclarations.\n", in->line);
-  if (result == EXIT_SYNTAX_ERROR) printErr("SYNTAX ERROR on line %d: Check your program once more, please.\n", in->line);
-  if (result == EXIT_INTERNAL_ERROR) printErr("INTERNAL ERROR on line %d: Something really bad happend. This is not your fault.\n", in->line);
+  if (result == EXIT_SEMANTIC_ERROR) printErr("SEMANTIC ERROR on line %d (excluding blank lines): Variable type conflict, use of an undeclared variable or conflict redeclarations.\n", in->line);
+  if (result == EXIT_NOT_DEFINED_ERROR) printErr("NOT DEFINED (REDEFINED) ERROR on line %d (excluding blank lines): You are using undefined variable or trying to redefine something.\n", in->line);
+  if (result == EXIT_TYPE_ERROR) printErr("TYPE ERROR on line %d (excluding blank lines): Some variable is of a wrong type. Or maybe you have used wrong amount or type of parameter of function.\n", in->line);
+  if (result == EXIT_SYNTAX_ERROR) printErr("SYNTAX ERROR on line %d (excluding blank lines): Check your program once more, please.\n", in->line);
+  if (result == EXIT_INTERNAL_ERROR) printErr("INTERNAL ERROR on line %d (excluding blank lines): Something really bad happend. This is not your fault.\n", in->line);
   tokenFree(&lex);
   return result;
 }

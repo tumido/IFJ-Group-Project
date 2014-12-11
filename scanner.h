@@ -49,6 +49,7 @@ struct input
 {
   FILE * file;
   unsigned int line;
+  bool newline;
 };
 
 /*   Nacitani tokenu

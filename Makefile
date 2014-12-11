@@ -17,7 +17,7 @@
 #    Deklarace promenych
 #  ---------------------------------------------------------------------
 CC = clang #gcc
-CFLAGS = -std=c99 -pedantic -Wall -Werror
+CFLAGS = -std=c99 -pedantic -Wall -Werror -g
 ARCHIVE = xcoufa09
 LIBS = io.o scanner.o ilist.o parser.o btree.o parstack.o constructs.o
 

@@ -55,10 +55,8 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   // potrebuju ")"
-  if (lex->type != l_rparenth || !hadParam)
-  {
-    return EXIT_SYNTAX_ERROR;
-  }
+  if (lex->type != l_rparenth || !hadParam) return EXIT_SYNTAX_ERROR;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
 
@@ -89,6 +87,7 @@ int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, to
   }
   // volam instrukci
   generateInstruction(I_READ, loc->type, NULL, NULL, loc, ilist);
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
 
@@ -130,6 +129,7 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
   // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
   generateInstruction(I_ASSIGN, k_int, &data->length, NULL, loc->data, ilist);
   if (isOrd) generateInstruction(I_CLEAN , k_string, data, NULL, NULL, ilist);
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
 int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex, struct node * loc)
@@ -160,6 +160,9 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
     isOrd = true;
   }
   else return EXIT_TYPE_ERROR;
+  // nactu ","
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type != l_sep) return EXIT_SYNTAX_ERROR;
   // potrebuju zadat rozsah (id nebo int)
   long long * range;
   if ((range = malloc (sizeof(long long))) == NULL) return EXIT_INTERNAL_ERROR;
@@ -180,6 +183,10 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
     isOrd = true;
   }
   else return EXIT_TYPE_ERROR;
+  // nactu ","
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if (lex->type != l_sep) return EXIT_SYNTAX_ERROR;
+  // a posledni -> delku
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type == l_id)
   {
@@ -257,7 +264,6 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
   }
   else result = evalExpression(in, table, ilist, lex, NULL, loc); // jinak (je to hodnota, cokoliv) volan evalExpression
 
-  if (result != EXIT_SUCCESS) return result;
   return result;
 }
 
@@ -274,6 +280,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL, NULL)) != EXIT_SUCCESS))
     { return result; }
+  printDebug("|||");
   // musim si nekde pamatovat navesti, jak to resi interpret ??
   // nasleduje "then"
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
