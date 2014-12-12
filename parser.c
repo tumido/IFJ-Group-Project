@@ -110,12 +110,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   sData itemTop;
   sData itemC;
   sData itemD;
-  sData resultVal;
   if (DataInit(&itemAct) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemTop) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemC) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemD) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
-  if (DataInit(&resultVal) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   itemAct.TypTok=l_eof;
   sPush (&s,itemAct);
   printDebug("Inicializuji zasobnik a vkladam zarazku\n");
@@ -801,13 +799,13 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
    //DataFree(&itemC);;
    //DataFree(&itemD);
     tokenFree(&NLex);
-    resultVal=sTop(&s);
-    if (resultVal.lexdata.type==l_int)
-    {printDebug ("Vysledek je %d\n",*(long int*)itemC.lexdata.data); *(long int*)retVal=*(long int*)itemC.lexdata.data;}
-    if (resultVal.lexdata.type==l_real)
-    {printDebug ("Vysledek je %e\n",*(double*)itemC.lexdata.data); *(double*)retVal=*(double*)itemC.lexdata.data;}
-    if (resultVal.lexdata.type==l_bool)
-    {printDebug ("Vysledek je %d\n",*(bool*)itemC.lexdata.data); *(bool*)retVal=*(bool*)itemC.lexdata.data;}
+    itemTop=sTop(&s);
+    if (itemTop.lexdata.type==l_int)
+    {printDebug ("Vysledek je %d\n",*(long int*)itemTop.lexdata.data); *(long int*)retVal=*(long int*)itemTop.lexdata.data;}
+    if (itemTop.lexdata.type==l_real)
+    {printDebug ("Vysledek je %e\n",*(double*)itemTop.lexdata.data); *(double*)retVal=*(double*)itemTop.lexdata.data;}
+    if (itemTop.lexdata.type==l_bool)
+    {printDebug ("Vysledek je %d\n",*(bool*)itemTop.lexdata.data); *(bool*)retVal=*(bool*)itemTop.lexdata.data;}
 
 
 
