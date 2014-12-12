@@ -391,7 +391,7 @@ int instruction(tListOfInstr *instrList)
 /*
  * FIND
  *
- * - I_FIND, zadany_retezec, hledany_podretezec, vysledek
+ * - I_FIND, NULL, zadany_retezec, hledany_podretezec, vysledek
  * - find(s : string; search : string) : integer
  * - vyhleda prvni vyskyt zadaneho podretezce 'search' v retezci 's' a vrati jeho pozici (pocitano od 1)
  * - pokud neni podretezec nalezen, vraci -1
@@ -457,7 +457,6 @@ int iWrite(tListOfInstr *I)
       printf("%s", ((string *)I->addr1)->str);
       break;
   }
-
   return EXIT_SUCCESS;
 }
 
@@ -465,8 +464,6 @@ int iWrite(tListOfInstr *I)
  * iRead
  * -----------------------------------------------------------------------------
  * - cte ze stdin
- * - musi jeste umet preskakovat mezery a tabulatory az do konce radku/vstupu
- *   -> na to prece existovala nejaka funce, ne? neumi to nahodou scanf? :)
  */
 int iRead(tInstr *I)
 {
@@ -490,6 +487,7 @@ int iRead(tInstr *I)
       while(ch = getchar() != (EOF || '\n'))
         strcat(tmp, ch);
       strcpy(I->addr3, tmp);
+      // toto opravdu nevim, jestli bude fungovat, jak ma..
       break;
   }
   return EXIT_SUCCESS;
@@ -500,6 +498,4 @@ int iRead(tInstr *I)
  * - kodit, makat, modlit se
  * - dokoncit zbyvajici instrukce
  * - odzkouset instrukce vestavenych funkci
- *   - sort done
- *   - lenght done
  */

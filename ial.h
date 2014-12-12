@@ -37,13 +37,13 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
 int findSubString(char *pattern, char *text,  int charJump[], int matchJump[]);
 
 /*
- * min
- * - funkce vrati mensi ze dvou cisel
+ * smaller
+ * - funkce vrati mensi ze dvou cisel typu int
  */
-int min(int a, int b);
+int smaller(int a, int b);
 
 /*
- * max
- * - funkce vrati mensi ze dvou cisel
+ * bigger
+ * - funkce vrati mensi ze dvou cisel typu int
  */
-int max(int a, int b);
+int bigger(int a, int b);
