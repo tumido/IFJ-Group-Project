@@ -397,7 +397,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         {   // nahore je i, redukujeme na E
           case l_id:
             itemD=sPop(&s); // popneme to
-            itemC=sPop(&s);// popneme pryc <
+            sPop(&s);// popneme pryc <
             if (itemTop.lexdata.data==NULL) return EXIT_SEMANTIC_ERROR;
             itemD.TypTok=l_E ; // zmenime i na E, data zustanou
             itemTop=sTop(&s);  // priradime na top to co je pred E
@@ -424,69 +424,286 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             {
              case l_add:
                  printDebug("Operace je scitani\n");
-                /* if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
-                 // musim nastavit vysledek na typ int
-                 // int + real = real
-                 printDebug("int+int\n");
+                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int+int\n");
+                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_ADD,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
-                 // na typ real
-                 // real + int = real
-                 printDebug("real+int\n");
+                 {
+                     printDebug("int+real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
-                 // typ real
-                 //real+real=real
-                 printDebug("int+real\n");
-                else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
-                // real
-                // str+str str (konkatenace)
-                printDebug("real+real\n");
+                 {
+                     printDebug("real+int\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real+real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
-                //str
-                printDebug("str+str\n");
-                else return EXIT_SEMANTIC_ERROR;*/
+                {
+                     printDebug("string+string\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_ADD,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                }
+                else return EXIT_SEMANTIC_ERROR;
                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
+                sPush(&s,itemC);
+                break;
               case l_mul:
                  printDebug("Operace je nasobeni\n");
+                  if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int*int\n");
+                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_MUL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("int*real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("real*int\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real*real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
                  sPush(&s,itemC);
                  break;
              case l_div:
                  printDebug("Operace je deleni\n");
+                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int/int=real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real/real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("int/real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("real/int\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
                  sPush(&s,itemC);
                  break;
              case l_sub:
                  printDebug("Operace je odcitani\n");
+                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int-int\n");
+                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_SUB,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("int-real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("real-int\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real-real\n");
+                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
                  sPush(&s,itemC);
                  break;
             case l_less:
                 printDebug("Operace je mensi\n");
-              // if(generateInstruction(I_LESS
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int<int\n");
+                     generateInstruction(I_LESS,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real<real\n");
+                     generateInstruction(I_LESS,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str<str\n");
+                     generateInstruction(I_LESS,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean<boolean\n");
+                     generateInstruction(I_LESS,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                 break;
             case l_greater:
                 printDebug("Operace je vetsi\n");
-              // if(generateInstruction(I_LESS
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int>int\n");
+                     generateInstruction(I_GREATER,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real>real\n");
+                     generateInstruction(I_GREATER,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str>str\n");
+                     generateInstruction(I_GREATER,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean>boolean\n");
+                     generateInstruction(I_GREATER,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                 break;
             case l_gequal:
                 printDebug("Operace je vetsirovno\n");
-             //if(generateInstruction(I_GREATEQ,
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int>=int\n");
+                     generateInstruction(I_GREATER_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real>=real\n");
+                     generateInstruction(I_GREATER_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str>=str\n");
+                     generateInstruction(I_GREATER_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean>=boolean\n");
+                     generateInstruction(I_GREATER_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                break;
             case l_lequal:
                 printDebug("Operace je mensirovno\n");
-             //if(generateInstruction(I_LESSEQ,
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int<=int\n");
+                     generateInstruction(I_LESS_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real<=real\n");
+                     generateInstruction(I_LESS_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str<=str\n");
+                     generateInstruction(I_LESS_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean>=boolean\n");
+                     generateInstruction(I_LESS_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                  break;
             case l_equal:
                 printDebug("Operace je rovna se\n");
-             //if(generateInstruction(I_EQ ..
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int=int\n");
+                     generateInstruction(I_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real=real\n");
+                     generateInstruction(I_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str=str\n");
+                     generateInstruction(I_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean=boolean\n");
+                     generateInstruction(I_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                  break;
             case l_not:
                 printDebug("Operace je nerovna se\n");
-             //if(generateInstruction(I_NOTEQ
+                if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("int<>int\n");
+                     generateInstruction(I_NOT_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
+                 {
+                     printDebug("real<>real\n");
+                     generateInstruction(I_NOT_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
+                 {
+                     printDebug("str<>str\n");
+                     generateInstruction(I_NOT_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
+                 {
+                     printDebug("boolean<>boolean\n");
+                     generateInstruction(I_NOT_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                 }
+                 else return EXIT_SEMANTIC_ERROR;
+                 itemTop=sTop(&s);
+                 sPush(&s,itemC);
                  break;
-
              default: break;
 
          }// operace

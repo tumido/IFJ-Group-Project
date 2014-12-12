@@ -11,6 +11,7 @@
 #include "io.h"
 
 /*
+ * -----------------------------------------------------------------------------
  * Funkce shellSort
  * -----------------------------------------------------------------------------
  * - provadi shellovo razeni 'n' prvku v poli
@@ -18,9 +19,11 @@
  */ 
 void shellSort(char *array, int n)
 {
-  int step, i, j;
+  int i = 0;
+  int j = 0;
+  int step = n / 2; // prvni krok je polovina delky pole
   char tmp;
-  step = n / 2; // prvni krok je polovina delky pole
+  
   
   while (step > 0) // cykli, pokud je krok vetsi/roven 1
   {
@@ -41,7 +44,8 @@ void shellSort(char *array, int n)
 }
 
 /*
- * Funkce findSubString
+ * -----------------------------------------------------------------------------
+ * Boyer-Mooreuv algoritmus
  * -----------------------------------------------------------------------------
  * - vyhledava podretezec zadane delky 'n' v retezci 's'
  * - implementovano pomoci boyer-mooreova algoritmu v opore:
@@ -54,9 +58,9 @@ void shellSort(char *array, int n)
  *     'compute march jumps'
  */
 
-
 /*
  * smaller
+ * -----------------------------------------------------------------------------
  * - funkce vrati mensi ze dvou integeru
  */
 int smaller(int a, int b)
@@ -68,6 +72,7 @@ int smaller(int a, int b)
 
 /*
  * bigger
+ * -----------------------------------------------------------------------------
  * - funkce vrati mensi ze dvou integeru
  */
 int bigger(int a, int b)
@@ -81,6 +86,7 @@ int charJump[];
 
 /*
  * compute jumps
+ * -----------------------------------------------------------------------------
  * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
  */
 void computeJumps(char *pattern, int patternLenght, int charJump[])
@@ -93,6 +99,7 @@ void computeJumps(char *pattern, int patternLenght, int charJump[])
 
 /*
  * compute match jump
+ * -----------------------------------------------------------------------------
  * - funkce pro posunuti v ramci vzorku
  * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
  */
@@ -140,6 +147,7 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
 
 /*
  * findSubString
+ * -----------------------------------------------------------------------------
  * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
  * - vraci index prvniho vyskytu zadaneho podretezce
  * - v pripade nenalezeni, vraci -1
