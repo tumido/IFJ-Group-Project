@@ -397,7 +397,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         {   // nahore je i, redukujeme na E
           case l_id:
             itemD=sPop(&s); // popneme to
-            itemC=sPop(&s);// popneme pryc <
+            sPop(&s);// popneme pryc <
             if (itemTop.lexdata.data==NULL) return EXIT_SEMANTIC_ERROR;
             itemD.TypTok=l_E ; // zmenime i na E, data zustanou
             itemTop=sTop(&s);  // priradime na top to co je pred E
@@ -428,31 +428,31 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int+int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_ADD,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int+real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real+int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real+real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                 {
                      printDebug("string+string\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_ADD,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                 }
                 else return EXIT_SEMANTIC_ERROR;
                 itemTop=sTop(&s);
@@ -464,25 +464,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int*int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_MUL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real*int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -494,25 +494,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int/int=real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real/int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -524,25 +524,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int-int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_SUB,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real-int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -553,22 +553,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int<int\n");
-                     generateInstruction(I_LESS,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<real\n");
-                     generateInstruction(I_LESS,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<str\n");
-                     generateInstruction(I_LESS,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean<boolean\n");
-                     generateInstruction(I_LESS,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -579,22 +579,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int>int\n");
-                     generateInstruction(I_GREATER,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real>real\n");
-                     generateInstruction(I_GREATER,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str>str\n");
-                     generateInstruction(I_GREATER,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>boolean\n");
-                     generateInstruction(I_GREATER,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -605,22 +605,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int>=int\n");
-                     generateInstruction(I_GREATER_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real>=real\n");
-                     generateInstruction(I_GREATER_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str>=str\n");
-                     generateInstruction(I_GREATER_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>=boolean\n");
-                     generateInstruction(I_GREATER_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -631,22 +631,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int<=int\n");
-                     generateInstruction(I_LESS_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<=real\n");
-                     generateInstruction(I_LESS_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<=str\n");
-                     generateInstruction(I_LESS_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>=boolean\n");
-                     generateInstruction(I_LESS_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -657,22 +657,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int=int\n");
-                     generateInstruction(I_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real=real\n");
-                     generateInstruction(I_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str=str\n");
-                     generateInstruction(I_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean=boolean\n");
-                     generateInstruction(I_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -683,22 +683,22 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int<>int\n");
-                     generateInstruction(I_NOT_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<>real\n");
-                     generateInstruction(I_NOT_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<>str\n");
-                     generateInstruction(I_NOT_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean<>boolean\n");
-                     generateInstruction(I_NOT_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retval, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
