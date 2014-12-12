@@ -142,6 +142,7 @@ int __SymbolTableDispose(struct node ** leaf)
       free(((funcData *)(*leaf)->data)->table);
       listFree(&((funcData *)(*leaf)->data)->ilist);
     }
+    if ((*leaf)->type == k_string) free(((string *)(*leaf)->data)->str);
     free((*leaf)->data);
     free(*leaf);
   }

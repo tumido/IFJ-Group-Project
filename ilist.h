@@ -49,7 +49,7 @@ typedef struct copy
 }tCopy;
 
 void listInit(tListOfInstr *L); // funkce inicializuje seznam instrukci
-void listFree(tListOfInstr *L); // funkce dealokuje seznam instrukci
+void listFree(tListOfInstr *L, int retVal); // funkce dealokuje seznam instrukci
 int listInsertLast(tListOfInstr *L, tInstr I); // vlozi novou instruci na konec seznamu
 void listFirst(tListOfInstr *L); // zaktivuje prvni instrukci
 void listNext(tListOfInstr *L); // aktivni instrukci se stane nasledujici instrukce

@@ -30,10 +30,10 @@ int interpret(tListOfInstr * ilist)
             scanf("%lf", (double *)i->addr3);
             break;
           case k_string:
-            if (((string *)i->addr3)->str != NULL) free(((string *)i->addr3)->str);
+            printDebug("hovno");
             unsigned int size = 8, length = 0;
             char ch;
-            if ((((string *)i->addr3)->str = malloc(sizeof(char) * size)) == NULL)
+            if ((((string *)i->addr3)->str = realloc(((string *)i->addr3)->str, sizeof(char) * size)) == NULL)
               return EXIT_INTERNAL_ERROR;
             while (EOF != (ch = getchar()) && ch != '\n')
             {
@@ -58,11 +58,11 @@ int interpret(tListOfInstr * ilist)
         switch(i->type)
         {
           case k_int:
-            printf("%d", *(int *)i->addr1);
+            printf("%d", *(int *)i->addr1); break;
           case k_real:
-            printf("%g", *(double *)i->addr1);
+            printf("%g", *(double *)i->addr1); break;
           case k_string:
-            printf("%s", ((string *)i->addr1)->str);
+            printf("%s", ((string *)i->addr1)->str); break;
           default:
             return EXIT_TYPE_ERROR;
         }
@@ -223,7 +223,6 @@ int interpret(tListOfInstr * ilist)
       default:
         return EXIT_INTERNAL_ERROR;
     }
-    printDebug("nacitam dalsi instrukci\n");
     listItem = listItem->nextItem;
   }
   return EXIT_SUCCESS;

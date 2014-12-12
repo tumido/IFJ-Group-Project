@@ -38,12 +38,14 @@ int main(int argc, char *argv[])
   btree table;
   SymbolTableInit(&table);
 
+  printDebug("=========== PARSER ============\n");
   int retVal = parser(&in, &table, &ilist);
 
+  printDebug("========== INTERPRET ==========\n");
   if (retVal == EXIT_SUCCESS) interpret(&ilist);
 
   SymbolTableDispose(&table);
-  listFree(&ilist);
+  listFree(&ilist, retVal);
   fclose(in.file);
 
   return retVal;
