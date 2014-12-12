@@ -26,6 +26,11 @@ void listFree(tListOfInstr *L)
     ptr = L->first;
     L->first = L->first->nextItem;
     // uvolnime celou polozku
+    if (ptr->Instruction.instType == I_CLEAR)
+    {
+      if (ptr->Instruction.type == k_string) free(((string *)ptr->Instruction.addr1)->str);
+      free(ptr->Instruction.addr1);
+    }
     free(ptr);
   }
 }

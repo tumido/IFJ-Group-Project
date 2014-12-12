@@ -323,26 +323,7 @@ int instruction(tListOfInstr *instrList)
  * - 'n' urcuje delku podretezce
  */
       case I_COPY:
-        int start = L->addr2->start;                    //promene start a length dostanu decodovanim druheho operandu, urcuji, ktera cast retezce bude zkopirovana
-        int length = L->addr2->length;
-        int arrayLenght = strlen(textCopy);             //zjistim si, jak dlouhy retezec mi prisel
-        int arraySize = arrayLenght - length - 1;       // promena, ktera yjisti, jak dlouhe pole budu potrebovat, urcene podle delky ocekavaneho podretezce,magicka konstanta zde vyrovnava deficit ypusobeny praci s indexy -- prechod mezi poctem pismen a poctem indexu
-        char arrayCopy [arraySize];
-        for(int i = 0; i <= arraySize; i++)             //inicializace vysledneho pole
-          {arrayCopy[i] = '\0';}
-        for(int i = 0; i <= length; i++)                //prepsani stringu do charu a vyhoyeni vysledku
-          {
-            arrayCopy[i] = textCopy[start];
-            start++;
-            if(textCopy[i] == '\0')
-              i = length;
-          }
-        //vysledek je momentalne ulozen v arrayCopy. Ted bych ho jen prekopiroval na I->addr3, kde by bylo nachystane pole (tohle je zatim jediny zpusob predani vysledku, ktery me naoadl)
-        /*
-         * v tuto chvili by to melo byt odolne i na chyby kdz chci najit podretezec delsi nez samotny yakladni retezec (testovano u me na PC, ne na eve)
-         * Ted uz jen staci ulozit vysledek na adresu urcenou ?triadresnym kodem?
-         * na 100% je potreba tuto funkci otestovat, promene jsem prepisoval na dvakrat, nejsem is jist ze jsou prepsane spravne
-         */
+i       
         break;
 
 /*
@@ -353,7 +334,7 @@ int instruction(tListOfInstr *instrList)
  * - vrati delku retezce zadaneho parametrem 's'
  */
       case I_LENGHT:
-        (*(int*)I->addr3) = strlen((*(char*)I->addr1));
+        (*(int*)I->addr3) = ((string *)I->addr2)->length;
         break;
 
 /*
@@ -425,7 +406,7 @@ int iWrite(tListOfInstr *L)
       break;
 
     case k_string:
-      printf("%c", (*(char*))I->addr1);
+      printf("%s", ((string *)I->addr1)->str);
       break;
 
   return EXIT_SUCCESS;

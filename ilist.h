@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "io.h"
 #include "strings.h"
+#define I_CLEAR 9
 
 typedef struct
 {

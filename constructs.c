@@ -136,7 +136,7 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
 {
   int result = EXIT_SUCCESS;
   struct node * what;
-  bool isOrd1 = false, isOrd2 = false;
+  bool isOrd1 = false, isOrd2 = false, isOrd3 = false;
   printDebug("Copy\n");
   // potrebuju "("
   string * data;
@@ -164,8 +164,8 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_sep) return EXIT_SYNTAX_ERROR;
   // potrebuju zadat rozsah (id nebo int)
-  long long * range;
-  if ((range = malloc (sizeof(long long))) == NULL) return EXIT_INTERNAL_ERROR;
+  struct srange * range;
+  if ((range = malloc (sizeof(struct srange))) == NULL) return EXIT_INTERNAL_ERROR;
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type == l_id)
@@ -173,15 +173,13 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
     if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
       return EXIT_NOT_DEFINED_ERROR;
     if (what->type != k_int) return EXIT_TYPE_ERROR;
-    *range = *(int *)what->data;
+    range->start = (int *)what->data;
   }
   else if (lex->type == l_int) // nebo int
   {
-    data = lex->data;
-    lex->type = l_int;
+    range->start = (int *)lex->data;
     lex->data = NULL;
     isOrd2 = true;
-    *range = *(int *)data;
   }
   else return EXIT_TYPE_ERROR;
   // nactu ","
@@ -194,15 +192,13 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
     if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
       return EXIT_NOT_DEFINED_ERROR;
     if (what->type != k_int) return EXIT_TYPE_ERROR;
-    *range = (*(int *)what->data << sizeof(int)) || *range;
+    range->length = (int *)what->data;
   }
   else if (lex->type == l_int) // nebo int
   {
-    data = lex->data;
-    lex->type = l_int;
+    range->length = (int *)lex->data;
     lex->data = NULL;
-    isOrd2 = true;
-    *range = (*(int *)data << sizeof(int)) || *range;
+    isOrd3 = true;
   }
   else return EXIT_TYPE_ERROR;
   // potrebuju ")"
@@ -213,9 +209,11 @@ int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, toke
     return EXIT_SYNTAX_ERROR;
   }
   // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
-  generateInstruction(I_COPY, k_string, data, NULL, loc->data, ilist);
+  generateInstruction(I_COPY, k_string, data, range, loc->data, ilist);
   if (isOrd1) generateInstruction(I_CLEAR , k_string, data, NULL, NULL, ilist);
-  if (isOrd2) generateInstruction(I_CLEAR , k_int, range, NULL, NULL, ilist);
+  if (isOrd2) generateInstruction(I_CLEAR , k_int, range->start, NULL, NULL, ilist);
+  if (isOrd3) generateInstruction(I_CLEAR , k_int, range->length, NULL, NULL, ilist);
+  generateInstruction(I_CLEAR , k_int, range, NULL, NULL, ilist);
   return result;
 }
 

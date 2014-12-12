@@ -17,8 +17,9 @@ begin
   s := copy('asdc', 1, 3);
   readln(o); {muzu nacitat boolean?? }
   write(a, 5, 3.234234324, 8, 'a'#32'sda', 'b', 'c');
+  s := 'ahoj svete';
   a := 1;
-  if a < b then
+  {  if a < b then }
   begin
     a := b
   end

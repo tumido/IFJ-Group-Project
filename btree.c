@@ -135,8 +135,6 @@ int __SymbolTableDispose(struct node ** leaf)
     __SymbolTableDispose(&((*leaf)->leftNode));
     __SymbolTableDispose(&((*leaf)->rightNode));
 
-    if ((*leaf)->type == k_string) free(((string * )(*leaf)->data)->str);
-
     if ((*leaf)->type == k_function)
     {
       SymbolTableDispose(((funcData *)(*leaf)->data)->table);
@@ -144,7 +142,6 @@ int __SymbolTableDispose(struct node ** leaf)
       free(((funcData *)(*leaf)->data)->table);
       listFree(&((funcData *)(*leaf)->data)->ilist);
     }
-
     free((*leaf)->data);
     free(*leaf);
   }

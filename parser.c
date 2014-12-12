@@ -351,7 +351,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   //DataFree(&itemC);
   //DataFree(&itemD);
 
-  return EXIT_INTERNAL_ERROR;
+  return EXIT_SUCCESS;
 }
 
 /*   Blok deklarace promennych
