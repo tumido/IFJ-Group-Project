@@ -140,7 +140,7 @@ int __SymbolTableDispose(struct node ** leaf)
       SymbolTableDispose(((funcData *)(*leaf)->data)->table);
       FunctionParamsListDispose(((funcData *)(*leaf)->data)->param);
       free(((funcData *)(*leaf)->data)->table);
-      listFree(&((funcData *)(*leaf)->data)->ilist);
+      listFree(&((funcData *)(*leaf)->data)->ilist, EXIT_SUCCESS);
     }
     if ((*leaf)->type == k_string) free(((string *)(*leaf)->data)->str);
     free((*leaf)->data);
