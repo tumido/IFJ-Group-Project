@@ -143,25 +143,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=l_int;
-      //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
     }
     else if  (nd->type == k_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=l_real;
-      //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+      *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
     }
     else if  (nd->type == k_string)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=l_str;
-      //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+      *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
     }
     else if  (nd->type == k_bool)
     {
       printDebug("Prvni lexem je bool\n");
       itemAct.lexdata.type=l_bool;
-      //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+      *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
     }
     else { return EXIT_SYNTAX_ERROR;}
   // __SymbolTableDispose(&nd);
@@ -194,19 +194,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=lex->type;
-      //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
     }
     else if  (lex->type == l_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=lex->type;
-     // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+     *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
     }
     else if  (lex->type == l_str)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=lex->type;
-      //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+      *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
     }
     itemAct.TypTok = l_id;
   }
@@ -242,25 +242,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-          //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-          //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
@@ -273,19 +273,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-         //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-         //*(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-         //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
@@ -336,25 +336,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-         // *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-         // *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+           *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
@@ -367,19 +367,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-        // *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-        // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-        // *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
@@ -429,30 +429,40 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      printDebug("int+int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                    *(((long int *) itemC.lexdata.data)) = *(((long int *) itemTop.lexdata.data))+ *(((long int *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_int;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int+real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((long int *) itemTop.lexdata.data))+*(((double *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real+int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemTop.lexdata.data))+*(((long int *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real+real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemTop.lexdata.data))+*(((double *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                 else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                 {
                      printDebug("string+string\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                    // *(((double *) itemC.lexdata.data)) = *(((double *) itemTop.lexdata.data))+*(((long int *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_str;
                 }
                 else return EXIT_SEMANTIC_ERROR;
                 itemTop=sTop(&s);
@@ -465,24 +475,32 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      printDebug("int*int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_MUL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((long int *) itemC.lexdata.data)) = *(((long int *) itemTop.lexdata.data))* *(((long int *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_int;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((long int *) itemTop.lexdata.data))* *(((double *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real*int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemTop.lexdata.data))* *(((long int *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_MUL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemTop.lexdata.data))* *(((double *) itemC.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -495,24 +513,32 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      printDebug("int/int=real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((long int *) itemC.lexdata.data))/ *(((long int *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemC.lexdata.data))/ *(((double *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemC.lexdata.data))/ *(((long int *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real/int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_DIV,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((long int *) itemC.lexdata.data))/ *(((double *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -525,24 +551,32 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      printDebug("int-int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_SUB,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((long int *) itemC.lexdata.data)) = *(((long int *) itemC.lexdata.data))- *(((long int *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_int;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("int-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemC.lexdata.data))- *(((long int *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("real-int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((long int*) itemC.lexdata.data))- *(((double *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_SUB,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     *(((double *) itemC.lexdata.data)) = *(((double *) itemC.lexdata.data))- *(((double *) itemTop.lexdata.data));
+                     itemC.lexdata.type=l_real;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -554,21 +588,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int<int\n");
                      generateInstruction(I_LESS,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) < *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<real\n");
                      generateInstruction(I_LESS,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) < *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<str\n");
                      generateInstruction(I_LESS,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     //if (*(((string*)itemC.lexdata.data)) < *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                    // else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean<boolean\n");
                      generateInstruction(I_LESS,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) < *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -580,21 +622,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int>int\n");
                      generateInstruction(I_GREATER,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) > *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real>real\n");
                      generateInstruction(I_GREATER,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) > *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str>str\n");
                      generateInstruction(I_GREATER,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                    // if (*(((string*)itemC.lexdata.data)) > *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                    // else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>boolean\n");
                      generateInstruction(I_GREATER,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) > *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -606,21 +656,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int>=int\n");
                      generateInstruction(I_GREATER_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) >= *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real>=real\n");
                      generateInstruction(I_GREATER_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) >= *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str>=str\n");
                      generateInstruction(I_GREATER_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                    // if (*(((string*)itemC.lexdata.data)) >= *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                    // else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>=boolean\n");
                      generateInstruction(I_GREATER_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) >= *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -632,21 +690,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int<=int\n");
                      generateInstruction(I_LESS_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) <= *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<=real\n");
                      generateInstruction(I_LESS_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) <= *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<=str\n");
                      generateInstruction(I_LESS_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                    //if (*(((string*)itemC.lexdata.data)) <= *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     //else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean>=boolean\n");
                      generateInstruction(I_LESS_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) <= *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -658,21 +724,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int=int\n");
                      generateInstruction(I_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) == *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real=real\n");
                      generateInstruction(I_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) == *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str=str\n");
                      generateInstruction(I_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     //if (*(((string*)itemC.lexdata.data)) == *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     //else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean=boolean\n");
                      generateInstruction(I_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) == *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -684,21 +758,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  {
                      printDebug("int<>int\n");
                      generateInstruction(I_NOT_EQUAL,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((long int*)itemC.lexdata.data)) != *(((long int*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_real) && (itemC.lexdata.type==l_real) )
                  {
                      printDebug("real<>real\n");
                      generateInstruction(I_NOT_EQUAL,k_real, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((double*)itemC.lexdata.data)) != *(((double*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_str) && (itemC.lexdata.type==l_str) )
                  {
                      printDebug("str<>str\n");
                      generateInstruction(I_NOT_EQUAL,k_string, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     //if (*(((string*)itemC.lexdata.data)) != *(((string*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     //else *(bool*)itemC.lexdata.data= false;
                  }
                  else if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("boolean<>boolean\n");
                      generateInstruction(I_NOT_EQUAL,k_bool, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
+                     if (*(((bool*)itemC.lexdata.data)) != *(((bool*)itemTop.lexdata.data))) *(bool*)itemC.lexdata.data= true;
+                     else *(bool*)itemC.lexdata.data= false;
                  }
                  else return EXIT_SEMANTIC_ERROR;
                  itemTop=sTop(&s);
@@ -710,12 +792,23 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           default: break;
         }// itemTop.TypTok
     }// switch prTable
+
   }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
    //DataFree(&itemAct);
    //DataFree(&itemTop);
    //DataFree(&itemC);;
    //DataFree(&itemD);
     tokenFree(&NLex);
+    itemTop=sTop(&s);
+    if (itemTop.lexdata.type==l_int)
+    {printDebug ("Vysledek je %d\n",*(long int*)itemTop.lexdata.data); *(long int*)retVal=*(long int*)itemTop.lexdata.data;}
+    if (itemTop.lexdata.type==l_real)
+    {printDebug ("Vysledek je %e\n",*(double*)itemTop.lexdata.data); *(double*)retVal=*(double*)itemTop.lexdata.data;}
+    if (itemTop.lexdata.type==l_bool)
+    {printDebug ("Vysledek je %d\n",*(bool*)itemTop.lexdata.data); *(bool*)retVal=*(bool*)itemTop.lexdata.data;}
+
+
+
         printDebug("Vracim se z analyzy\n");
   return EXIT_SUCCESS;
 }
