@@ -143,25 +143,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=l_int;
-      //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
     }
     else if  (nd->type == k_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=l_real;
-      //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+      *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
     }
     else if  (nd->type == k_string)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=l_str;
-      //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+      *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
     }
     else if  (nd->type == k_bool)
     {
       printDebug("Prvni lexem je bool\n");
       itemAct.lexdata.type=l_bool;
-      //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+      *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
     }
     else { return EXIT_SYNTAX_ERROR;}
   // __SymbolTableDispose(&nd);
@@ -194,19 +194,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=lex->type;
-      //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+      *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
     }
     else if  (lex->type == l_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=lex->type;
-     // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+     *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
     }
     else if  (lex->type == l_str)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=lex->type;
-      //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+      *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
     }
     itemAct.TypTok = l_id;
   }
@@ -242,25 +242,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-          //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-          //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
@@ -273,19 +273,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-         //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-         //*(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-         //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
@@ -336,25 +336,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-         // *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-         // *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+           *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
@@ -367,19 +367,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-        // *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-        // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-        // *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
