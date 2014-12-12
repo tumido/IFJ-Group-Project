@@ -18,6 +18,7 @@
 #include "io.h"
 #include "ial.h" // kvuli funkci findSubstring a shellSort
 #include "ilist.h"
+#include "stack.h"
 
 // datove typy
 #define T_INTEGER 0
@@ -35,7 +36,7 @@
 #define I_MUL 10
 #define I_DIV 11
 #define I_ADD 12
-#define I_SUB 12
+#define I_SUB 13
 #define I_CON 14
 #define I_INC 15
 #define I_DEC 16

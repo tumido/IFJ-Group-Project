@@ -15,10 +15,6 @@
  * -----------------------------------------------------------------------------
  * - provadi shellovo razeni 'n' prvku v poli
  * - implemetace podle slajdu prof. Hoznika
- * - zatim neotestovano
- * - strana 162
- * 
- * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
 void shellSort(char *array, int n)
 {
@@ -32,7 +28,7 @@ void shellSort(char *array, int n)
     {
       j = i - step + 1;
 
-      while ((j >= 1) && (array[j] > array[j + step])) // bubble pruchod
+      while ((j >= 0) && (array[j] > array[j + step])) // bubble pruchod
       {
         tmp = array[j];
         array[j] = array[j + step];
@@ -48,21 +44,43 @@ void shellSort(char *array, int n)
  * Funkce findSubString
  * -----------------------------------------------------------------------------
  * - vyhledava podretezec zadane delky 'n' v retezci 's'
- * - implementovano pomoci boyer-mooreova algoritmu:
+ * - implementovano pomoci boyer-mooreova algoritmu v opore:
  *   - prochazi text zleva doprava a porovnava vzor s textem zprava doleva
  *   - jestlize znak na aktualni pozici ve vzorku neni (pozna na zaklade tabulky
  *     spatnych znaku), preskoci na index vetsi o delku vzorku
- *   - jestlize znak na akutali pozici ve vzorku je, porovnava nasledujici znaky
+ *   - jestlize znak na akutalni pozici ve vzorku je, porovnava nasledujici znaky
  *     zprava doleva
  *   - pro zabezpeceni rozeznani opakujicich se posloupnosti znaku ve vzoru slouzi
- *     tabulka 'dobrych' suffixu
- *
- * - je treba se na to cele jeste podivat a srovnat s oporou, ve ktere je to ale 
- *   zrejme spatne..
+ *     'compute march jumps'
  */
 
+
 /*
- * computeJumps
+ * smaller
+ * - funkce vrati mensi ze dvou integeru
+ */
+int smaller(int a, int b)
+{
+  if(a < b) return a;
+  else if (a > b) return b;
+  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
+}
+
+/*
+ * bigger
+ * - funkce vrati mensi ze dvou integeru
+ */
+int bigger(int a, int b)
+{
+  if(a < b) return b;
+  else if (a > b) return a;
+  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
+}
+
+int charJump[];
+
+/*
+ * compute jumps
  * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
  */
 void computeJumps(char *pattern, int patternLenght, int charJump[])
@@ -70,98 +88,92 @@ void computeJumps(char *pattern, int patternLenght, int charJump[])
   int i;
 
   for (i = 0; i < SIZE; ++i) charJump[i] = patternLenght;
-  for (i = 0; i < patternLenght -1; ++i) charJump[pattern[i]] = patternLenght - 1 - i;
+  for (i = 0; i < patternLenght - 1; ++i) charJump[pattern[i]] = patternLenght - 1 - i;
 }
 
 /*
- * suffixes
- * - vypocte suffixy pro zadany vzor (pattern)
+ * compute match jump
+ * - funkce pro posunuti v ramci vzorku
+ * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
  */
-void suffixes(char *pattern, int patternLenght, int *suffix)
+void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
 {
-  int f, g, i;
+  int k, q, qq;
+  int m = patternLenght;
+  int backup[];
 
-  suffix[patternLenght - 1] = patternLenght;
-  g = patternLenght - 1;
-
-  for (i = patternLenght - 2; i >= 0; --i)
+  for(k = 0; k < m; k++)
   {
-    if ((i > g) && (suffix[i + patternLenght - 1 - f]) < (i - g))
-      suffix[i] = suffix[i + patternLenght - 1 - f];
-    else
+    matchJump[k] = 2 * m - k;
+    k = m;
+    q = m + 1;
+
+    while (k > 0)
     {
-      if (i < g) g = i;
+      backup[k] = q;
 
-      f = i;
-
-      while ((g >= 0) && (pattern[g] == pattern[g + patternLenght - 1 - f])) --g;
-
-      suffix[i] = f - g;
-    }
-  }
-}
-
-/*
- * goodSuffixes
- * - naplni pole spravnymi suffixy
- */
-void goodSuffixes(char *pattern, int patternLenght, int goodSuffix[])
-{
-  int i = 0;
-  int j = 0;
-  int suffix[SIZE];
-
-  suffixes(pattern, patternLenght, suffix);
-
-  for (i = 0; i < patternLenght; ++i) goodSuffix[i] = patternLenght;
-
-  for (i = patternLenght - 1; i >= 0; --i)
-  {
-    if (suffix[i] == i + 1)
-    {
-      for (; j < patternLenght - 1 - i; ++j)
+      while ((q < m) && (pattern[k] != pattern[q]))
       {
-        if (goodSuffix[j] == patternLenght) goodSuffix[j] = patternLenght - 1 - i;
+        matchJump[q] = smaller(matchJump[q], m - k);
+        q = backup[q];
       }
+
+      k--;
+      q--;
+    }
+
+    for (k = 0; k < q; k++) matchJump[k] = smaller(matchJump[k], m + q - k);
+
+    qq = backup[q];
+
+    while (q < m)
+    {
+      while (q < qq)
+      {
+        matchJump[q] = smaller(matchJump[q], qq - q + m);
+        q = q + 1;
+      }
+      qq = backup[qq];
     }
   }
-
-  for (i = 0; i <= patternLenght - 2; ++i)
-    goodSuffix[patternLenght - 1 - suffix[i]] = patternLenght - 1 - i;
 }
 
 /*
  * findSubString
  * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
- * - vraci index prvniho vyskytu zadaneho podretezce, nebo by alespon mela..
+ * - vraci index prvniho vyskytu zadaneho podretezce
+ * - v pripade nenalezeni, vraci -1
  */
-int findSubString(char *pattern, char *text)
+int findSubString(char *pattern, char *text,  int charJump[], int matchJump[])
 {
-  int rowLenght = strlen(text);
+  int j, k; // j - index to textu, k - index do vzorku
   int patternLenght = strlen(pattern);
-  int i, j, count, goodSuffix[SIZE], charJump[SIZE];
+  
+  j = patternLenght;
+  k = patternLenght;
+  
+  // volani pomocnych funkci
+  computeJumps(char *pattern, int patternLenght, int charJump[]);
+  computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
 
-  // vytvoreni tabulek
-  goodSuffixes(pattern, patternLenght, goodSuffix);
-  badCharacters(pattern, patternLenght, charJump);
-
-  // hledani
-  j = count = 0;
-  while (j <= rowLenght - patternLenght)
+  while ((j < SIZE) && (k > 0))
   {
-    for (i = patternLenght - 1; i >= 0 && pattern[i] == text[i + j]; --i);
-    if (i < 0)
+    if(text[j] == pattern[k])
     {
-      count++;
-      j += goodSuffix[0];
+      j--;
+      k--;
     }
     else
     {
-      if (goodSuffix[i] < (charJump[text[i + j]] - patternLenght + 1 + i))
-        j += (charJump[text[i + j]] - patternLenght + 1 + i);
-      else j += goodSuffix[i];
+      j = j + bigger(charJump[text[j]], matchJump[k]); // vybereme vetsi = vyhodnejsi posun
+      k = patternLenght;
     }
   }
-  return count + 1; // nutna korekce, pozice je pocitana od 1
-  // jeste nutno vyresit vraceni 0 pri nenalezeni retezce, ale napret otestovat a ono se na to prijde..
+
+  if (k == 0) return (j + 1); // nasla se shoda
+  else return -1; // nenasla se shoda
 }
+
+/*
+ * - oba dva algoritmy jsou treba otestovat, nejlepe nekym povolanym..
+ */
