@@ -20,7 +20,7 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
 {
   int result = EXIT_SUCCESS;
   struct node * loc;
-  bool hadParam = false;
+  bool hadParam = false, isOrd = false;
   printDebug("Write\n");
   // mam "write"
   // potrebuju "("
@@ -34,6 +34,7 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
   {
     printDebug("Parametr funkce write\n");
     hadParam = true;
+    isOrd = false;
     if (lex->type == l_id)
     {
       if (((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || loc->type == k_function)
@@ -46,13 +47,17 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
       data = lex->data;
       switch(lex->type)
       { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break; default: return EXIT_INTERNAL_ERROR;}
+      lex->type = l_int;
+      isOrd = true;
+      data = NULL;
     }
     generateInstruction(I_WRITE, type, data, NULL, NULL, ilist);
+    if (isOrd) generateInstruction(I_CLEAR, type, data, NULL, NULL, ilist);
     // nactu ","
-    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){if (isOrd) free(data); return result; }
     if (lex->type != l_sep) break;
     //pokracuju s dalsim identifikatorem
-    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){if (isOrd) free(data);  return result; }
   }
   // potrebuju ")"
   if (lex->type != l_rparenth || !hadParam) return EXIT_SYNTAX_ERROR;
@@ -308,9 +313,10 @@ int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, toke
   }
   else return EXIT_TYPE_ERROR;
   // potrebuju ")"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){if (isOrd) free(data); return result; }
   if (lex->type != l_rparenth)
   {
+    if (isOrd) free(data);
     if (lex->type == l_sep) return EXIT_TYPE_ERROR;
     return EXIT_SYNTAX_ERROR;
   }
@@ -374,25 +380,25 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
-    {return result; }
+    {free(condition); free(sign); free(sign2); return result; }
   // provedu podmineny jump (pokud je podminka nepravda, skacu)
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   // nasleduje "then"
-  if (lex->type != l_key && *(key *)lex->data != k_then) {return EXIT_SYNTAX_ERROR;}
+  if (lex->type != l_key && *(key *)lex->data != k_then) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
-  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
-  if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
-  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
+  if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
+  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
   // pak "else"
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last;
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_else) return EXIT_SYNTAX_ERROR;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){free(condition); free(sign); free(sign2);  return result; }
+  if (lex->type != l_key && *(key *)lex->data != k_else) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
-  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
-  if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
-  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
-  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
+  if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
+  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   *sign2 = ilist->last;
   generateInstruction(I_CLEAR, k_bool, condition, NULL, NULL, ilist);
   generateInstruction(I_CLEAR, k_int, sign, NULL, NULL, ilist);
@@ -418,20 +424,20 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
-    { return result; }
+    {free(condition); free(sign); free(sign2);  return result; }
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   *sign2 = ilist->last;
   // potrebuju "do"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_do) return EXIT_SYNTAX_ERROR;
+  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){free(condition); free(sign); free(sign2);  return result; }
+  if (lex->type != l_key && *(key *)lex->data != k_do) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
-  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
-  if (lex->type != l_key || *(key *)lex->data != k_begin) return EXIT_SYNTAX_ERROR;
-  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) { return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
+  if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
+  if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
   // jump back na podminku
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last; // sem skoci pokud while neplati
-  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) { return result; }
+  if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   generateInstruction(I_CLEAR, k_bool, condition, NULL, NULL, ilist);
   generateInstruction(I_CLEAR, k_int, sign, NULL, NULL, ilist);
   generateInstruction(I_CLEAR, k_int, sign2, NULL, NULL, ilist);
