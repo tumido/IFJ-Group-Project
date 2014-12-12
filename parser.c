@@ -16,14 +16,13 @@ void generateInstruction(int instType, key type, void *addr1, void *addr2, void 
  * KONVENCE INSTRUKCI
  * -----------------------------------------------------------------------------
  * - plati pro aritmeticke instrukce, instrukce porovnani a instrukce vestavenych funkci
- * - specialni instrukce maji specianli konvece uvedene vzdy pred instrukci samotnou
- *   - na prani muzu doplnit i sem, pro lepsi prehlednost
+ * - specialni instrukce maji specialni konvece uvedene vzdy pred instrukci samotnou
  *
  * - instrukce se dvema operandy:
- * JMENO_INSTRUCE, OPERAND1, OPERAND2, VYSLEDEK
+ *   JMENO_INSTRUCE, TYP, OPERAND1, OPERAND2, VYSLEDEK
  *
  * - instrukce s jednim operandem:
- * JMENO_INSTRUKCE, OPERAND1, NULL, VYSLEDEK
+ *   JMENO_INSTRUKCE, TYP, OPERAND1, NULL, VYSLEDEK
  */
 
 {

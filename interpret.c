@@ -412,9 +412,6 @@ int instruction(tListOfInstr *instrList)
  * - implementovano pomoci algoritmu shell sort
  */
       case I_SORT:
-        // string je vlastne pole znaku, ze?
-        // takze staci predat ukazatel na string a spocitat jeho delku, kvuli promenne 'n' v shellSortu
-
         if(strlen(*(int*)I->addr1) == 1) (*(char*)I->addr3) = (*(char*)I->addr1); // retezec ma delku 1, neni co radit
         else
         {
@@ -440,7 +437,7 @@ int interpret(tListOfInstr *)
 }
 
 /*
- * iWRITE
+ * iWrite
  * -----------------------------------------------------------------------------
  * - vypisuje hodnotu addr1
  */
@@ -465,10 +462,11 @@ int iWrite(tListOfInstr *I)
 }
 
 /*
- * iREAD
+ * iRead
  * -----------------------------------------------------------------------------
  * - cte ze stdin
  * - musi jeste umet preskakovat mezery a tabulatory az do konce radku/vstupu
+ *   -> na to prece existovala nejaka funce, ne? neumi to nahodou scanf? :)
  */
 int iRead(tInstr *I)
 {
@@ -502,4 +500,6 @@ int iRead(tInstr *I)
  * - kodit, makat, modlit se
  * - dokoncit zbyvajici instrukce
  * - odzkouset instrukce vestavenych funkci
+ *   - sort done
+ *   - lenght done
  */
