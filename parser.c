@@ -427,6 +427,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  if ((itemTop.lexdata.type==l_int) && (itemC.lexdata.type==l_int) )
                  {
                      printDebug("int+int\n");
+                     printDebug("Ocekavaji ode me vysledek %d\n",retType);
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_ADD,k_int, itemC.lexdata.data, itemTop.lexdata.data,retVal, ilist);
                     *(((long int *) itemC.lexdata.data)) = *(((long int *) itemTop.lexdata.data))+ *(((long int *) itemC.lexdata.data));
