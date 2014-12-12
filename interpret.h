@@ -16,15 +16,9 @@
 #include <stdbool.h>
 #include "strings.h"
 #include "io.h"
-#include "ial.h" // kvuli funkci findSubstring a shellSort
+#include "ial.h"
 #include "ilist.h"
 #include "stack.h"
-
-// datove typy
-#define T_INTEGER 0
-#define T_REAL 1
-#define T_BOOLEAN 2
-#define T_STRING 3
 
 // typy jednotlivych instrukci
 #define I_READ 4
