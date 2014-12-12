@@ -23,6 +23,8 @@ int interpret(tListOfInstr * ilist)
       case I_READ:
         switch(i->type)
         {
+          unsigned int size, length;
+          char ch;
           case k_int:
             scanf("%d", (int *)i->addr3);
             break;
@@ -30,9 +32,7 @@ int interpret(tListOfInstr * ilist)
             scanf("%lf", (double *)i->addr3);
             break;
           case k_string:
-            printDebug("hovno");
-            unsigned int size = 8, length = 0;
-            char ch;
+            size = 8; length = 0;
             if ((((string *)i->addr3)->str = realloc(((string *)i->addr3)->str, sizeof(char) * size)) == NULL)
               return EXIT_INTERNAL_ERROR;
             while (EOF != (ch = getchar()) && ch != '\n')
