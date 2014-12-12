@@ -49,7 +49,7 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
       { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break; default: return EXIT_INTERNAL_ERROR;}
       lex->type = l_int;
       isOrd = true;
-      data = NULL;
+      lex->data = NULL;
     }
     generateInstruction(I_WRITE, type, data, NULL, NULL, ilist);
     if (isOrd) generateInstruction(I_CLEAR, type, data, NULL, NULL, ilist);
@@ -91,7 +91,7 @@ int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, to
     return EXIT_SYNTAX_ERROR;
   }
   // volam instrukci
-  generateInstruction(I_READ, loc->type, NULL, NULL, loc, ilist);
+  generateInstruction(I_READ, loc->type, NULL, NULL, loc->data, ilist);
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
@@ -384,7 +384,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   // provedu podmineny jump (pokud je podminka nepravda, skacu)
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   // nasleduje "then"
-  if (lex->type != l_key && *(key *)lex->data != k_then) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
+  if (lex->type != l_key || *(key *)lex->data != k_then) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
@@ -393,7 +393,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){free(condition); free(sign); free(sign2);  return result; }
-  if (lex->type != l_key && *(key *)lex->data != k_else) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
+  if (lex->type != l_key || *(key *)lex->data != k_else) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}

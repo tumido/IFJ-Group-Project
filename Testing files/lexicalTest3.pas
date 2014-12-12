@@ -19,7 +19,7 @@ begin
   write(a, 5, 3.234234324, 8, 'a'#32'sda', 'b', 'c');
   s := 'ahoj svete';
   a := 1;
-  if true then
+  if 1 then
   begin
     a := b
   end
@@ -27,7 +27,7 @@ begin
   begin
     b := a
   end;
-  while a <b do
+  while 1 do
   begin
     a := a
   end;

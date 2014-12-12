@@ -38,6 +38,7 @@ void listFree(tListOfInstr *L)
 int listInsertLast(tListOfInstr *L, tInstr I)
 // vlozi novou instruci na konec seznamu
 {
+  printDebug("Vkladam Instrukci\n");
   tListItem *newItem;
   if ((newItem = malloc(sizeof (tListItem))) == NULL) return EXIT_INTERNAL_ERROR;
   newItem->Instruction = I;

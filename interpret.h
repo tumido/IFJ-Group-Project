@@ -18,7 +18,7 @@
 #include "io.h"
 #include "ial.h"
 #include "ilist.h"
-#include "stack.h"
+//#include "stack.h"
 
 // typy jednotlivych instrukci
 #define I_READ 4

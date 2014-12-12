@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
   int retVal = parser(&in, &table, &ilist);
 
-  //if (retVal == EXIT_SUCCESS) interpret(code, &ilist);
+  if (retVal == EXIT_SUCCESS) interpret(&ilist);
 
   SymbolTableDispose(&table);
   listFree(&ilist);

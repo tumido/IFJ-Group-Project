@@ -8,6 +8,11 @@
  * =====================================================================
  */
 
+#ifndef IAL_INCLUDED
+#define IAL_INCLUDED
+#include <stdio.h>
+#include <stdlib.h>
+#include "strings.h"
 // maximalni delka radky zpracovavaneho retezce
 #define SIZE 255 
 
@@ -47,3 +52,4 @@ int min(int a, int b);
  * - funkce vrati mensi ze dvou cisel
  */
 int max(int a, int b);
+#endif
