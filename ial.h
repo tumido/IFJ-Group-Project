@@ -14,7 +14,7 @@
 /*
  * Funkce vykonavajici radici algoritmus shell sort
  */
-void shellSort(int *array, int n);
+void shellSort(char *array, int n);
 
 /*
  * compute jumps
