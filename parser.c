@@ -110,12 +110,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   sData itemTop;
   sData itemC;
   sData itemD;
-  sData itemE;
   if (DataInit(&itemAct) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemTop) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemC) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemD) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
-  if (DataInit(&itemE) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   itemAct.TypTok=l_eof;
   sPush (&s,itemAct);
   printDebug("Inicializuji zasobnik a vkladam zarazku\n");
@@ -130,21 +128,6 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
      printDebug("Obdrzel jsem dva lexemy\n");
      NLex.type=nextLex->type;
-     if  (nextLex->type == l_int)
-    {
-      NLex.type=lex->type;
-      *(((long int *) NLex.data))= *(((long int *)nextLex->data));
-    }
-    else if  (nextLex->type == l_real)
-    {
-      printDebug("Prvni lexem je double\n");
-      *(((double *) NLex.data))= *(((double *)nextLex->data));
-    }
-    else if  (nextLex->type == l_str)
-    {
-      printDebug("Prvni lexem je retezec\n");
-      *(((string *) NLex.data))= *(((string *) nextLex->data));
-    }
     }
 
   if (lex->type==l_id)
@@ -153,38 +136,57 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     printDebug("Prvni lexem je ID, jdu hledat ve strome\n");
     if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
     {
-          __SymbolTableDispose(&nd); return EXIT_SEMANTIC_ERROR;
+          return EXIT_SEMANTIC_ERROR;
     }
     // ulozim si ze stromu hodnoty
     if  (nd->type == k_int)
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=l_int;
-      *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+      //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
     }
     else if  (nd->type == k_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=l_real;
-      *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+      //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
     }
     else if  (nd->type == k_string)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=l_str;
-      *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+      //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
     }
     else if  (nd->type == k_bool)
     {
       printDebug("Prvni lexem je bool\n");
       itemAct.lexdata.type=l_bool;
-      *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+      //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
     }
-    else return EXIT_SYNTAX_ERROR;
-   __SymbolTableDispose(&nd);
+    else { return EXIT_SYNTAX_ERROR;}
+  // __SymbolTableDispose(&nd);
    itemAct.TypTok = l_id;
   }
-   //printDebug("tady jeste jsu\n");
+  else if (lex->type==l_key)
+  {
+      printDebug("je to klicove slovo, zkontroluji jestli je to true nebo false\n");
+      if (*(key *)lex->data == k_true)
+       {
+          printDebug("Je to true\n");
+           *(bool*)retVal= true;
+          printDebug("Vracim se z analyzy\n");
+          return EXIT_SUCCESS;
+           printDebug("Vracim se z analyzy\n");
+       }
+      else if(*(key *)lex->data == k_false)
+      {
+          printDebug("Je to false\n");
+           *(bool*)retVal= false;
+          printDebug("Vracim se z analyzy\n");
+          return EXIT_SUCCESS;
+       }
+      else return EXIT_SYNTAX_ERROR;
+  }
    // jestli je token int,real,str ulozim si hodnotu a typ
   else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
   {
@@ -192,19 +194,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     {
       printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=lex->type;
-      *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+      //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
     }
     else if  (lex->type == l_real)
     {
       printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=lex->type;
-      *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+     // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
     }
     else if  (lex->type == l_str)
     {
       printDebug("Prvni lexem je retezec\n");
       itemAct.lexdata.type=lex->type;
-      *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+      //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
     }
     itemAct.TypTok = l_id;
   }
@@ -225,7 +227,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          itemTop=sTop(&s);
          if (Ptoken==1)
          {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
-         else{lex->data=NLex.data;lex->type=NLex.type;Ptoken=1;}
+         else{lex->type=NLex.type;Ptoken=1;}
 
          if (lex->type==l_id)
          {
@@ -233,36 +235,36 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           printDebug("Dalsi lexem je ID, jdu hledat ve strome\n");
           if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
           {
-          __SymbolTableDispose(&nd); return EXIT_SEMANTIC_ERROR;
+            return EXIT_SEMANTIC_ERROR;
           }
           // ulozim si ze stromu hodnoty
           if  (nd->type == k_int)
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+          //*(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+          //*(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
-          __SymbolTableDispose(&nd);
+         // __SymbolTableDispose(&nd);
          }
          // jestli je token int,real,str ulozim si hodnotu a typ
         else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
@@ -271,19 +273,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+         //*(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         //*(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+         //*(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
@@ -314,8 +316,11 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         printDebug("Vkladam token do zasobniku\n");
         sPush (&s,itemAct);
         if (Ptoken==1)
-        {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result; printDebug ("jsem v if\n"); }
-        else{lex->data=NLex.data;lex->type=NLex.type; printDebug ("jsem v else\n");Ptoken=1;}
+        {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result; }
+        else{
+            Ptoken=1;
+            lex->type=NLex.type;
+            }
 
         itemTop=sTop(&s);
         if (lex->type==l_id)
@@ -331,25 +336,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           {
           printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
-          *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          //*(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
           }
           else if  (nd->type == k_real)
           {
           printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
-          *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          //*(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
           }
           else if  (nd->type == k_string)
           {
           printDebug("Dalsi lexem je retezec\n");
           itemAct.lexdata.type=l_str;
-          *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
+         // *(((string *) itemAct.lexdata.data))= *(((string *)nd->data));
           }
           else if  (nd->type == k_bool)
           {
           printDebug("Dalsi lexem je bool\n");
           itemAct.lexdata.type=l_bool;
-          *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
+         // *(((bool *) itemAct.lexdata.data))= *(((bool *)nd->data));
           }
           else return EXIT_SYNTAX_ERROR;
           itemAct.TypTok = l_id;
@@ -362,19 +367,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
          {
          printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
-         *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+        // *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
          }
          else if  (lex->type == l_real)
          {
          printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
-         *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+        // *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
          }
          else if  (lex->type == l_str)
          {
          printDebug("Dalsi lexem je retezec\n");
          itemAct.lexdata.type=lex->type;
-         *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
+        // *(((string *) itemAct.lexdata.data))= *(((string *) lex->data));
          }
          itemAct.TypTok = l_id;
         }
@@ -414,7 +419,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             itemTop=sPop(&s); // popneme E
             itemD=sPop(&s); // popneme operaci
             itemC=sPop(&s); // popneme druhy E
-            itemE=sPop(&s); // tady by melo byt <
+            sPop(&s); // tady by melo byt <
             switch (itemD.TypTok)
             {
              case l_add:
@@ -484,19 +489,17 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
 
              default: break;
 
-            }
+         }// operace
           default: break;
-        }
+        }// itemTop.TypTok
     }// switch prTable
   }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
    //DataFree(&itemAct);
    //DataFree(&itemTop);
-   //DataFree(&itemC);
+   //DataFree(&itemC);;
    //DataFree(&itemD);
-   //DataFree(&itemE);
-    printDebug("Vracim se z analyzy!\n");
     tokenFree(&NLex);
-
+        printDebug("Vracim se z analyzy\n");
   return EXIT_SUCCESS;
 }
 
