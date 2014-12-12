@@ -47,7 +47,7 @@ void generateInstruction(int instType, key type, void *addr1, void *addr2, void 
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal);
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal, key retType);
 
 /*   Blok deklarace promennych
  * ---------------------------------------------------------------------

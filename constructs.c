@@ -356,10 +356,10 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
     tokenInit(&tmp);
     if ((result = fillToken(in,&tmp)) != EXIT_SUCCESS){ return result; }
     if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp, loc);
-    else result = evalExpression(in, table, ilist, lex, &tmp, loc);
+    else result = evalExpression(in, table, ilist, lex, &tmp, loc->data, loc->type);
     tokenFree(&tmp);
   }
-  else result = evalExpression(in, table, ilist, lex, NULL, loc); // jinak (je to hodnota, cokoliv) volan evalExpression
+  else result = evalExpression(in, table, ilist, lex, NULL, loc->data, loc->type); // jinak (je to hodnota, cokoliv) volan evalExpression
   return result;
 }
 
@@ -379,7 +379,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if ((sign2 = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, condition, k_bool)) != EXIT_SUCCESS))
     {free(condition); free(sign); free(sign2); return result; }
   // provedu podmineny jump (pokud je podminka nepravda, skacu)
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
@@ -423,7 +423,7 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   // mam "while"
   // vyhodnoceni podminky
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
-      ((result = evalExpression(in, table, ilist, lex, NULL, condition)) != EXIT_SUCCESS))
+      ((result = evalExpression(in, table, ilist, lex, NULL, condition, k_bool)) != EXIT_SUCCESS))
     {free(condition); free(sign); free(sign2);  return result; }
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   *sign2 = ilist->last;

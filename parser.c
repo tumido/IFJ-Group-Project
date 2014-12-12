@@ -96,7 +96,7 @@ int retIndex (lexType typ)
  * ---------------------------------------------------------------------
  * - bude namapovane na Juruv kod
  */
-int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal)
+int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, void * retVal, key retType)
 {
   printDebug("Spoustim analyzu vyrazu\n");
   int result = EXIT_SUCCESS;
