@@ -171,19 +171,18 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
       printDebug("je to klicove slovo, zkontroluji jestli je to true nebo false\n");
       if (*(key *)lex->data == k_true)
        {
+          itemAct.TypVal=l_bool;
+          itemAct.vBool=1;
           printDebug("Je to true\n");
-           *(bool*)retVal= true;
-          printDebug("Vracim se z analyzy\n");
-          return EXIT_SUCCESS;
        }
       else if(*(key *)lex->data == k_false)
       {
           printDebug("Je to false\n");
-           *(bool*)retVal= false;
-          printDebug("Vracim se z analyzy\n");
-          return EXIT_SUCCESS;
+          itemAct.TypVal=l_bool;
+          itemAct.vBool=0;
        }
       else return EXIT_SYNTAX_ERROR;
+      itemAct.TypTok=l_id;
   }
    // jestli je token int,real,str ulozim si hodnotu a typ
   else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
@@ -402,6 +401,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             itemTop=sTop(&s);  // priradime na top to co je pred E
             sPush (&s,itemD);   // pushneme E
             printDebug("Redukuji <i na E\n");
+            if (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]== EE)
+            {
+                printDebug("Je to prirazeni\n");
+                if ((itemD.TypVal==l_int) && (retType== k_int) )
+                {*(((long int*)itemD.data2))=itemD.vInt; generateInstruction(I_ASSIGN,k_int, itemD.data2, NULL,retVal, ilist);}
+                else if ((itemD.TypVal==l_real) && (retType== k_real) )
+                {*(((double*)itemD.data2))=itemD.vDouble; generateInstruction(I_ASSIGN,k_real, itemD.data2, NULL,retVal, ilist);}
+                else if ((itemD.TypVal==l_str) && (retType== k_string) )
+                printDebug("STRING MUSIM DODELAT\n");
+                else if ((itemD.TypVal==l_bool) && (retType== k_bool) )
+                {*(((bool*)itemD.data2))=itemD.vBool; generateInstruction(I_ASSIGN,k_bool, itemD.data2, NULL,retVal, ilist);}
+                else return EXIT_TYPE_ERROR;
+            }
             break;
           case l_rparenth:
             printDebug("Vrchol je ), vyraz byl v zavorce\n");
@@ -865,7 +877,6 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     }// switch prTable
 
   }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
-   DataFree(&itemAct);
     tokenFree(&NLex);
     itemTop=sTop(&s);
     if (itemTop.TypVal==l_int)
