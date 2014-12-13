@@ -141,15 +141,15 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     // ulozim si ze stromu hodnoty
     if  (nd->type == k_int)
     {
-      printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=l_int;
       *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+      printDebug("Prvni lexem je int s hodnotou %d\n",*(long int*)itemAct.lexdata.data);
     }
     else if  (nd->type == k_real)
     {
-      printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=l_real;
       *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+            printDebug("Prvni lexem je real s hodnotou %d\n",*(double*)itemAct.lexdata.data);
     }
     else if  (nd->type == k_string)
     {
@@ -192,15 +192,15 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   {
     if  (lex->type == l_int)
     {
-      printDebug("Prvni lexem je int\n");
       itemAct.lexdata.type=lex->type;
       *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+      printDebug("Prvni lexem je int s hodnotou %d\n",*(long int*)itemAct.lexdata.data);
     }
     else if  (lex->type == l_real)
     {
-      printDebug("Prvni lexem je double\n");
       itemAct.lexdata.type=lex->type;
-     *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+     *(double *) itemAct.lexdata.data= *(double *)lex->data;
+     printDebug("Prvni lexem je real s hodnotou %d\n",*(double*)itemAct.lexdata.data);
     }
     else if  (lex->type == l_str)
     {
@@ -334,15 +334,15 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           // ulozim si ze stromu hodnoty
           if  (nd->type == k_int)
           {
-          printDebug("Dalsi lexem je int\n");
           itemAct.lexdata.type=l_int;
           *(((long int *) itemAct.lexdata.data))= *(((long int *)nd->data));
+          printDebug("Dalsi lexem je int s hodnotou %d\n",*(long int*)itemAct.lexdata.data);
           }
           else if  (nd->type == k_real)
           {
-          printDebug("Dalsi lexem je double\n");
           itemAct.lexdata.type=l_real;
           *(((double *) itemAct.lexdata.data))= *(((double *)nd->data));
+          printDebug("Dalsi lexem je double s hodnotou %d\n",*(double*)itemAct.lexdata.data);
           }
           else if  (nd->type == k_string)
           {
@@ -365,15 +365,15 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         {
          if  (lex->type == l_int)
          {
-         printDebug("Dalsi lexem je int\n");
          itemAct.lexdata.type=lex->type;
          *(((long int *) itemAct.lexdata.data))= *(((long int *)lex->data));
+          printDebug("Dalsi lexem je int s hodnotou %d\n",*(long int*)itemAct.lexdata.data);
          }
          else if  (lex->type == l_real)
          {
-         printDebug("Dalsi lexem je double\n");
          itemAct.lexdata.type=lex->type;
          *(((double *) itemAct.lexdata.data))= *(((double *)lex->data));
+         printDebug("Dalsi lexem je double s hodnotou %d\n",*(double*)itemAct.lexdata.data);
          }
          else if  (lex->type == l_str)
          {
@@ -802,11 +802,11 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     tokenFree(&NLex);
     itemTop=sTop(&s);
     if (itemTop.lexdata.type==l_int)
-    {printDebug ("Vysledek je %d\n",*(long int*)itemTop.lexdata.data); *(long int*)retVal=*(long int*)itemTop.lexdata.data;}
+    {printDebug ("Vysledek je int = %d\n",*(long int*)itemTop.lexdata.data); *(long int*)retVal=*(long int*)itemTop.lexdata.data;}
     if (itemTop.lexdata.type==l_real)
-    {printDebug ("Vysledek je %e\n",*(double*)itemTop.lexdata.data); *(double*)retVal=*(double*)itemTop.lexdata.data;}
+    {printDebug ("Vysledek je real = %e\n",*(double*)itemTop.lexdata.data); *(double*)retVal=*(double*)itemTop.lexdata.data;}
     if (itemTop.lexdata.type==l_bool)
-    {printDebug ("Vysledek je %d\n",*(bool*)itemTop.lexdata.data); *(bool*)retVal=*(bool*)itemTop.lexdata.data;}
+    {printDebug ("Vysledek je bool = %d\n",*(bool*)itemTop.lexdata.data); *(bool*)retVal=*(bool*)itemTop.lexdata.data;}
 
 
 
