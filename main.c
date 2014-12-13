@@ -39,14 +39,18 @@ int main(int argc, char *argv[])
   SymbolTableInit(&table);
 
   printDebug("=========== PARSER ============\n");
+  int retValInterpret = EXIT_SUCCESS;
   int retVal = parser(&in, &table, &ilist);
 
   printDebug("========== INTERPRET ==========\n");
-  if (retVal == EXIT_SUCCESS) interpret(&ilist);
+  if (retVal == EXIT_SUCCESS) retValInterpret = interpret(&ilist);
 
   SymbolTableDispose(&table);
   listFree(&ilist, retVal);
   fclose(in.file);
 
-  return retVal;
+  if (retValInterpret == EXIT_TYPE_ERROR) printErr("TYPE ERROR: You are trying to input boolean. Sorry I can't agree with that.\n");
+  if (retValInterpret == EXIT_READ_STDIN_ERROR) printErr("READ STDIN ERROR: Your input is of a wrong data type.\n");
+  if (retVal != EXIT_SUCCESS) return retVal;
+  return retValInterpret;
 }

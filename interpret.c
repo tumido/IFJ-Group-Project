@@ -26,10 +26,10 @@ int interpret(tListOfInstr * ilist)
           unsigned int size, length;
           char ch;
           case k_int:
-            scanf("%d", (int *)i->addr3);
+            if ( scanf("%d", (int *)i->addr3) != 1) return EXIT_READ_STDIN_ERROR;
             break;
           case k_real:
-            scanf("%lf", (double *)i->addr3);
+            if (scanf("%lf", (double *)i->addr3) != 1) return EXIT_READ_STDIN_ERROR;
             break;
           case k_string:
             size = 8; length = 0;
@@ -50,9 +50,13 @@ int interpret(tListOfInstr * ilist)
             ((string *)i->addr3)->alloc = length;
             ((string *)i->addr3)->length = length;
             break;
-          default:
+          case k_bool:
             return EXIT_TYPE_ERROR;
+          default:
+            return EXIT_READ_STDIN_ERROR;
         }
+        printDebug("nacteno");
+       
         break;
       case I_WRITE:
         switch(i->type)
