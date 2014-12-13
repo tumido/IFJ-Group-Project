@@ -19,17 +19,21 @@ begin
   write(a, 5, 3.234234324, 8, 'a'#32'sda', 'b', 'c');
   s := 'ahoj svete';
   a := 1;
+  write(a);
   if true then
   begin
-    a := a
+    a := a;
+  write(a)
   end
   else
   begin
-    b := a
+    a := a;
+   write(b)
   end;
-  while 1 do
+  while true do
   begin
-    a := a
+    a := a;
+    write(a)
   end;
   a := 1;
   b := 2;

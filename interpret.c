@@ -72,7 +72,7 @@ int interpret(tListOfInstr * ilist)
         }
         break;
       case I_JUMP: // instrukce skoku, jen se nastavim na zadanou v adrese (ve volani si beru addr1 = ilist->last)
-        listItem = i->addr1;
+        if (i->addr1 == NULL || !(*(bool *)i->addr1)) listItem = *(tListItem **)i->addr2;
         break;
       case I_ASSIGN: // isntukce prirazeni, jedina komplikace je string (kopiruju retezec, musim realloc)
         switch(i->type)

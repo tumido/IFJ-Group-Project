@@ -392,7 +392,6 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
-  printDebug("ahoj");
   // pak "else"
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last;
@@ -432,7 +431,6 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
   *sign2 = ilist->last;
   // potrebuju "do"
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key && *(key *)lex->data != k_do) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }

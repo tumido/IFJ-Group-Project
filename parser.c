@@ -1318,7 +1318,7 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
         case k_while: return embededWhile(in, table, ilist, lex);
         case k_write: return embededFuncWrite(in, table, ilist, lex);
         case k_readln: return embededFuncReadln(in, table, ilist, lex);
-        default: return  EXIT_SYNTAX_ERROR;
+        default: printDebug("%d", *(key *)lex->data); return  EXIT_SYNTAX_ERROR;
       }
       break;
     default: return EXIT_SYNTAX_ERROR;
