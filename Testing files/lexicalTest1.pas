@@ -1,4 +1,4 @@
-if 1 begin		
+1.e4 if 1 begin		
 var a94_94 := 11;
 end;  
 'a'

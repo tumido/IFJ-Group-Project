@@ -29,7 +29,7 @@ typedef enum
   s_begin, s_comment, s_id,
   s_colon, s_less, s_greater,
   s_string, s_string_escape, s_string_escape_check, s_string_check,
-  s_integer, s_real,
+  s_integer, s_real, s_real_ok,
   s_real_exp, s_real_exp_all, s_real_exp_ok
 } tState;
 

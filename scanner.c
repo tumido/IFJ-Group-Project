@@ -223,6 +223,10 @@ int fillToken(struct input * in, token * lex)
         else { lex->type = l_int; read = false; ungetc(z, in->file); }
         break;
       case s_real: // integer skoncil teckou, je to tedy realne cislo
+        if (isdigit(z)) { addCharToString(lex, z); lex->type = l_real; state = s_real_ok; }
+        else { read = false; ungetc(z, in->file); retVal = EXIT_LEXICAL_ERROR; expected = "0..9, real number should not end with . [dot]"; }
+        break;
+      case s_real_ok: // integer skoncil teckou, je to tedy realne cislo
         if (isdigit(z)) { addCharToString(lex, z); }
         else if(z == 'E' || z == 'e') { addCharToString(lex, z); state = s_real_exp; }
         else { lex->type = l_real; read = false; ungetc(z, in->file); }
