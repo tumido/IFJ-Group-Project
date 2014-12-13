@@ -425,7 +425,6 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  printDebug("Operace je scitani\n");
                  if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     printDebug("toto je spatne\n");
                       *(((long int*)itemC.data2))=itemC.vInt;
                        *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int+int\n");
@@ -580,7 +579,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      printDebug("int-int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
                      generateInstruction(I_SUB,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     printDebug("delim %d a %d\n",itemTop.vInt,itemC.vInt);
+                     printDebug("Odcitam %d a %d\n",itemTop.vInt,itemC.vInt);
                      itemC.vInt =itemC.vInt - itemTop.vInt;
                      itemC.TypVal=l_int;
                  }
