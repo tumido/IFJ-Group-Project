@@ -401,6 +401,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             itemTop=sTop(&s);  // priradime na top to co je pred E
             sPush (&s,itemD);   // pushneme E
             printDebug("Redukuji <i na E\n");
+            if (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]== EE)
+            {
+                printDebug("Je to prirazeni\n");
+                if ((itemD.TypVal==l_int) && (retType== k_int) )
+                {*(((long int*)itemD.data2))=itemD.vInt; generateInstruction(I_ASSIGN,k_int, itemD.data2, NULL,retVal, ilist);}
+                else if ((itemD.TypVal==l_real) && (retType== k_real) )
+                {*(((double*)itemD.data2))=itemD.vDouble; generateInstruction(I_ASSIGN,k_real, itemD.data2, NULL,retVal, ilist);}
+                else if ((itemD.TypVal==l_str) && (retType== k_string) )
+                printDebug("STRING MUSIM DODELAT\n");
+                else if ((itemD.TypVal==l_bool) && (retType== k_bool) )
+                {*(((bool*)itemD.data2))=itemD.vBool; generateInstruction(I_ASSIGN,k_bool, itemD.data2, NULL,retVal, ilist);}
+                else return EXIT_TYPE_ERROR;
+            }
             break;
           case l_rparenth:
             printDebug("Vrchol je ), vyraz byl v zavorce\n");
