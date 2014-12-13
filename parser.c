@@ -627,6 +627,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_LESS,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt<itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -636,6 +637,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_LESS,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble<itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -665,6 +667,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_GREATER,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt>itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -674,6 +677,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_GREATER,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble>itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -703,6 +707,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_GREATER_EQUAL,k_int, itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt>=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                    itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -712,6 +717,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_GREATER_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble>=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -741,6 +747,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_LESS_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt<=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -750,6 +757,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_LESS_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble<=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -779,6 +787,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt==itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -788,6 +797,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble==itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -817,6 +827,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_NOT_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt!=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
@@ -826,6 +837,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                      generateInstruction(I_NOT_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble!=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
+                     itemC.TypVal=l_bool;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
@@ -853,10 +865,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
     }// switch prTable
 
   }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
-   //DataFree(&itemAct);
-   //DataFree(&itemTop);
-   //DataFree(&itemC);;
-   //DataFree(&itemD);
+   DataFree(&itemAct);
     tokenFree(&NLex);
     itemTop=sTop(&s);
     if (itemTop.TypVal==l_int)
