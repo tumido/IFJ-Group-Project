@@ -33,5 +33,5 @@ begin
   end;
   a := 1;
   b := 2;
-  a := a + b;
+  a := a + b
 end.

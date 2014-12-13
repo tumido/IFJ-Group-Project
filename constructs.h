@@ -20,12 +20,6 @@
 #include "btree.h"
 #include "io.h"
 
-struct srange
-{
-  int * start;
-  int * length;
-};
-
 /*   Zpracovani vestavnych funkci a prikazu
  * =====================================================================
  */

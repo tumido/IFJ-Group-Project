@@ -136,11 +136,6 @@ int interpret(tListOfInstr * ilist)
         else if(i->type == k_real) *(double *)i->addr3 = *(double *)i->addr1 - *(double *)i->addr2;
         else return EXIT_RUNTIME_ERROR;
         break;
-//      case I_CON: // neni to nahodou totez v ADD ??
-
-//      case I_INC:
-//      case I_DEC:
-//      case I_NEG: // v zadani jsem je nenasel, jsou tam teda?
       case I_LESS:
         switch(i->type)
         {
@@ -208,8 +203,12 @@ int interpret(tListOfInstr * ilist)
         }
         break;
       case I_COPY:
+        if ((((string *)i->addr3)->str = realloc(((string *)i->addr3)->str, *((struct srange *)i->addr2)->length * sizeof(char))) == NULL)
+          return EXIT_INTERNAL_ERROR;
+        strncpy(&((string *)i->addr3)->str[*((struct srange *)i->addr2)->start], ((string *)i->addr1)->str, *((struct srange *)i->addr2)->length);
+        break;
 //      case I_LENGHT: // neni potreba resi se assignem
-      case I_FIND:
+      case I_FIND: // nejsdriv spravte ial.c
       case I_SORT:
         if (((string *)i->addr1)->length <= 1) return EXIT_INTERNAL_ERROR; //zkopirovat string
         else

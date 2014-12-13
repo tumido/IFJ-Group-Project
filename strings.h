@@ -23,6 +23,12 @@ typedef struct
   unsigned int alloc;
 } string;
 
+
+struct srange
+{
+  int * start;
+  int * length;
+};
 /*   Typ pro lexemy
  * ---------------------------------------------------------------------
  * - urcuje typ lexemu, resp. tokenu

@@ -292,7 +292,7 @@ int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, toke
   printDebug("Sort\n");
   // potrebuju "("
   string * data;
-  if (loc->type != k_int) return EXIT_TYPE_ERROR;
+  if (loc->type != k_string) return EXIT_TYPE_ERROR;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
   // potrebuju id stringu
