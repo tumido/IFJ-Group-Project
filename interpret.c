@@ -44,7 +44,7 @@ int interpret(tListOfInstr * ilist)
                   return EXIT_INTERNAL_ERROR;
               }
             }
-            ((string *)i->addr3)->str[length++] = '\0';
+            ((string *)i->addr3)->str[length] = '\0';
             if ((((string *)i->addr3)->str = realloc(((string *)i->addr3)->str, sizeof(char) * length)) == NULL)
                return EXIT_INTERNAL_ERROR;
             ((string *)i->addr3)->alloc = length;
@@ -55,7 +55,7 @@ int interpret(tListOfInstr * ilist)
           default:
             return EXIT_READ_STDIN_ERROR;
         }
-        printDebug("nacteno");
+        printDebug("Nacteno ze vstupu.\n");
        
         break;
       case I_WRITE:
@@ -203,9 +203,11 @@ int interpret(tListOfInstr * ilist)
         }
         break;
       case I_COPY:
+        if (((string *)i->addr1)->length < (*((struct srange *)i->addr2)->length + *((struct srange *)i->addr2)->start)) return EXIT_RUNTIME_ERROR;
         if ((((string *)i->addr3)->str = realloc(((string *)i->addr3)->str, *((struct srange *)i->addr2)->length * sizeof(char))) == NULL)
           return EXIT_INTERNAL_ERROR;
         strncpy(&((string *)i->addr3)->str[*((struct srange *)i->addr2)->start], ((string *)i->addr1)->str, *((struct srange *)i->addr2)->length);
+        ((string *)i->addr3)->length = *((struct srange *)i->addr2)->length;
         break;
 //      case I_LENGHT: // neni potreba resi se assignem
       case I_FIND: // nejsdriv spravte ial.c

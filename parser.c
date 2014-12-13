@@ -1364,7 +1364,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
 
   printDebug("Konec bloku kodu\n");
   if ((lex->type != l_key) || (*(key *)lex->data != k_end))
-    return EXIT_SYNTAX_ERROR; // za telem programu musi byt "end",
+  { printDebug("Chybi end, mam typ: %d", *(key *)lex->data); return EXIT_SYNTAX_ERROR;} // za telem programu musi byt "end",
 
   return result;
 }

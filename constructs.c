@@ -134,7 +134,6 @@ int embededFuncLength(struct input * in, btree * table, tListOfInstr * ilist, to
   // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
   generateInstruction(I_ASSIGN, k_int, &data->length, NULL, loc->data, ilist);
   if (isOrd) generateInstruction(I_CLEAR , k_string, data, NULL, NULL, ilist);
-  if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
 int embededFuncCopy(struct input * in, btree * table, tListOfInstr * ilist, token * lex, struct node * loc)
@@ -389,6 +388,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   if  ((result = body(in, table, ilist, lex)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
+  printDebug("ahoj");
   // pak "else"
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last;
