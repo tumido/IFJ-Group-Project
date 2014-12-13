@@ -22,11 +22,13 @@
 
 typedef struct
 {
-    lexType TypVal; // tady si ulozim hodnotu a typ hodnoty
+    lexType TypVal; // tady si ulozim typ hodnoty
     lexType TypTok; // tady si ulozim typ lexemu
     long int vInt;
     double vDouble;
     bool vBool;
+    void *data;
+    void *data2;
 }sData;
 
 

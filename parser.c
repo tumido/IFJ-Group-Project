@@ -105,12 +105,14 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   sInit (&s);
     token NLex;
     if ((result = tokenInit(&NLex)) != EXIT_SUCCESS) return result;
-  void *i;
-  void *k;
   sData itemAct;
   sData itemTop;
   sData itemC;
   sData itemD;
+  if (DataInit(&itemAct) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
+  if (DataInit(&itemTop) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
+  if (DataInit(&itemC) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
+  if (DataInit(&itemD) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   itemAct.TypTok=l_eof;
   sPush (&s,itemAct);
   printDebug("Inicializuji zasobnik a vkladam zarazku\n");
@@ -424,39 +426,42 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
                      printDebug("toto je spatne\n");
-                     *((long int*)i)=itemC.vInt;
-                      *((long int*)k)=itemTop.vInt;
+                      *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int+int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_int, i, k,retVal, ilist);
-                     printDebug("scitam %d a %d\n",*(long int*)i,*(long int*)k);
+                     generateInstruction(I_ADD,k_int, itemC.data2, itemTop.data,retVal, ilist);
+                     printDebug("scitam %d a %d\n",*(long int*)itemC.data2,*(long int*)itemTop.data);
                      itemC.vInt =itemTop.vInt + itemC.vInt;
                      itemC.TypVal=l_int;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); long int *k=&(itemTop.vInt);
                      printDebug("int+real\n");
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, i, k,retVal, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vInt + itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); double *k=&(itemTop.vDouble);
                      printDebug("real+int\n");
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, i ,k,retVal, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble + itemC.vInt;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
                      printDebug("real+real\n");
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, i, k,retVal, ilist);
+                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble + itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
@@ -476,38 +481,42 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  printDebug("Operace je nasobeni\n");
                  if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                      *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int*int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_MUL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      printDebug("nasobim %d a %d\n",itemTop.vInt,itemC.vInt);
                      itemC.vInt =itemTop.vInt * itemC.vInt;
                      itemC.TypVal=l_int;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); long int *k=&(itemTop.vInt);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_MUL,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vInt * itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); double *k=&(itemTop.vDouble);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real*int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real,i,k,retVal, ilist);
+                     generateInstruction(I_MUL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble * itemC.vInt;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real*real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, i, k,retVal, ilist);
+                     generateInstruction(I_MUL,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble * itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
@@ -519,38 +528,42 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  printDebug("Operace je deleni\n");
                  if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int/int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, i, k,retVal, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      printDebug("delim %d a %d\n",itemTop.vInt,itemC.vInt);
                      itemC.vDouble =itemC.vInt / itemTop.vInt;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); long int *k=&(itemTop.vInt);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("real/int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real,  i, k,retVal, ilist);
+                     generateInstruction(I_DIV,k_real,  itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemC.vInt / itemTop.vDouble;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); double *k=&(itemTop.vDouble);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("int/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real,  i, k,retVal, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemC.vDouble / itemTop.vInt;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real/real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real,  i, k,retVal, ilist);
+                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble / itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
@@ -562,38 +575,42 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  printDebug("Operace je odcitani\n");
                  if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int-int\n");
                      if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_int,  i, k,retVal, ilist);
+                     generateInstruction(I_SUB,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      printDebug("delim %d a %d\n",itemTop.vInt,itemC.vInt);
                      itemC.vInt =itemC.vInt - itemTop.vInt;
                      itemC.TypVal=l_int;
                  }
                  else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); long int *k=&(itemTop.vInt);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("real-int\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real,  i, k,retVal, ilist);
+                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemC.vInt - itemTop.vDouble;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); double *k=&(itemTop.vDouble);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("int-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real,  i, k,retVal, ilist);
+                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemC.vDouble - itemTop.vInt;
                      itemC.TypVal=l_real;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real-real\n");
                      if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real, i, k,retVal, ilist);
+                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      itemC.vDouble =itemTop.vDouble - itemC.vDouble;
                      itemC.TypVal=l_real;
                  }
@@ -605,17 +622,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je mensi\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                      *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int<int\n");
-                     generateInstruction(I_LESS,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_LESS,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt<itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                      *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real<real\n");
-                     generateInstruction(I_LESS,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_LESS,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble<itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -626,9 +645,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool<bool\n");
-                     generateInstruction(I_LESS,k_bool, i,k,retVal, ilist);
+                     generateInstruction(I_LESS,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool<itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -640,17 +660,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je vetsi\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int>int\n");
-                     generateInstruction(I_GREATER,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_GREATER,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt>itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real>real\n");
-                     generateInstruction(I_GREATER,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_GREATER,k_real, itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble>itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -661,9 +683,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool>bool\n");
-                     generateInstruction(I_GREATER,k_bool,i,k,retVal, ilist);
+                     generateInstruction(I_GREATER,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool>itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -675,17 +698,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je vetsirovno\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int>=int\n");
-                     generateInstruction(I_GREATER_EQUAL,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_int, itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt>=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real>=real\n");
-                     generateInstruction(I_GREATER_EQUAL,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble>=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -696,9 +721,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool>=bool\n");
-                     generateInstruction(I_GREATER_EQUAL,k_bool, i,k,retVal, ilist);
+                     generateInstruction(I_GREATER_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool>=itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -710,17 +736,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je mensirovno\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                    *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int<=int\n");
-                     generateInstruction(I_LESS_EQUAL,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt<=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real=<real\n");
-                     generateInstruction(I_LESS_EQUAL,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble<=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -731,9 +759,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool<bool\n");
-                     generateInstruction(I_LESS_EQUAL,k_bool, i,k,retVal, ilist);
+                     generateInstruction(I_LESS_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool<=itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -745,17 +774,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je rovna se\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int==int\n");
-                     generateInstruction(I_EQUAL,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt==itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real==real\n");
-                     generateInstruction(I_EQUAL,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble==itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -766,9 +797,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool==bool\n");
-                     generateInstruction(I_EQUAL,k_bool,i,k,retVal, ilist);
+                     generateInstruction(I_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool==itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -780,17 +812,19 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Operace je nerovna se\n");
                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
                  {
-                     long int *i= &(itemC.vInt); long int *k=&(itemTop.vInt);
+                     *(((long int*)itemC.data2))=itemC.vInt;
+                       *(((long int*)itemTop.data))=itemTop.vInt;
                      printDebug("int<>int\n");
-                     generateInstruction(I_NOT_EQUAL,k_int, i,k,retVal, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vInt!=itemD.vInt) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
                  else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
                  {
-                     double *i= &(itemC.vDouble); double *k=&(itemTop.vDouble);
+                     *(((double*)itemC.data2))=itemC.vDouble;
+                       *(((double*)itemTop.data))=itemTop.vDouble;
                      printDebug("real<>real\n");
-                     generateInstruction(I_NOT_EQUAL,k_real, i,k,retVal, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vDouble!=itemD.vDouble) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
@@ -801,9 +835,10 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                  }
                  else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
                  {
-                     bool *i= &(itemC.vBool); bool *k=&(itemTop.vBool);
+                     *(((bool*)itemC.data2))=itemC.vBool;
+                       *(((bool*)itemTop.data))=itemTop.vBool;
                      printDebug("bool<>bool\n");
-                     generateInstruction(I_NOT_EQUAL,k_bool, i,k,retVal, ilist);
+                     generateInstruction(I_NOT_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
                      if (itemC.vBool!=itemD.vBool) itemC.vBool=true;
                      else itemC.vBool= false;
                  }
