@@ -19,9 +19,9 @@ begin
   write(a, 5, 3.234234324, 8, 'a'#32'sda', 'b', 'c');
   s := 'ahoj svete';
   a := 1;
-  if 1 then
+  if true then
   begin
-    a := b
+    a := a
   end
   else
   begin

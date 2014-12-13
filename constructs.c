@@ -335,7 +335,7 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
   int result = EXIT_SUCCESS;
   struct node * loc;
   printDebug("Prirazeni\n");
-  if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL || loc->type == k_function)
+  if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
     return EXIT_NOT_DEFINED_ERROR;
 
   // potrebuji ":="
@@ -348,7 +348,11 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
   if (lex->type == l_key && (*(key *)lex->data == k_sort ||
         *(key *)lex->data == k_find ||
         *(key *)lex->data == k_length ||
-        *(key *)lex->data == k_copy)) result = callFunction(in, table, ilist, lex, NULL, loc);
+        *(key *)lex->data == k_copy))
+  {
+    if (loc->type == k_function) return EXIT_NOT_DEFINED_ERROR;
+    result = callFunction(in, table, ilist, lex, NULL, loc);
+  }
   else if (lex->type == l_id) // mam identifikator, ale jeste nevim, jestli chci vyhodnocovat vyraz nebo volat vestavnou funkci
   {
     token tmp; // pokud bude dalsi token zavorka volam funkci

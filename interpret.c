@@ -101,7 +101,7 @@ int interpret(tListOfInstr * ilist)
         }
         break;
       case I_CALL_FUNCTION: // volani funkce (zaradim instrukce funkce jako nasledujici instrukci a za posledni instrukci fukce zaradim nasledujici instrukci (co by naseldovala v ilistu))
-        ((tListOfInstr *)i->addr1)->last = listItem->nextItem;
+        ((tListOfInstr *)i->addr1)->last->nextItem = listItem->nextItem;
         listItem = ((tListOfInstr *)i->addr1)->first;
         break;
       case I_CLEAR: // free nad docasnou hodnotou (u stringu jeste samotny string)

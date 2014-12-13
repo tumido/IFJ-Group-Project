@@ -937,7 +937,7 @@ int declareListContent(struct input * in, btree * table, token * lex)
     return EXIT_SYNTAX_ERROR;
   }
 
-  if ( SymbolTableSearch(table, ((string *)lex->data)->str) != NULL) return EXIT_SYNTAX_ERROR;
+  if ( __SymbolTableSearch(table->local, ((string *)lex->data)->str) != NULL) return EXIT_NOT_DEFINED_ERROR;
 
   // zalohujeme si identifikator, zatim nevime, jaky je to typ
   char tmp[BUFSIZE];
@@ -1142,6 +1142,15 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     // inicializuju ilist a TS funkce
     listInit(&(((funcData *)nd->data)->ilist));
     SymbolTableInitLocal(((funcData *)nd->data)->table, table);
+
+    //vytvorim uzel pro navratovou hodnotu
+    struct node * retNode;
+    if ((retNode = SymbolTableCreateNode(tmp, type, NULL)) == NULL)
+    { // pokud selze vytvoreni uzlu navratove hodnoty
+      __SymbolTableDispose(&retNode);
+      return EXIT_INTERNAL_ERROR;
+    }
+    SymbolTableInsert(((funcData *)nd->data)->table, retNode); // vlozime symbol
     while (firstParam != NULL)
     {
       if ((new = SymbolTableCreateNode(firstParam->keyValue, firstParam->type, NULL)) == NULL)
@@ -1154,7 +1163,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     }
     // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
     if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
-        ((result = body(in, table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
+        ((result = body(in, ((funcData *)nd->data)->table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
       return result;
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
@@ -1220,7 +1229,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
   if (isOrd) generateInstruction(I_CLEAR, param->type, data, NULL, NULL, ilist);
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  if (lex->type != l_sep) return EXIT_SYNTAX_ERROR; // neni carka, ale nemam vsechny parametry -> chyba
+  if (lex->type != l_sep && param->next != NULL) return EXIT_SYNTAX_ERROR; // neni carka, ale nemam vsechny parametry -> chyba
 
   return paramsCall(in, table, ilist,  lex, function, param->next);
 }
@@ -1254,10 +1263,12 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
     if ((result = paramsCall(in, table, ilist, lex, (funcData *)nd->data, ((funcData *)nd->data)->param)) != EXIT_SUCCESS)
       return result;
     // nacteme pravou zavorku a konec
-    if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
     if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
     generateInstruction(I_CALL_FUNCTION, k_function, &((funcData *)nd->data)->ilist, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
-    generateInstruction(I_ASSIGN, retNode->type, ((funcData *)nd->data)->retVal, NULL, retNode->data, ilist); // prirazeni navratove hodnoty funkce do lhodonty
+
+    if (((nd = SymbolTableSearch(((funcData *)nd->data)->table, nd->keyValue)) == NULL))
+      return EXIT_NOT_DEFINED_ERROR;
+    generateInstruction(I_ASSIGN, retNode->type, nd->data, NULL, retNode->data, ilist); // prirazeni navratove hodnoty funkce do lhodonty
   }
   else if (lex->type == l_key) // vestavne funkce
   {

@@ -166,10 +166,11 @@ int FunctionParamsListDispose(struct funcParam * paramList)
  * ---------------------------------------------------------------------
  * - vraci ukazatel na uzel pokud je hledany prvek nalezen nebo NULL
  */
+
 struct node * SymbolTableSearch(btree * table, char * key)
 {
   struct node * found = __SymbolTableSearch(table->local, key);
-  if (found == NULL) return __SymbolTableSearch(table->global, key);
+  if (found == NULL) {printDebug("Prohledavam globani tabulku\n"); return __SymbolTableSearch(table->global, key);}
   return found;
 }
 
