@@ -425,11 +425,11 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   if ((sign2 = malloc(sizeof(tListItem *))) == NULL) return EXIT_INTERNAL_ERROR;
   // mam "while"
   // vyhodnoceni podminky
+  *sign2 = ilist->last;
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS) ||
       ((result = evalExpression(in, table, ilist, lex, NULL, condition, k_bool)) != EXIT_SUCCESS))
     {free(condition); free(sign); free(sign2);  return result; }
   generateInstruction(I_JUMP, k_bool, condition, sign, NULL, ilist);
-  *sign2 = ilist->last;
   // potrebuju "do"
   if (lex->type != l_key && *(key *)lex->data != k_do) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
   //nasledovat musi begin

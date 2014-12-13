@@ -16,8 +16,8 @@ int interpret(tListOfInstr * ilist)
   tInstr * i;
   while(listItem != NULL)
   {
-    printDebug("zpracovavam instrukci\n");
     i = &listItem->Instruction;
+    printDebug("zpracovavam instrukci typu %d\n", i->instType);
     switch(i->instType)
     {
       case I_READ:
@@ -56,7 +56,6 @@ int interpret(tListOfInstr * ilist)
             return EXIT_READ_STDIN_ERROR;
         }
         printDebug("Nacteno ze vstupu.\n");
-       
         break;
       case I_WRITE:
         switch(i->type)
@@ -102,11 +101,11 @@ int interpret(tListOfInstr * ilist)
         break;
       case I_CALL_FUNCTION: // volani funkce (zaradim instrukce funkce jako nasledujici instrukci a za posledni instrukci fukce zaradim nasledujici instrukci (co by naseldovala v ilistu))
         ((tListOfInstr *)i->addr1)->last->nextItem = listItem->nextItem;
-        listItem = ((tListOfInstr *)i->addr1)->first;
+        listItem->nextItem = ((tListOfInstr *)i->addr1)->first;
         break;
-      case I_CLEAR: // free nad docasnou hodnotou (u stringu jeste samotny string)
-        if (i->type == k_string) free(((string *)i->addr1)->str);
-        free(i->addr1);
+      case I_CLEAR: // free nad docasnou hodnotou (u stringu jeste samotny string) -> provede se az pri uklidu na konci, kvuli jumpum...
+        //if (i->type == k_string) free(((string *)i->addr1)->str);
+        //free(i->addr1);
         break;
       case I_MUL: // jak resit int * real?
         if (i->type == k_int) *(int *)i->addr3 = *(int *)i->addr1 * *(int *)i->addr2;

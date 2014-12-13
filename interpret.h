@@ -45,24 +45,8 @@
 #define I_LENGHT 25
 #define I_FIND 26
 #define I_SORT 27
-
-/*
- * Interpretace konkretni instrukce
- */
-int instruction(tListOfInstr *instrList);
-
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  */
 int interpret(tListOfInstr *  I);
-
-/*
- * Funkce vykonava volani READ - cte ze stdin
- */
-int iRead(tListOfInstr *L);
-
-/*
- *Funkce vypise na stdout data ulozena na pozici instruction->addr1
- */
-int iWrite(tListOfInstr *L);
 #endif
