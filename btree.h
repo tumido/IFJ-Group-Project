@@ -27,6 +27,7 @@ struct node
 {
   char keyValue[BUFSIZE]; // klic jmeno funkce, promenne
   void * data;
+  void * funcData;
   bool defined;
   key type;
 
@@ -55,7 +56,6 @@ struct funcParam
 typedef struct
 {
   key retType; // navratovy typ
-  void * retVal; // navratova hodnota
   btree * table; // lokalni tablulka symbolu
   struct funcParam * param; // linearni seznam parametru
   tListOfInstr ilist; // list instrukci funkce
@@ -104,4 +104,10 @@ int FunctionParamsListDispose(struct funcParam * paramList);
 struct node * SymbolTableSearch(btree * table, char * key);
 struct node * __SymbolTableSearch(struct node * leaf, char * key);
 
+int SymbolTableCopy(btree * tableOriginal, btree * tableNew);
+struct node * __SymbolTableCopy(struct node * nd);
+
+
+int SymbolTableRestore(btree * tableOriginal, btree * tableNew, char * key);
+int __SymbolTableRestore(struct node * ndO, struct node * nd, char * key);
 #endif

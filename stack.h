@@ -13,30 +13,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "io.h"
+#include "btree.h"
 /*
  * Zasobnik
  * -----------------------------------------------------------------------------
  * implemetace pomoci linearniho seznamu
  */
-
-/*
- * samotny prvek seznamu, bude obsahovat vsechnz mozne typy vysledku, nepouzite typy dostanou NULL
- * promena boolResult nahrazuje typ bool, nebot mi prijde jednodusi pracovat s integerem 1 TRUE nebo 0 FALSE
- * Roman se pta - proc? V cem je to jednodussi? Kdyztak bych bral jako 0 - TRUE a 1 - FALSE :)
- */
 typedef struct stackPtr
 {
-  int iResult;
-  float fResult;
-  int boolResult;
-  char cResult; // zde si presne nejsem jist, jestli by nebylo lepsi pouit pole
+  btree * table;
   struct stackPtr *next; // ukazatel na nasledujici prvek v zasobniku
 } stackElem;
 
 typedef struct
 {
   stackElem * top; // ukazatel na vrchol zasobniku
-  int numberOfResults; // pocet prvku v zasobniku
 } stack;
 
 /*
@@ -47,15 +38,12 @@ void stackInit(stack *S);
 /*
  * PUSHnuti vysledku (podle typu) na zasobnik
  */
-int stackPUSHInt(stack *S, int i);
-int stackPUSHReal(stack *S, double f);
-int stackPUSHBool(stack *S, int i);
-int stackPUSHChar(stack *S, char *c); //opet, u charu si nejsem jist spravnosti
+int stackPUSH(stack * s, btree *table);
 
 /*
  * POPnuti vysledku ze zasobnku, bude vracet celou strukturu
  */
-int stackPOP(stack *S, struct stackPtr * result);
+int stackPOP(stack *S, btree * table, char * key);
 
 /*
  * Zjisti zdali je stack prazdny. Pokud je prazdny vraci 0 jinak 1
