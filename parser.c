@@ -87,6 +87,33 @@ int retIndex (lexType typ)
  return j;
 }
 
+int convertType(sData * item1, sData * item2)
+{
+  printDebug("Konvertuji na real ");
+  void * data;
+  if (item1->typeVal != l_real)
+  {
+    printDebug("item1\n");
+    data = item1->data;
+    if ((item1->data = malloc(sizeof(double))) == NULL)
+      return EXIT_INTERNAL_ERROR;
+    *((double *)item1->data) = (double) *(int *)data;
+    item1->typeVal = l_real;
+    item1->typeKey = k_real;
+  }
+  if (item2->typeVal != l_real)
+  {
+    printDebug("item2\n");
+    data = item2->data;
+    if ((item2->data = malloc(sizeof(double))) == NULL)
+      return EXIT_INTERNAL_ERROR;
+    *((double *)item2->data) = (double) *(int *)data;
+    item2->typeVal = l_real;
+    item2->typeKey = k_real;
+  }
+  return EXIT_SUCCESS;
+}
+
 void * createSemiResult(lexType typeA, lexType typeB, key * retType, lexType * retTypeL, lexType op)
 {
   void * data;
@@ -325,71 +352,91 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             {
               case l_add:
                 printDebug("Scitani\n");
-                generateInstruction(I_ADD, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
                     ((itemTop.typeVal==l_str) && (itemC.typeVal== l_str)) || ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
                     ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
                   return EXIT_TYPE_ERROR;
+                if (itemTop.typeVal != itemC.typeVal)
+                {
+                  result = convertType(&itemTop, &itemC);
+                  if (result != EXIT_SUCCESS) return result;
+                }
+                generateInstruction(I_ADD, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_mul:
                 printDebug("Nasobeni\n");
-                generateInstruction(I_MUL, semiresultType, itemTop.data, itemC.data, semiresult, ilist);
                 if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
                       ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
                     ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
                   return EXIT_TYPE_ERROR;
+                if (itemTop.typeVal != itemC.typeVal)
+                {
+                  result = convertType(&itemTop, &itemC);
+                  if (result != EXIT_SUCCESS) return result;
+                }
+                generateInstruction(I_MUL, semiresultType, itemTop.data, itemC.data, semiresult, ilist);
                 break;
               case l_div:
                 printDebug("Deleni\n");
-                generateInstruction(I_DIV, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
                       ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
                     ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
                   return EXIT_TYPE_ERROR;
+                if (itemTop.typeVal != itemC.typeVal)
+                {
+                  result = convertType(&itemTop, &itemC);
+                  if (result != EXIT_SUCCESS) return result;
+                }
+                generateInstruction(I_DIV, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_sub:
                 printDebug("Odcitani\n");
-                generateInstruction(I_SUB, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
                       ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
                     ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
                   return EXIT_TYPE_ERROR;
+                if (itemTop.typeVal != itemC.typeVal)
+                {
+                  result = convertType(&itemTop, &itemC);
+                  if (result != EXIT_SUCCESS) return result;
+                }
+                generateInstruction(I_SUB, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_less:
                 printDebug("Mensi nez\n");
-                generateInstruction(I_LESS, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_LESS, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_greater:
                 printDebug("Vetsi nez\n");
-                generateInstruction(I_GREATER, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_GREATER, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_gequal:
                 printDebug("Vetsi nebo rovno\n");
-                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_lequal:
                 printDebug("Mensi nebo rovno\n");
-                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_equal:
                 printDebug("Rovna se\n");
-                generateInstruction(I_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_not:
                 printDebug("Nerovna se\n");
-                generateInstruction(I_NOT_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
+                generateInstruction(I_NOT_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               default:
                 break;

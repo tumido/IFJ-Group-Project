@@ -39,4 +39,6 @@ clean:
 	rm -vf *.o *.a *.so *.zip ifj14
 
 zip:
-	zip $(ARCHIVE).zip *.c *.h rozdeleni Makefile
+	oowriter -convert-to pdf:writer_pdf_Export Dokumentace.docx
+	mv {D,d}okumentace.pdf
+	zip $(ARCHIVE).zip *.c *.h rozdeleni Makefile dokumentace.pdf
