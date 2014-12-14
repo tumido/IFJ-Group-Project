@@ -69,6 +69,7 @@ int interpret(tListOfInstr * ilist)
           case k_bool:
             if (*(bool *)i->addr1 == true) printf("TRUE");
             else printf("FALSE");
+            break;
           default:
             return EXIT_TYPE_ERROR;
         }
@@ -101,6 +102,7 @@ int interpret(tListOfInstr * ilist)
           default:
             return EXIT_TYPE_ERROR;
         }
+        printDebug("prirazuji z adresy %d (hodnota %d) na adresu %d nova hodnota je %d\n", i->addr1, i->addr3, *(int *)i->addr3, *(int *)i->addr3);
         break;
       case I_CALL_FUNCTION: // volani funkce (zaradim instrukce funkce jako nasledujici instrukci a za posledni instrukci fukce zaradim nasledujici instrukci (co by naseldovala v ilistu))
         ((tListOfInstr *)i->addr1)->last->nextItem = listItem->nextItem;

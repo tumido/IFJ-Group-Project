@@ -124,7 +124,7 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
  *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
-int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 
 /*   Blok kodu
  * ---------------------------------------------------------------------
@@ -135,7 +135,7 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, s
  *   <statements> -> <state> ; <statements>
  *   <statements> -> <state>
  */
-int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 
 /*  Telo programu
  * ---------------------------------------------------------------------
@@ -144,7 +144,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  * <body> -> <statements> end
  * <body> -> end
  */
-int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 
 /*   Parser
  * ---------------------------------------------------------------------

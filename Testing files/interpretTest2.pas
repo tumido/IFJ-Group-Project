@@ -6,21 +6,17 @@ function a(k:integer): integer;
 var x:string;
     i:integer;
 begin
-  if k <> 0 then begin
-  write('Jsem ve funkci, a mam parametr s hodnotou ', k, '. Zadej string: ');
-  readln(x);
-  write(''#10'Zadal jsi: ', x, ''#10'Vytvarim lokalni i s hodnotou 26, globalni ma hodnotu k = ', k,  ''#10'');
+  if k > 0 then begin
   k := k - 1;
-  a := a(k);
-  write('Hodnota a je:', a, ''#10'')
+  a := a(k)
   end
   else
-    begin end
+  begin
+  a := 0
+  end
 end;
 
 begin
-  readln(s);
   i := a(5);
-  write('Hodonta i je: ', i, ''#10'');
-  write('s =', s, ''#10'')
+  write('Hodonta i je: ', i, ''#10'')
 end.

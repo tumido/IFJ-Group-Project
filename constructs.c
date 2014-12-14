@@ -339,14 +339,18 @@ int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, toke
  *   jestli bude volana funkce a nebo je to vyraz
  * - nasledne vola
  */
-int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunction)
 {
   int result = EXIT_SUCCESS;
   struct node * loc;
+  key retType;
   printDebug("Prirazeni\n");
   if ((loc = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
+  {
     return EXIT_NOT_DEFINED_ERROR;
-
+  } 
+  if (loc->type == k_function && loc == inFunction) { printErr("asdas"); retType = ((funcData *)loc->data)->retType; }
+  else retType = loc->type;
   // potrebuji ":="
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_assign) return EXIT_SYNTAX_ERROR;
@@ -368,9 +372,9 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
     tokenInit(&tmp);
     if ((result = fillToken(in,&tmp)) != EXIT_SUCCESS){ return result; }
     if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp, loc, s);
-    else result = evalExpression(in, table, ilist, lex, &tmp, loc->data, loc->type);
+    else result = evalExpression(in, table, ilist, lex, &tmp, loc->data, retType);
   }
-  else result = evalExpression(in, table, ilist, lex, NULL, loc->data, loc->type); // jinak (je to hodnota, cokoliv) volan evalExpression
+  else result = evalExpression(in, table, ilist, lex, NULL, loc->data, retType); // jinak (je to hodnota, cokoliv) volan evalExpression
   loc->defined = true;
   return result;
 }
@@ -380,7 +384,7 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
  * - zpracuje patricne tokeny a necha probehnout telo podminky
  * - JAK JSOU RESENE JUMPY??
  */
-int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc)
 {
   int result = EXIT_SUCCESS;
   printDebug("Vetveni\n");
@@ -400,7 +404,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
-  if  ((result = body(in, table, ilist, lex, s)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
+  if  ((result = body(in, table, ilist, lex, s, inFunc)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
   // pak "else"
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last;
@@ -409,7 +413,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
-  if  ((result = body(in, table, ilist, lex, s)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
+  if  ((result = body(in, table, ilist, lex, s, inFunc)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   *sign2 = ilist->last;
   generateInstruction(I_CLEAR, k_bool, condition, NULL, NULL, ilist);
@@ -423,7 +427,7 @@ int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * le
  * - zpracuje patricne tokeny a necha probehnout telo cyklu
  * - JAK JSOU RESENE JUMPY??
  */
-int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc)
 {
   int result = EXIT_SUCCESS;
   printDebug("Cyklus\n");
@@ -444,7 +448,7 @@ int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token *
   //nasledovat musi begin
   if (((result = fillToken(in,lex)) != EXIT_SUCCESS)) {free(condition); free(sign); free(sign2);  return result; }
   if (lex->type != l_key || *(key *)lex->data != k_begin) {free(condition); free(sign); free(sign2); return EXIT_SYNTAX_ERROR;}
-  if  ((result = body(in, table, ilist, lex, s)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
+  if  ((result = body(in, table, ilist, lex, s, inFunc)) != EXIT_SUCCESS) {free(condition); free(sign); free(sign2);  return result; }
   // jump back na podminku
   generateInstruction(I_JUMP, k_bool, NULL, sign2, NULL, ilist);
   *sign = ilist->last; // sem skoci pokud while neplati

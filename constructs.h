@@ -55,19 +55,19 @@ int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, toke
  *   jestli bude volana funkce a nebo je to vyraz
  * - nasledne vola
  */
-int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 
 /*   Podminene vetveni
  * ---------------------------------------------------------------------
  * - zpracuje patricne tokeny a necha probehnout telo podminky
  * - JAK JSOU RESENE JUMPY??
  */
-int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int embededIf(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 
 /*   Cyklus while
  * ---------------------------------------------------------------------
  * - zpracuje patricne tokeny a necha probehnout telo cyklu
  * - JAK JSOU RESENE JUMPY??
  */
-int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
+int embededWhile(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc);
 #endif

@@ -12,6 +12,7 @@ begin
     write('jsem ve whilu b = ', b, ''#10'')
   end;
   i := 3 * 2.0;
+  {  s := 'asdsad' + 'vvvv'; }
   write(''#10'test scitani: i := 1 + 1; i =', i, ''#10'', true);
-  write('konec while'#10'')
+  write('konec while'#10'', s, ''#10'')
 end.

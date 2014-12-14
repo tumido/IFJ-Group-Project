@@ -319,6 +319,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             if (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)]== EE)
             {
                 printDebug("Je to prirazeni\n");
+                printErr("%d k %d\n", retType, itemD.typeVal);
                 if (((itemD.typeVal==l_int) && (retType== k_int)) || ((itemD.typeVal==l_real) && (retType== k_real)) ||
                     ((itemD.typeVal==l_str) && (retType== k_string)) || ((itemD.typeVal==l_bool) && (retType== k_bool)))
                   generateInstruction(I_ASSIGN, retType, itemD.data, NULL, retVal, ilist);
@@ -406,25 +407,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Mensi nez\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_LESS, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_LESS, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
                 break;
               case l_greater:
                 printDebug("Vetsi nez\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_GREATER, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_GREATER, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
                 break;
               case l_gequal:
                 printDebug("Vetsi nebo rovno\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
                 break;
               case l_lequal:
                 printDebug("Mensi nebo rovno\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
                 break;
               case l_equal:
                 printDebug("Rovna se\n");
@@ -709,6 +710,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     return EXIT_INTERNAL_ERROR;
   }
   SymbolTableInsert(table, nd); // vlozime symbol
+  ((funcData *)nd->data)->retType = type;
 
   if (*(key *)lex->data == k_forward) // token je "forward", potrebuju ";"
   {
@@ -737,7 +739,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
     printDebug("Deklarace vlastnich promennych a telo funkce\n");
     // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
     if (((result = declareList(in, ((funcData *)nd->funcData)->table, lex)) != EXIT_SUCCESS) ||
-        ((result = body(in, ((funcData *)nd->funcData)->table, &(((funcData *)nd->funcData)->ilist), lex, s)) != EXIT_SUCCESS))
+        ((result = body(in, ((funcData *)nd->funcData)->table, &(((funcData *)nd->funcData)->ilist), lex, s, nd)) != EXIT_SUCCESS))
       return result;
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
@@ -774,6 +776,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
       if (nd->type != param->type) return EXIT_TYPE_ERROR;
 
       data = nd->data;
+      break;
     case l_int:
     case l_real:
     case l_str:
@@ -799,6 +802,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
     printDebug("Parametr funkce nenalezen v lokalni tabulce, nemas delat hacky Coufale..\n");
     return EXIT_INTERNAL_ERROR;
   }
+  if (lex->type == l_id) printErr("%d", *(int *)lex->data);
   generateInstruction(I_ASSIGN,param->type, data, NULL, paramNode->data, ilist);
   paramNode->defined = true;
   if (isOrd) generateInstruction(I_CLEAR, param->type, data, NULL, NULL, ilist);
@@ -874,14 +878,14 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
  *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
-int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc)
 {
   printDebug("Zpracovavam prikaz\n");
   switch (lex->type)
   {
     // <state> -> id := <evalExpression>
     // <state> -> id := <call>
-    case (l_id): return embededAssign(in, table, ilist, lex, s);
+    case (l_id): return embededAssign(in, table, ilist, lex, s, inFunc);
     // <state> -> if <evalExpression> then <body> ; else <body>
     // <state> -> while <evalExpression> do <body>
     // <state> -> write ( <type> )
@@ -889,8 +893,8 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, s
     case (l_key):
       switch (*(key *)lex->data)
       {
-        case k_if: return embededIf(in, table, ilist, lex, s);
-        case k_while: return embededWhile(in, table, ilist, lex, s);
+        case k_if: return embededIf(in, table, ilist, lex, s, inFunc);
+        case k_while: return embededWhile(in, table, ilist, lex, s, inFunc);
         case k_write: return embededFuncWrite(in, table, ilist, lex);
         case k_readln: return embededFuncReadln(in, table, ilist, lex);
         default: printDebug("%d", *(key *)lex->data); return  EXIT_SYNTAX_ERROR;
@@ -911,14 +915,14 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, s
  *   <statements> -> <state> ; <statements>
  *   <statements> -> <state>
  */
-int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc)
 {
   int result;
   printDebug("Zacatek noveho prikazu\n");
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
-  result = state(in, table, ilist, lex, s);
+  result = state(in, table, ilist, lex, s, inFunc);
   if (result != EXIT_SUCCESS) return result;
 
   // pokud dalsi token je strednik tzn ze bude
@@ -927,7 +931,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
   {
     printDebug("Nasleduje prikaz\n");
     if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
-    return statements(in, table, ilist, lex, s);
+    return statements(in, table, ilist, lex, s, inFunc);
   }
   // pokud uz strednik nebude
   // za poslednim prikazem nema byt strednik
@@ -942,7 +946,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  * <body> -> <statements> end
  * <body> -> end
  */
-int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
+int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s, struct node * inFunc)
 {
   printDebug("Zacatek bloku kodu\n");
   int result = EXIT_SUCCESS;
@@ -956,7 +960,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, st
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   // a projde telo programu -> pokud cokoliv z toho selze, vraci error
-  if ((result = statements(in, table, ilist, lex, s)) != EXIT_SUCCESS)
+  if ((result = statements(in, table, ilist, lex, s, inFunc)) != EXIT_SUCCESS)
     return result;
 
   printDebug("Konec bloku kodu\n");
@@ -992,7 +996,7 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist, stack * s)
 
         if (((result = declareList(in, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
             ((result = function(in, table, ilist, &lex, s)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
-            ((result = body(in, table, ilist, &lex, s)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
+            ((result = body(in, table, ilist, &lex, s, NULL)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
         if ((lex.type == l_enddot) ||
            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
