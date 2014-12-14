@@ -159,7 +159,7 @@ int defineToken(token * lex, sData * item, btree * table)
       item->typeKey = (lex->type ==  l_int) ? k_int : (lex->type == l_str) ? k_string : (lex->type == l_real) ? k_real : k_else;
       break;
     case l_id:
-      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL))
+      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || nd->defined == false)
         return EXIT_NOT_DEFINED_ERROR;
       printDebug("Token je id typu %d\n", nd->type);
       switch(nd->type)
@@ -684,6 +684,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
         return EXIT_INTERNAL_ERROR;
       }
       SymbolTableInsert(((funcData *)nd->funcData)->table, new); // vlozime nove vytvoreny symbol bez hodnoty
+      new->defined = true;
       firstParam = firstParam->next;
     }
     printDebug("Deklarace vlastnich promennych a telo funkce\n");
