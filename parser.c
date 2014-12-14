@@ -87,10 +87,62 @@ int retIndex (lexType typ)
  return j;
 }
 
-/*   Syntakticka analyza
- * =====================================================================
- * - "zhora dolu", vyuziva rekurzivni sestup
+/*   Vyhodnoceni tokenu
+ * ---------------------------------------------------------------------
+ * - vyhodnoti token a ulozi jeho data do sData itemu
  */
+int defineToken(token * lex, sData * item, btree * table)
+{
+  struct node * nd;
+  switch (lex->type)
+  {
+    case l_int:
+    case l_real:
+    case l_str:
+      printDebug("Token je ordinalni hodnota\n");
+      item->type = item->typeVal = lex->type;
+      item->data = lex->data;
+      lex->data = NULL;
+      break;
+    case l_id:
+      printDebug("Token je id\n");
+      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || nd->defined == false)
+        return EXIT_NOT_DEFINED_ERROR;
+      switch(nd->type)
+      {
+        case k_int: item->type = item->typeVal = l_int; break;
+        case k_string: item->type = item->typeVal = l_str; break;
+        case k_real: item->type = item->typeVal = l_real; break;
+        case k_bool: item->type = item->typeVal = l_bool; break;
+        default: return EXIT_INTERNAL_ERROR;
+      }
+      item->data = nd->data;
+      break;
+    case l_key:
+      if (*(key *)lex->data == k_true || *(key *)lex->data == k_false)
+      {
+      printDebug("Token je bool\n");
+        item->type = item->typeVal = l_bool;
+        if ((item->data = malloc(sizeof(bool))) == NULL)
+          return EXIT_INTERNAL_ERROR;
+        *(bool *)item->data = (*(key *)lex->data == k_true);
+        lex->data = NULL;
+        break;
+      }
+      item->type = lex->type;
+      printDebug("Token je key\n");
+      break;
+    case l_lparenth:
+      item->type = lex->type;
+      printDebug("Token je (\n");
+      break;
+    default:
+      item->type = lex->type;
+      printDebug("Token je neznamy\n");
+      break;
+  }
+  return EXIT_SUCCESS;
+}
 
 /*   Vyhodnoceni vyrazu
  * ---------------------------------------------------------------------
@@ -100,797 +152,157 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
 {
   printDebug("Spoustim analyzu vyrazu\n");
   int result = EXIT_SUCCESS;
-  int Ptoken=0;
   Stack s;
   sInit (&s);
-    token NLex;
-    if ((result = tokenInit(&NLex)) != EXIT_SUCCESS) return result;
-  sData itemAct;
-  sData itemTop;
-  sData itemC;
-  sData itemD;
+  sData itemAct, itemTop, itemC, itemD;
   if (DataInit(&itemAct) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemTop) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemC) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
   if (DataInit(&itemD) == EXIT_INTERNAL_ERROR) return EXIT_INTERNAL_ERROR;
-  itemAct.TypTok=l_eof;
+  itemAct.type=l_eof;
   sPush (&s,itemAct);
   printDebug("Inicializuji zasobnik a vkladam zarazku\n");
+  printDebug("Zpracovavam prvni lexem\n");
+  printDebug("Zkontroluji, jestli mam dva lexemy nebo jeden\n");
+  defineToken(lex,&itemAct,table);
+  sPush(&s,itemAct);
   itemTop=sTop(&s);
-  printDebug("Kontrola prvniho lexemu\n");
-  if (nextLex==NULL)
-   {
-    printDebug("Byl obdrzen pouze jeden lexem\n");
-    Ptoken=1;
-   }
-  else
-    {
-     printDebug("Obdrzel jsem dva lexemy\n");
-     NLex.type=nextLex->type;
-    }
-
-  if (lex->type==l_id)
+  if (nextLex != NULL)
   {
-    struct node *nd;
-    printDebug("Prvni lexem je ID, jdu hledat ve strome\n");
-    if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
-    {
-          return EXIT_SEMANTIC_ERROR;
-    }
-    // ulozim si ze stromu hodnoty
-    if  (nd->type == k_int)
-    {
-      itemAct.TypVal=l_int;
-      itemAct.vInt=*(long int*)nd->data;
-      printDebug("Prvni lexem je int s hodnotou %d\n",itemAct.vInt);
-    }
-    else if  (nd->type == k_real)
-    {
-      itemAct.TypVal=l_real;
-      itemAct.vDouble=*(double*)nd->data;
-            printDebug("Prvni lexem je real s hodnotou %e\n",itemAct.vDouble);
-    }
-    else if  (nd->type == k_string)
-    {
-      printDebug("Prvni lexem je retezec\n");
-      itemAct.TypVal=l_str;
-      // string musim dodelat
-    }
-    else if  (nd->type == k_bool)
-    {
-      itemAct.TypVal=l_bool;
-      itemAct.vBool=*(bool*)nd->data;
-      printDebug("Prvni lexem je bool s hodnotou %d\n",itemAct.vBool);
-    }
-    else { return EXIT_SYNTAX_ERROR;}
-  // __SymbolTableDispose(&nd);
-   itemAct.TypTok = l_id;
-  }
-  else if (lex->type==l_key)
+    printDebug("Mam dva lexemy\n");
+    defineToken(nextLex,&itemAct,table);
+    tokenFree(nextLex);
+    nextLex = NULL;
+  } else
   {
-      printDebug("je to klicove slovo, zkontroluji jestli je to true nebo false\n");
-      if (*(key *)lex->data == k_true)
-       {
-          itemAct.TypVal=l_bool;
-          itemAct.vBool=1;
-          printDebug("Je to true\n");
-       }
-      else if(*(key *)lex->data == k_false)
-      {
-          printDebug("Je to false\n");
-          itemAct.TypVal=l_bool;
-          itemAct.vBool=0;
-       }
-      else return EXIT_SYNTAX_ERROR;
-      itemAct.TypTok=l_id;
-  }
-   // jestli je token int,real,str ulozim si hodnotu a typ
-  else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
-  {
-    if  (lex->type == l_int)
-    {
-      itemAct.TypVal=lex->type;
-      itemAct.vInt=*(long int*)lex->data;
-      printDebug("Prvni lexem je int s hodnotou %d\n",itemAct.vInt);
-    }
-    else if  (lex->type == l_real)
-    {
-     itemAct.TypVal=lex->type;
-     itemAct.vDouble=*(double*)lex->data;
-     printDebug("Prvni lexem je real s hodnotou %d\n",itemAct.vDouble);
-    }
-    else if  (lex->type == l_str)
-    {
-      printDebug("Prvni lexem je retezec\n");
-      itemAct.TypVal=lex->type;
-      // string musim dodelat
-      //+++++++++++++++++++++++
-    }
-    itemAct.TypTok = l_id;
-  }
-  else
-  {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-    printDebug("Prvni lexem neni promenna ani cislo\n");
-    itemAct.TypTok=lex->type;
+    if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
+    defineToken(lex, &itemAct, table);
   }
   do
   {
-    switch (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)])
+    switch (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)])
     {
-       case Err:
-           return EXIT_SYNTAX_ERROR;
-
-       case Straight:
-         sPush(&s,itemAct);
-         itemTop=sTop(&s);
-         if (Ptoken==1)
-         {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;}
-         else{lex->type=NLex.type;Ptoken=1;}
-
-         if (lex->type==l_id)
-         {
-         struct node *nd;
-         printDebug("Dalsi lexem je ID, jdu hledat ve strome\n");
-         if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
-         {
-          return EXIT_SEMANTIC_ERROR;
-         }
-         // ulozim si ze stromu hodnoty
-         if  (nd->type == k_int)
-         {
-          itemAct.TypVal=l_int;
-          itemAct.vInt=*(long int*)nd->data;
-          printDebug("Dalsi lexem je int s hodnotou %d\n",itemAct.vInt);
-         }
-         else if  (nd->type == k_real)
-         {
-          itemAct.TypVal=l_real;
-          itemAct.vDouble=*(double*)nd->data;
-          printDebug("Dalsi lexem je real s hodnotou %e\n",itemAct.vDouble);
-          }
-         else if  (nd->type == k_string)
-         {
-          printDebug("Dalsi lexem je retezec\n");
-          itemAct.TypVal=l_str;
-          // string musim dodelat
-         }
-         else if  (nd->type == k_bool)
-         {
-          itemAct.TypVal=l_bool;
-          itemAct.vBool=*(bool*)nd->data;
-          printDebug("Dalsi lexem je bool s hodnotou %d\n",itemAct.vBool);
-         }
-         else { return EXIT_SYNTAX_ERROR;}
-         // __SymbolTableDispose(&nd);
-         itemAct.TypTok = l_id;
-         }
-         // jestli je token int,real,str ulozim si hodnotu a typ
-         else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
-         {
-         if  (lex->type == l_int)
-         {
-         itemAct.TypVal=lex->type;
-         itemAct.vInt=*(long int*)lex->data;
-         printDebug("Dalsi lexem je int s hodnotou %d\n",itemAct.vInt);
-         }
-         else if  (lex->type == l_real)
-         {
-         itemAct.TypVal=lex->type;
-         itemAct.vDouble=*(double*)lex->data;
-         printDebug("Dalsi lexem je real s hodnotou %d\n",itemAct.vDouble);
-         }
-         else if  (lex->type == l_str)
-         {
-         printDebug("Dalsi lexem je retezec\n");
-         itemAct.TypVal=lex->type;
-         // string musim dodelat
-         //+++++++++++++++++++++++
-         }
-         itemAct.TypTok = l_id;
-         }
-         else
-         {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-         printDebug("Dalsi lexem neni promenna ani cislo\n");
-         itemAct.TypTok=lex->type;
-         }
-         break;
-
-       case Left:
-        printDebug("Uplatnuji Leve pravidlo\n");
-        itemTop=sTop(&s);  // co je nahore?
-        itemC.TypTok=l_left; // nastavim si <
-        if (itemTop.TypTok==l_E)  // jestli je nahore E
-        { // zamenime E za <E
-         itemTop=sPop(&s);
-         sPush (&s,itemC);
-         sPush (&s,itemTop);
-         printDebug("Zamena E za <E\n");
-        }
-        else // na vrcholu neni E, dame tam <
-        {
-         printDebug("Pridavam < do zasobniku\n");
-         sPush (&s,itemC);
-        }
-        // nakonec vlozime token
-        printDebug("Vkladam token do zasobniku\n");
-        sPush (&s,itemAct);
-        if (Ptoken==1)
-        {if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result; }
-        else{
-            Ptoken=1;
-            lex->type=NLex.type;
-            }
+      case Err:
+        printDebug("Hovno\n");
+        return EXIT_SYNTAX_ERROR;
+      case Straight:
+        printDebug("Pouziva pravidlo =\n");
+        sPush(&s,itemAct);
         itemTop=sTop(&s);
-         if (lex->type==l_id)
-         {
-         struct node *nd;
-         printDebug("Dalsi lexem je ID, jdu hledat ve strome\n");
-         if ( (nd=SymbolTableSearch (table,((string *)lex->data)->str))==NULL)
-         {
-          return EXIT_SEMANTIC_ERROR;
-         }
-         // ulozim si ze stromu hodnoty
-         if  (nd->type == k_int)
-         {
-          itemAct.TypVal=l_int;
-          itemAct.vInt=*(long int*)nd->data;
-          printDebug("Dalsi lexem je int s hodnotou %d\n",itemAct.vInt);
-         }
-         else if  (nd->type == k_real)
-         {
-          itemAct.TypVal=l_real;
-          itemAct.vDouble=*(double*)nd->data;
-          printDebug("Dalsi lexem je real s hodnotou %e\n",itemAct.vDouble);
-          }
-         else if  (nd->type == k_string)
-         {
-          printDebug("Dalsi lexem je retezec\n");
-          itemAct.TypVal=l_str;
-          // string musim dodelat
-         }
-         else if  (nd->type == k_bool)
-         {
-          itemAct.TypVal=l_bool;
-          itemAct.vBool=*(bool*)nd->data;
-          printDebug("Dalsi lexem je bool s hodnotou %d\n",itemAct.vBool);
-         }
-         else { return EXIT_SYNTAX_ERROR;}
-         // __SymbolTableDispose(&nd);
-         itemAct.TypTok = l_id;
-         }
-         // jestli je token int,real,str ulozim si hodnotu a typ
-         else if(lex->type == l_int || lex->type == l_real || lex->type == l_str)
-         {
-         if  (lex->type == l_int)
-         {
-         itemAct.TypVal=lex->type;
-         itemAct.vInt=*(long int*)lex->data;
-         printDebug("Dalsi lexem je int s hodnotou %d\n",itemAct.vInt);
-         }
-         else if  (lex->type == l_real)
-         {
-         itemAct.TypVal=lex->type;
-         itemAct.vDouble=*(double*)lex->data;
-         printDebug("Dalsi lexem je real s hodnotou %d\n",itemAct.vDouble);
-         }
-         else if  (lex->type == l_str)
-         {
-         printDebug("Dalsi lexem je retezec\n");
-         itemAct.TypVal=lex->type;
-         // string musim dodelat
-         //+++++++++++++++++++++++
-         }
-         itemAct.TypTok = l_id;
-         }
-         else
-         {// pokud to neni id ani zadny cislo tak si prsote ulozime typ tokenu
-         printDebug("Dalsi lexem neni promenna ani cislo\n");
-         itemAct.TypTok=lex->type;
-         }
-      break;
-
-     case Right:
-        printDebug("Uplatnuji prave pravidlo\n");
-        itemTop=sTop(&s); // kouknu se co je nahore
-        switch (itemTop.TypTok)
-        {   // nahore je i, redukujeme na E
+        defineToken(lex, &itemAct, table);
+        break;
+      case Left:
+        printDebug("Pouzivam leve pravidlo\n");
+        itemTop = sTop(&s);
+        itemC.type  = l_left;
+        if (itemTop.type == l_E)
+        {
+          itemTop = sPop(&s);
+          sPush(&s, itemC);
+          sPush(&s, itemTop);
+          printDebug("Zamena \"E\" za \"<E\"\n");
+        } else
+        {
+          sPush(&s, itemC);
+          printDebug("Pridavam \"<\"\n");
+        }
+        itemTop=sTop(&s);
+        if (nextLex != NULL)
+        {
+          defineToken(nextLex,&itemAct,table);
+          tokenFree(nextLex);
+          nextLex = NULL;
+        } else
+        {
+          if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
+          defineToken(lex, &itemAct, table);
+        }
+        break;
+      case Right:
+        printDebug("Pouzivam prave pravidlo\n");
+        itemTop = sTop(&s);
+        switch (itemTop.type)
+        {
           case l_id:
-            itemD=sPop(&s); // popneme to
-            sPop(&s);// popneme pryc <
-            itemD.TypTok=l_E ; // zmenime i na E, data zustanou
-            itemTop=sTop(&s);  // priradime na top to co je pred E
-            sPush (&s,itemD);   // pushneme E
-            printDebug("Redukuji <i na E\n");
-            if (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]== EE)
+          case l_str:
+          case l_int:
+          case l_real:
+          case l_bool:
+            itemD = sPop(&s);
+            itemC = sPop(&s);
+            if (itemC.type != l_left && itemC.type != l_eof) return EXIT_INTERNAL_ERROR;
+            itemD.type = l_E;
+            itemTop = sTop(&s);
+            sPush(&s, itemD);
+            printDebug("Redukuji \"<i\" na \"E\"\n");
+            if (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)]== EE)
             {
                 printDebug("Je to prirazeni\n");
-                if ((itemD.TypVal==l_int) && (retType== k_int) )
-                {*(((long int*)itemD.data2))=itemD.vInt; generateInstruction(I_ASSIGN,k_int, itemD.data2, NULL,retVal, ilist);}
-                else if ((itemD.TypVal==l_real) && (retType== k_real) )
-                {*(((double*)itemD.data2))=itemD.vDouble; generateInstruction(I_ASSIGN,k_real, itemD.data2, NULL,retVal, ilist);}
-                else if ((itemD.TypVal==l_str) && (retType== k_string) )
-                printDebug("STRING MUSIM DODELAT\n");
-                else if ((itemD.TypVal==l_bool) && (retType== k_bool) )
-                {*(((bool*)itemD.data2))=itemD.vBool; generateInstruction(I_ASSIGN,k_bool, itemD.data2, NULL,retVal, ilist);}
+                if (((itemD.typeVal==l_int) && (retType== k_int)) || ((itemD.typeVal==l_real) && (retType== k_real)) ||
+                    ((itemD.typeVal==l_str) && (retType== k_string)) || ((itemD.typeVal==l_bool) && (retType== k_bool)))
+                  generateInstruction(I_ASSIGN, retType, itemD.data, NULL, retVal, ilist);
                 else return EXIT_TYPE_ERROR;
             }
             break;
           case l_rparenth:
-            printDebug("Vrchol je ), vyraz byl v zavorce\n");
-            sPop(&s); // odstranim )
-            itemC=sPop(&s); // odstranim E
-            sPop(&s); // odstranim (
-            sPop (&s); // odstranim <
-            itemTop=sTop(&s), // nahore je to co je pred E
-            sPush(&s,itemC); // dam tam zpatky E
+            printDebug("Na vrcholu je \")\"\n");
+            itemD = sPop(&s);
+            if (itemD.type != l_rparenth) return EXIT_INTERNAL_ERROR;
+            itemC = sPop(&s);
+            itemD = sPop(&s);
+            if (itemD.type != l_lparenth) return EXIT_INTERNAL_ERROR;
+            itemD = sPop(&s);
+            if (itemD.type != l_left) return EXIT_INTERNAL_ERROR;
+            itemTop = sTop(&s);
+            sPush(&s, itemC);
             break;
-          // na vrchu je E
           case l_E:
-             printDebug("Vrchol je E, kontroluji operaci\n");
-            itemTop=sPop(&s); // popneme E
-            itemD=sPop(&s); // popneme operaci
-            itemC=sPop(&s); // popneme druhy E
-            sPop(&s); // tady by melo byt <
-            switch (itemD.TypTok)
+            printDebug("Na vrcholu je E, kontroluji operaci\n");
+            itemTop = sPop(&s);
+            itemD = sPop(&s);
+            itemC = sPop(&s);
+            if (itemC.type != l_E) return EXIT_INTERNAL_ERROR;
+            switch (itemD.type)
             {
-             case l_add:
-                 printDebug("Operace je scitani\n");
-                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                      *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int+int\n");
-                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_int, itemC.data2, itemTop.data,retVal, ilist);
-                     printDebug("scitam %d a %d\n",*(long int*)itemC.data2,*(long int*)itemTop.data);
-                     itemC.vInt =itemTop.vInt + itemC.vInt;
-                     itemC.TypVal=l_int;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
-                 {
-                     printDebug("int+real\n");
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vInt + itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("real+int\n");
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble + itemC.vInt;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("real+real\n");
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_ADD,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble + itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                else if ((itemTop.TypVal==l_str) && (itemC.TypVal==l_str) )
-                {
-                     printDebug("string+string\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     // string dodelat
-                     //+++++++++++++++++++
-                     itemC.TypVal=l_str;
-                }
-                else return EXIT_SEMANTIC_ERROR;
-                itemTop=sTop(&s);
-                sPush(&s,itemC);
-                break;
+              case l_add:
+                printDebug("Scitani\n");
               case l_mul:
-                 printDebug("Operace je nasobeni\n");
-                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                      *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int*int\n");
-                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     printDebug("nasobim %d a %d\n",itemTop.vInt,itemC.vInt);
-                     itemC.vInt =itemTop.vInt * itemC.vInt;
-                     itemC.TypVal=l_int;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int*real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vInt * itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real*int\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble * itemC.vInt;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real*real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_MUL,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble * itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-             case l_div:
-                 printDebug("Operace je deleni\n");
-                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int/int\n");
-                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     printDebug("delim %d a %d\n",itemTop.vInt,itemC.vInt);
-                     itemC.vDouble =itemC.vInt / itemTop.vInt;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("real/int\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real,  itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemC.vInt / itemTop.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("int/real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemC.vDouble / itemTop.vInt;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real/real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_DIV,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble / itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-             case l_sub:
-                 printDebug("Operace je odcitani\n");
-                 if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int-int\n");
-                     if (retType!= k_int) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     printDebug("Odcitam %d a %d\n",itemTop.vInt,itemC.vInt);
-                     itemC.vInt =itemC.vInt - itemTop.vInt;
-                     itemC.TypVal=l_int;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("real-int\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemC.vInt - itemTop.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("int-real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemC.vDouble - itemTop.vInt;
-                     itemC.TypVal=l_real;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_int) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real-real\n");
-                     if (retType!= k_real) return  EXIT_TYPE_ERROR;
-                     generateInstruction(I_SUB,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     itemC.vDouble =itemTop.vDouble - itemC.vDouble;
-                     itemC.TypVal=l_real;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-            case l_less:
-                printDebug("Operace je mensi\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                      *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int<int\n");
-                     generateInstruction(I_LESS,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt<itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                      *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real<real\n");
-                     generateInstruction(I_LESS,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble<itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str<str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool<bool\n");
-                     generateInstruction(I_LESS,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool<itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
+                printDebug("Nasobeni\n");
+              case l_div:
+                printDebug("Deleni\n");
+              case l_sub:
+                printDebug("Odcitani\n");
+              case l_less:
+                printDebug("Mensi nez\n");
+              case l_greater:
+                printDebug("Vetsi nez\n");
+              case l_gequal:
+                printDebug("Vetsi nebo rovno\n");
+              case l_lequal:
+                printDebug("Mensi nebo rovno\n");
+              case l_equal:
+                printDebug("Rovna se\n");
+              case l_not:
+                printDebug("Nerovna se\n");
+              default:
                 break;
-            case l_greater:
-                printDebug("Operace je vetsi\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int>int\n");
-                     generateInstruction(I_GREATER,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt>itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real>real\n");
-                     generateInstruction(I_GREATER,k_real, itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble>itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str>str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool>bool\n");
-                     generateInstruction(I_GREATER,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool>itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                break;
-            case l_gequal:
-                printDebug("Operace je vetsirovno\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int>=int\n");
-                     generateInstruction(I_GREATER_EQUAL,k_int, itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt>=itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                    itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real>=real\n");
-                     generateInstruction(I_GREATER_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble>=itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str>=str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool>=bool\n");
-                     generateInstruction(I_GREATER_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool>=itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-               break;
-            case l_lequal:
-                printDebug("Operace je mensirovno\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                    *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int<=int\n");
-                     generateInstruction(I_LESS_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt<=itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real=<real\n");
-                     generateInstruction(I_LESS_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble<=itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str<str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool<bool\n");
-                     generateInstruction(I_LESS_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool<=itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-            case l_equal:
-                printDebug("Operace je rovna se\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int==int\n");
-                     generateInstruction(I_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt==itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real==real\n");
-                     generateInstruction(I_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble==itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str==str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool==bool\n");
-                     generateInstruction(I_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool==itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-            case l_not:
-                printDebug("Operace je nerovna se\n");
-                if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     *(((long int*)itemC.data2))=itemC.vInt;
-                       *(((long int*)itemTop.data))=itemTop.vInt;
-                     printDebug("int<>int\n");
-                     generateInstruction(I_NOT_EQUAL,k_int,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vInt!=itemD.vInt) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_real) && (itemC.TypVal==l_real) )
-                 {
-                     *(((double*)itemC.data2))=itemC.vDouble;
-                       *(((double*)itemTop.data))=itemTop.vDouble;
-                     printDebug("real<>real\n");
-                     generateInstruction(I_NOT_EQUAL,k_real,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vDouble!=itemD.vDouble) itemC.vBool=true;
-                     else itemC.vBool= false;
-                     itemC.TypVal=l_bool;
-                 }
-                 else if ((itemTop.TypVal==l_int) && (itemC.TypVal==l_int) )
-                 {
-                     printDebug("str<>str\n");
-                     // musim dodelat string
-                 }
-                 else if ((itemTop.TypVal==l_bool) && (itemC.TypVal==l_bool) )
-                 {
-                     *(((bool*)itemC.data2))=itemC.vBool;
-                       *(((bool*)itemTop.data))=itemTop.vBool;
-                     printDebug("bool<>bool\n");
-                     generateInstruction(I_NOT_EQUAL,k_bool,itemC.data2, itemTop.data,retVal, ilist);
-                     if (itemC.vBool!=itemD.vBool) itemC.vBool=true;
-                     else itemC.vBool= false;
-                 }
-                 else return EXIT_SEMANTIC_ERROR;
-                 itemTop=sTop(&s);
-                 sPush(&s,itemC);
-                 break;
-             default: break;
+            }
+          default:
+            break;
+        }
+    }
+  }while (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)]!= EE);
+  itemTop=sTop(&s);
 
-         }// operace
-          default: break;
-        }// itemTop.TypTok
-    }// switch prTable
-
-  }while (prTable[retIndex(itemTop.TypTok)][retIndex(itemAct.TypTok)]!= EE);
-    tokenFree(&NLex);
-    itemTop=sTop(&s);
-    if (itemTop.TypVal==l_int)
-    {printDebug ("Vysledek je int = %d\n",itemTop.vInt); *(long int*)retVal=itemTop.vInt;}
-    if (itemTop.TypVal==l_real)
-    {printDebug ("Vysledek je real = %e\n",itemTop.vDouble); *(double*)retVal=itemTop.vDouble;}
-    if (itemTop.TypVal==l_bool)
-    {printDebug ("Vysledek je bool = %d\n",itemTop.vBool); *(bool*)retVal=itemTop.vBool;}
-
-
-
-        printDebug("Vracim se z analyzy\n");
+  printDebug("Vracim se z analyzy\n");
   return EXIT_SUCCESS;
 }
+
+
+/*   Syntakticka analyza
+ * =====================================================================
+ * - "zhora dolu", vyuziva rekurzivni sestup
+ */
 
 /*   Blok deklarace promennych
  * ---------------------------------------------------------------------

@@ -48,20 +48,11 @@ int DataInit(sData *lex)
   ((string *) lex->data)->length = 0;
   ((string *) lex->data)->alloc = DETAIL_LENGHT;
 
-  if (((lex->data2 = (string *) malloc(sizeof(string))) == NULL) ||
-     ((((string *) lex->data2)->str = malloc(sizeof(char) * DETAIL_LENGHT)) == NULL ))
-    return EXIT_INTERNAL_ERROR;
-  ((string *) lex->data2)->str[0] = '\0';
-  ((string *) lex->data2)->length = 0;
-  ((string *) lex->data2)->alloc = DETAIL_LENGHT;
   return EXIT_SUCCESS;
 }
 
 void DataFree(sData *str)
 {
-  if (str->TypVal != l_int && str->TypVal != l_real && str->TypVal!= l_key)
-    {free(((string *)str->data)->str);free(((string *)str->data2)->str); }
   free(str->data);
-  free(str->data2);
 }
 

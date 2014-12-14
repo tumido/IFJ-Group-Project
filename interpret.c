@@ -209,7 +209,7 @@ int interpret(tListOfInstr * ilist)
         ((string *)i->addr3)->length = *((struct srange *)i->addr2)->length;
         break;
       case I_FIND:
-        *(int *)i->addr3 = findSubString(((string *)i->addr2)->str, ((string *)i->addr1)->str);
+        //*(int *)i->addr3 = findSubString(((string *)i->addr2)->str, ((string *)i->addr1)->str);
         break;
       case I_SORT:
         if (((string *)i->addr1)->length <= 1) return EXIT_INTERNAL_ERROR; //zkopirovat string
