@@ -18,7 +18,7 @@
 #include "io.h"
 #include "ial.h"
 #include "ilist.h"
-//#include "stack.h"
+#include "stack.h"
 
 // typy jednotlivych instrukci
 #define I_READ 4
@@ -45,6 +45,8 @@
 #define I_LENGHT 25
 #define I_FIND 26
 #define I_SORT 27
+#define I_TABLE_BACKUP 28
+#define I_TABLE_RESTORE 29
 /*
  * Hlavni ridici funkce intepretu, spousti a ridi cinnost pomocnych funkci
  */

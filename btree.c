@@ -38,6 +38,7 @@ struct node * SymbolTableCreateNode(char * name, key type, void * data)
 
   nd->type = type;
   nd->defined = false;
+  nd->funcData = NULL;
   nd->rightNode = nd->leftNode = NULL;
   strncpy(nd->keyValue, name, BUFSIZE);
   name = NULL;
@@ -79,16 +80,23 @@ struct node * SymbolTableCreateFunctionNode(char * name, key type, struct funcPa
   strncpy(nd->keyValue, name, BUFSIZE);
   name = NULL;
 
-  if ((nd->data = (funcData *) malloc(sizeof(funcData))) == NULL) return NULL;
+  if ((nd->funcData = (funcData *) malloc(sizeof(funcData))) == NULL) return NULL;
+  switch (type)
+  {
+    case k_int: if ((nd->data = malloc(sizeof(int))) == NULL) return NULL; break;
+    case k_real: if ((nd->data = malloc(sizeof(double))) == NULL) return NULL; break;
+    case k_string: if ((nd->data = malloc(sizeof(string))) == NULL) return NULL; break;
+    case k_bool: if ((nd->data = malloc(sizeof(bool))) == NULL) return NULL; break;
+    default: return NULL;
+  }
 
-  ((funcData *)nd->data)->defined = defined;
-  ((funcData *)nd->data)->param = param;
-  ((funcData *)nd->data)->retVal = NULL;
-  ((funcData *)nd->data)->retType = type;
-  if ((((funcData *)nd->data)->table = (btree *) malloc(sizeof(btree))) == NULL) return NULL;
+  ((funcData *)nd->funcData)->defined = defined;
+  ((funcData *)nd->funcData)->param = param;
+  ((funcData *)nd->funcData)->retType = type;
+  if ((((funcData *)nd->funcData)->table = (btree *) malloc(sizeof(btree))) == NULL) return NULL;
 
-  SymbolTableInit(((funcData *)nd->data)->table);
-  listInit(&((funcData *)nd->data)->ilist);
+  SymbolTableInit(((funcData *)nd->funcData)->table);
+  listInit(&((funcData *)nd->funcData)->ilist);
 
   printDebug("Novy uzel pro funkci vytvoren\n");
   return nd;
@@ -137,12 +145,13 @@ int __SymbolTableDispose(struct node ** leaf)
 
     if ((*leaf)->type == k_function)
     {
-      SymbolTableDispose(((funcData *)(*leaf)->data)->table);
-      FunctionParamsListDispose(((funcData *)(*leaf)->data)->param);
-      free(((funcData *)(*leaf)->data)->table);
-      listFree(&((funcData *)(*leaf)->data)->ilist, EXIT_SUCCESS);
+      SymbolTableDispose(((funcData *)(*leaf)->funcData)->table);
+      FunctionParamsListDispose(((funcData *)(*leaf)->funcData)->param);
+      free(((funcData *)(*leaf)->funcData)->table);
+      listFree(&((funcData *)(*leaf)->funcData)->ilist, EXIT_SUCCESS);
+      free((*leaf)->funcData);
     }
-    if ((*leaf)->type == k_string) free(((string *)(*leaf)->data)->str);
+    else if ((*leaf)->type == k_string) free(((string *)(*leaf)->data)->str);
     free((*leaf)->data);
     free(*leaf);
   }
@@ -183,4 +192,67 @@ struct node * __SymbolTableSearch(struct node * leaf, char * key)
     else {return __SymbolTableSearch(leaf->rightNode, key); }
   }
   return NULL;
+}
+
+
+int SymbolTableCopy(btree * tableOriginal, btree * tableNew)
+{
+  tableNew->global = tableOriginal->global;
+  tableNew->local = __SymbolTableCopy(tableOriginal->local);
+  return EXIT_SUCCESS;
+}
+
+struct node * __SymbolTableCopy(struct node * nd)
+{
+  if(nd != NULL)
+  {
+    struct node * nodeNew;
+    if ((nodeNew = SymbolTableCreateNode(nd->keyValue, nd->type, nd->data)) == NULL)
+      return NULL;
+
+    nodeNew->leftNode = __SymbolTableCopy(nd->leftNode);
+    nodeNew->rightNode = __SymbolTableCopy(nd->rightNode);
+    return nodeNew;
+  }
+  return NULL;
+}
+int SymbolTableRestore(btree * tableOriginal, btree * tableNew, char * key)
+{
+  tableNew->global = tableOriginal->global;
+  __SymbolTableRestore(tableOriginal->local, tableNew->local, key);
+  return EXIT_SUCCESS;
+}
+
+int __SymbolTableRestore(struct node * ndO, struct node * nd, char * key)
+{
+  if(ndO != NULL || nd != NULL)
+  {
+    if (strcmp(ndO->keyValue, key) != EXIT_SUCCESS)
+    {
+      switch (ndO->type)
+      {
+        case k_int:
+          *(int *)ndO->data = *(int *)nd->data;
+          break;
+        case k_real:
+          *(double *)ndO->data = *(double *)nd->data;
+          break;
+        case k_bool:
+          *(bool *)ndO->data = *(bool *)nd->data;
+          break;
+        case k_string:
+          ((string *)ndO->data)->str = ((string *)nd->data)->str;
+          ((string *)ndO->data)->alloc = ((string *)nd->data)->alloc;
+          ((string *)ndO->data)->length = ((string *)nd->data)->length;
+          break;
+        default:
+          return EXIT_INTERNAL_ERROR;
+      }
+    } else printDebug("Navratova hodnota ponechana\n");
+
+    __SymbolTableRestore(ndO->leftNode, nd->leftNode, key);
+    __SymbolTableRestore(ndO->rightNode, nd->rightNode, key);
+    return EXIT_SUCCESS;
+  }
+  return EXIT_INTERNAL_ERROR;
 }

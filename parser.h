@@ -17,6 +17,7 @@
 #include "interpret.h"
 #include "constructs.h"
 #include "parstack.h"
+#include "stack.h"
 
 #define dINT 6
 #define dREAL 7
@@ -89,7 +90,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param);
  *   <forward> -> "forward" ";"
  *   <forward> -> <declareList> <body> ";" <function>
  */
-int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
 
 /*   Rekurzivni zpracovani promennych v deklaraci funkce
  * ---------------------------------------------------------------------
@@ -109,7 +110,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist,  token * 
  *   funkce a na jejich konec zaradi insrukci prirazeni vysledku
  *   <callFunction> -> id "(" <paramsCall> ")"
  */
-int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode);
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode, stack * s);
 
 /*   Zpracovani prikazu programu
  * ---------------------------------------------------------------------
@@ -123,7 +124,7 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
  *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
-int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
 
 /*   Blok kodu
  * ---------------------------------------------------------------------
@@ -134,7 +135,7 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
  *   <statements> -> <state> ; <statements>
  *   <statements> -> <state>
  */
-int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
 
 /*  Telo programu
  * ---------------------------------------------------------------------
@@ -143,7 +144,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  * <body> -> <statements> end
  * <body> -> end
  */
-int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
+int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s);
 
 /*   Parser
  * ---------------------------------------------------------------------
@@ -154,4 +155,4 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex);
  *
  * <program> -> <decList> <funciton> <body> <EOF>
  */
-int parser(struct input * in, btree * table, tListOfInstr * ilist);
+int parser(struct input * in, btree * table, tListOfInstr * ilist, stack *);

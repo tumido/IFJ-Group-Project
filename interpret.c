@@ -53,7 +53,7 @@ int interpret(tListOfInstr * ilist)
           case k_bool:
             return EXIT_TYPE_ERROR;
           default:
-            return EXIT_READ_STDIN_ERROR;
+            printDebug("%d", i->type); return EXIT_READ_STDIN_ERROR;
         }
         printDebug("Nacteno ze vstupu.\n");
         break;
@@ -224,6 +224,13 @@ int interpret(tListOfInstr * ilist)
           strcpy(((string *)i->addr3)->str, ((string *)i->addr1)->str);
 //          shellSort(((string *)i->addr3)->str, ((string *)i->addr3)->length);
         }
+        break;
+      case I_TABLE_BACKUP:
+        stackPUSH((stack *)i->addr3, (btree *)i->addr1);
+        break;
+      case I_TABLE_RESTORE:
+        stackPOP((stack *)i->addr3, (btree *)i->addr1, (char *)i->addr2);
+        break;
       default:
         return EXIT_INTERNAL_ERROR;
     }

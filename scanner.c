@@ -200,11 +200,13 @@ int fillToken(struct input * in, token * lex)
         break;
       case s_string: // zpracovani retezce
         if (z == '\'') { state = s_string_check; }
+        else if (z == EOF) {read = false; retVal = EXIT_LEXICAL_ERROR; }
         else { addCharToString(lex, z); }
         break;
       case s_string_check: // je to escape sekvence nebo konec?
         if (z == '\'') { state = s_string; addCharToString(lex, z); }
         else if (z =='#' ){ state = s_string_escape; }
+        else if (z == EOF) {read = false; retVal = EXIT_LEXICAL_ERROR; }
         else { lex->type = l_str; read = false; ungetc(z, in->file); }
         break;
       case s_string_escape: // u escape sekvence potrebuj alespon jedno cislo

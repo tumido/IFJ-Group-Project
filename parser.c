@@ -1030,7 +1030,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param)
  *   <forward> -> "forward" ";"
  *   <forward> -> <declareList> <body> ";" <function>
  */
-int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
 {
   printDebug("Funkce\n");
   int result = EXIT_SUCCESS;
@@ -1044,7 +1044,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id) return EXIT_SYNTAX_ERROR;
   if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) != NULL) &&
-      ((nd->type != k_function) || ((funcData *)nd->data)->defined))
+      ((nd->type != k_function) || ((funcData *)nd->funcData)->defined))
     // pokud uz je identifikator v tabulce a pritom to neni funkce (ktera jeste nebyla definovana) -> chyba
     return EXIT_SYNTAX_ERROR;
 
@@ -1066,7 +1066,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   {
     printDebug("Nalezen drive definovany prototyp\n");
     paramDecl = firstParam;
-    paramDef = ((funcData *)nd->data)->param;
+    paramDef = ((funcData *)nd->funcData)->param;
     while (paramDecl != NULL || paramDef != NULL) // zkontroluju obsah jednotlivych parametru
     {
       if ((paramDecl->type != paramDef->type) || (strcmp(paramDecl->keyValue, paramDef->keyValue) != EXIT_SUCCESS))
@@ -1097,7 +1097,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
       (*(key *)lex->data != k_string)))
     return EXIT_SYNTAX_ERROR;
 
-  if ((nd != NULL) && (*(key *)lex->data != ((funcData *)nd->data)->retType)) // navratova hodnota prototypu neodpovida deklaraci -> smazat parametry a konec
+  if ((nd != NULL) && (*(key *)lex->data != ((funcData *)nd->funcData)->retType)) // navratova hodnota prototypu neodpovida deklaraci -> smazat parametry a konec
   {
     printDebug("Jiny navratovy typ\n");
     FunctionParamsListDispose(firstParam);
@@ -1140,17 +1140,10 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
   {
     printDebug("Definice funkce\n");
     // inicializuju ilist a TS funkce
-    listInit(&(((funcData *)nd->data)->ilist));
-    SymbolTableInitLocal(((funcData *)nd->data)->table, table);
+    listInit(&(((funcData *)nd->funcData)->ilist));
+    SymbolTableInitLocal(((funcData *)nd->funcData)->table, table);
 
-    //vytvorim uzel pro navratovou hodnotu
-    struct node * retNode;
-    if ((retNode = SymbolTableCreateNode(tmp, type, NULL)) == NULL)
-    { // pokud selze vytvoreni uzlu navratove hodnoty
-      __SymbolTableDispose(&retNode);
-      return EXIT_INTERNAL_ERROR;
-    }
-    SymbolTableInsert(((funcData *)nd->data)->table, retNode); // vlozime symbol
+    printDebug("Plnim tabulku symbolu parametry\n");
     while (firstParam != NULL)
     {
       if ((new = SymbolTableCreateNode(firstParam->keyValue, firstParam->type, NULL)) == NULL)
@@ -1158,18 +1151,19 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
         __SymbolTableDispose(&new);
         return EXIT_INTERNAL_ERROR;
       }
-      SymbolTableInsert(((funcData *)nd->data)->table, new); // vlozime nove vytvoreny symbol bez hodnoty
+      SymbolTableInsert(((funcData *)nd->funcData)->table, new); // vlozime nove vytvoreny symbol bez hodnoty
       firstParam = firstParam->next;
     }
+    printDebug("Deklarace vlastnich promennych a telo funkce\n");
     // pokud selze definice funkce, uvolnuju jeji tabulku symbolu a koncim
-    if (((result = declareList(in, ((funcData *)nd->data)->table, lex)) != EXIT_SUCCESS) ||
-        ((result = body(in, ((funcData *)nd->data)->table, &(((funcData *)nd->data)->ilist), lex)) != EXIT_SUCCESS))
+    if (((result = declareList(in, ((funcData *)nd->funcData)->table, lex)) != EXIT_SUCCESS) ||
+        ((result = body(in, ((funcData *)nd->funcData)->table, &(((funcData *)nd->funcData)->ilist), lex, s)) != EXIT_SUCCESS))
       return result;
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   if (lex->type != l_endl) return EXIT_SYNTAX_ERROR;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
-  return function(in, table, ilist, lex);
+  return function(in, table, ilist, lex, s);
 }
 
 /*   Rekurzivni zpracovani promennych v deklaraci funkce
@@ -1238,7 +1232,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
  * ---------------------------------------------------------------------
  *   <callFunction> -> id "(" <paramsCall> ")"
  */
-int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode)
+int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token * lex, token * nextLex, struct node * retNode, stack * s)
 {
   int result = EXIT_SUCCESS;
   printDebug("Volani funkce\n");
@@ -1246,10 +1240,11 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
   if (lex->type == l_id) // uzivatelem definovana funkce
   {
     // musim overit, ze identifikator existuje a je definovana funkce
-    if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || (((funcData *)nd->data)->defined) == false)
+    if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || (((funcData *)nd->funcData)->defined) == false)
       return EXIT_NOT_DEFINED_ERROR;
     if (nd->type != k_function)
       return EXIT_TYPE_ERROR;
+    generateInstruction(I_TABLE_BACKUP, k_var, ((funcData *)nd->funcData)->table, NULL, s, ilist);
     // nactu oteviraci zavorku
     if (nextLex != NULL)
     {
@@ -1260,15 +1255,14 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
       if (lex->type != l_lparenth) return EXIT_SYNTAX_ERROR;
     }
     // zpracovani parametru
-    if ((result = paramsCall(in, table, ilist, lex, (funcData *)nd->data, ((funcData *)nd->data)->param)) != EXIT_SUCCESS)
+    if ((result = paramsCall(in, table, ilist, lex, (funcData *)nd->funcData, ((funcData *)nd->funcData)->param)) != EXIT_SUCCESS)
       return result;
     // nacteme pravou zavorku a konec
     if (lex->type != l_rparenth) return EXIT_SYNTAX_ERROR;
-    generateInstruction(I_CALL_FUNCTION, k_function, &((funcData *)nd->data)->ilist, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
+    generateInstruction(I_CALL_FUNCTION, k_function, &((funcData *)nd->funcData)->ilist, NULL, NULL, ilist); // vytvorime volani funkce (ma uz nactene parametry v tabulce)
 
-    if (((nd = SymbolTableSearch(((funcData *)nd->data)->table, nd->keyValue)) == NULL))
-      return EXIT_NOT_DEFINED_ERROR;
     generateInstruction(I_ASSIGN, retNode->type, nd->data, NULL, retNode->data, ilist); // prirazeni navratove hodnoty funkce do lhodonty
+    generateInstruction(I_TABLE_RESTORE, k_var, ((funcData *)nd->funcData)->table, nd->keyValue, s, ilist);
   }
   else if (lex->type == l_key) // vestavne funkce
   {
@@ -1299,14 +1293,14 @@ int callFunction(struct input * in, btree * table, tListOfInstr * ilist, token *
  *   <state> -> write ( <type> )
  *   <state> -> readln ( <type> )
  */
-int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
 {
   printDebug("Zpracovavam prikaz\n");
   switch (lex->type)
   {
     // <state> -> id := <evalExpression>
     // <state> -> id := <call>
-    case (l_id): return embededAssign(in, table, ilist, lex);
+    case (l_id): return embededAssign(in, table, ilist, lex, s);
     // <state> -> if <evalExpression> then <body> ; else <body>
     // <state> -> while <evalExpression> do <body>
     // <state> -> write ( <type> )
@@ -1314,8 +1308,8 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
     case (l_key):
       switch (*(key *)lex->data)
       {
-        case k_if: return embededIf(in, table, ilist, lex);
-        case k_while: return embededWhile(in, table, ilist, lex);
+        case k_if: return embededIf(in, table, ilist, lex, s);
+        case k_while: return embededWhile(in, table, ilist, lex, s);
         case k_write: return embededFuncWrite(in, table, ilist, lex);
         case k_readln: return embededFuncReadln(in, table, ilist, lex);
         default: printDebug("%d", *(key *)lex->data); return  EXIT_SYNTAX_ERROR;
@@ -1336,14 +1330,14 @@ int state(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
  *   <statements> -> <state> ; <statements>
  *   <statements> -> <state>
  */
-int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int statements (struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
 {
   int result;
   printDebug("Zacatek noveho prikazu\n");
   // nebyl to end, to jsme kontrolovali jeste v body
   // tzn ze tam bude nejaky prikaz
   // zavolame state
-  result = state(in, table, ilist, lex);
+  result = state(in, table, ilist, lex, s);
   if (result != EXIT_SUCCESS) return result;
 
   // pokud dalsi token je strednik tzn ze bude
@@ -1352,7 +1346,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
   {
     printDebug("Nasleduje prikaz\n");
     if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
-    return statements(in, table, ilist, lex);
+    return statements(in, table, ilist, lex, s);
   }
   // pokud uz strednik nebude
   // za poslednim prikazem nema byt strednik
@@ -1367,7 +1361,7 @@ int statements (struct input * in, btree * table, tListOfInstr * ilist, token * 
  * <body> -> <statements> end
  * <body> -> end
  */
-int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
+int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex, stack * s)
 {
   printDebug("Zacatek bloku kodu\n");
   int result = EXIT_SUCCESS;
@@ -1381,7 +1375,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
     if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   }
   // a projde telo programu -> pokud cokoliv z toho selze, vraci error
-  if ((result = statements(in, table, ilist, lex)) != EXIT_SUCCESS)
+  if ((result = statements(in, table, ilist, lex, s)) != EXIT_SUCCESS)
     return result;
 
   printDebug("Konec bloku kodu\n");
@@ -1400,7 +1394,7 @@ int body(struct input * in, btree * table, tListOfInstr * ilist, token * lex)
  *
  * <program> -> <decList> <funciton> <body> <EOF>
  */
-int parser(struct input * in, btree * table, tListOfInstr * ilist)
+int parser(struct input * in, btree * table, tListOfInstr * ilist, stack * s)
 {
   printDebug("Spoustim Parser\n");
   token lex;
@@ -1416,8 +1410,8 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist)
           { result = EXIT_SYNTAX_ERROR; break; }
 
         if (((result = declareList(in, table, &lex)) != EXIT_SUCCESS) || //Kontrola deklarace promennych (nemusi byt nic deklarovano)
-            ((result = function(in, table, ilist, &lex)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
-            ((result = body(in, table, ilist, &lex)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
+            ((result = function(in, table, ilist, &lex, s)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
+            ((result = body(in, table, ilist, &lex, s)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
         if ((lex.type == l_enddot) ||
            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||

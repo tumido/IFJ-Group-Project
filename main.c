@@ -14,6 +14,7 @@
 #include "scanner.h"
 #include "parser.h"
 #include "ilist.h"
+#include "stack.h"
 
 int main(int argc, char *argv[])
 {
@@ -35,12 +36,14 @@ int main(int argc, char *argv[])
 
   tListOfInstr ilist;
   listInit(&ilist);
+  stack s;
+  stackInit(&s);
   btree table;
   SymbolTableInit(&table);
 
   printDebug("=========== PARSER ============\n");
   int retValInterpret = EXIT_SUCCESS;
-  int retVal = parser(&in, &table, &ilist);
+  int retVal = parser(&in, &table, &ilist, &s);
 
   printDebug("========== INTERPRET ==========\n");
   if (retVal == EXIT_SUCCESS) retValInterpret = interpret(&ilist);
