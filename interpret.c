@@ -127,7 +127,8 @@ int interpret(tListOfInstr * ilist)
         else if (i->type == k_real) *(double *)i->addr3 = *(double *)i->addr1 + *(double *)i->addr2;
         else if (i->type == k_string)
         {
-          if ((((string *)i->addr3)->str = malloc(sizeof(char) * 2 *(((string *)i->addr1)->alloc + ((string *)i->addr2)->alloc))) == NULL)
+          ((string *)i->addr3)->alloc = (((string *)i->addr1)->alloc + ((string *)i->addr2)->alloc);
+          if ((((string *)i->addr3)->str = malloc(sizeof(char) * ((string *)i->addr3)->alloc)) == NULL)
             return EXIT_INTERNAL_ERROR;
           strcpy(((string *)i->addr3)->str, ((string *)i->addr1)->str);
           strcat(((string *)i->addr3)->str, ((string *)i->addr2)->str);
