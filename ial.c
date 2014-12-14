@@ -68,7 +68,7 @@ int findSubString(char *pattern, char *text)
   int f = 0;
   int g = 0;
   int count = 0;
-  int shift=0;
+  int shift = 0;
 
   while(i < textLenght)
   { 
@@ -81,18 +81,15 @@ int findSubString(char *pattern, char *text)
          - shoda - koncim a vracim index
          - neshoda - skacu o tolik, kolikaty byl shodny prvek
     - neshoda, posunu se o pattern od minula
-  
  */
 
-    // uz na zacatku jsem skocil o pattern - porovnam prvky
+    // uz na zacatku jsem skocil o pattern (inicializaci) - rovnou porovnam prvky
     for(f = 0; f < patternLenght; f++)
     {
       printf("\n---- porovnavam v patternu\n");
       printf("text: %c\n", text[a-1]);
       printf("vzor: %c\n", pattern[b-1-f]);
        
-      
-
       if(text[a-1] == pattern[b-1-f])
       {
         printf("shoda\n");
@@ -108,32 +105,28 @@ int findSubString(char *pattern, char *text)
           printf("-- porovnavam zbyvajici pismena posunuteho patternu\n");
           printf("text: %c\n", text[a-1]);
           printf("vzor: %c\n", pattern[b-1]);
-          //printf("a: %d, b: %d, count: %d\n", a, b, count);
 
           if (text[a-1] == pattern[b-1]) // nasel jsem shodu, kontroluji prechozi znaky
           {
             printf("............... nalezena shoda ....................\n");
-            //printf("a: %d, b: %d, count: %d\n", a, b, count);
-            //printf("...................................................\n");
+
             a--;
             b--;
             lenghtFind++; 
-            //printf("lenghtFind: %d\n", lenghtFind);
+
             if(lenghtFind == patternLenght) return a + 1; // nalezeno
           }
           else
           {
             printf("nenalezeno, shiftuju\n");
-            a = shift + patternLenght - g;
+            a = shift + patternLenght - g - 1;
           }
-
-          
         } 
       }
       else 
       {
         printf("neshoda\n");
-        count++;
+        count++; // pocitam si pocet neshod v prvnim porovnavani
 
         if(count == patternLenght)
         {
@@ -143,16 +136,15 @@ int findSubString(char *pattern, char *text)
         } 
       }
     }
-    
     i++; 
   }
-  return -1;
+  return -1; // nenalezeno
 }
 
 int main(int argc, char *argv[])
 { 
-  char pattern[SIZE] = "gf";
-  char text[SIZE] = "efgaaagf";
+  char pattern[SIZE] = "dad";
+  char text[SIZE] = "asdasdadsdddd";
   printf("%d\n", findSubString(pattern, text));
   
   system("PAUSE");
