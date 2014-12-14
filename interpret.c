@@ -127,11 +127,10 @@ int interpret(tListOfInstr * ilist)
         else if (i->type == k_real) *(double *)i->addr3 = *(double *)i->addr1 + *(double *)i->addr2;
         else if (i->type == k_string)
         {
-          if (((string *)i->addr3)->str != NULL) free(((string *)i->addr3)->str);
-          if ((((string *)i->addr3)->str = malloc(sizeof(char) * (((string *)i->addr1)->alloc + ((string *)i->addr2)->alloc))) == NULL)
+          if ((((string *)i->addr3)->str = malloc(sizeof(char) * 2 *(((string *)i->addr1)->alloc + ((string *)i->addr2)->alloc))) == NULL)
             return EXIT_INTERNAL_ERROR;
-          strncpy(((string *)i->addr3)->str, ((string *)i->addr1)->str, ((string *)i->addr1)->length - 1);
-          strncat(((string *)i->addr3)->str, ((string *)i->addr1)->str, ((string *)i->addr1)->length);
+          strcpy(((string *)i->addr3)->str, ((string *)i->addr1)->str);
+          strcat(((string *)i->addr3)->str, ((string *)i->addr2)->str);
         }
         else return EXIT_RUNTIME_ERROR;
         break;

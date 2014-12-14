@@ -119,8 +119,6 @@ void * createSemiResult(lexType typeA, lexType typeB, key * retType, lexType * r
   void * data;
   if (op == l_div)
   {
-    if ((typeA != l_int || typeA != l_real) && (typeB != l_int || typeB != l_real))
-      return NULL;
     if ((data = malloc(sizeof(double))) == NULL)
       return NULL;
     *retType = k_real;
@@ -161,9 +159,16 @@ void * createSemiResult(lexType typeA, lexType typeB, key * retType, lexType * r
     *retType = k_bool;
     *retTypeL = l_bool;
     return data;
-  } else
+  }
+  if (typeA == l_str && typeB == l_str)
+  {
+    if ((data = malloc(sizeof(string))) == NULL)
+      return NULL;
+    *retType = k_string;
+    *retTypeL = l_str;
+    return data;
+  }
     return NULL;
-  return data;
 }
 
 /*   Vyhodnoceni tokenu
@@ -184,6 +189,7 @@ int defineToken(token * lex, sData * item, btree * table)
       item->data = lex->data;
       lex->data = NULL;
       item->typeKey = (lex->type ==  l_int) ? k_int : (lex->type == l_str) ? k_string : (lex->type == l_real) ? k_real : k_else;
+      lex->type = l_int;
       break;
     case l_id:
       if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || nd->defined == false)
@@ -319,7 +325,7 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             if (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)]== EE)
             {
                 printDebug("Je to prirazeni\n");
-                printErr("%d k %d\n", retType, itemD.typeVal);
+                printDebug("%d k %d\n", retType, itemD.typeVal);
                 if (((itemD.typeVal==l_int) && (retType== k_int)) || ((itemD.typeVal==l_real) && (retType== k_real)) ||
                     ((itemD.typeVal==l_str) && (retType== k_string)) || ((itemD.typeVal==l_bool) && (retType== k_bool)))
                   generateInstruction(I_ASSIGN, retType, itemD.data, NULL, retVal, ilist);
@@ -344,11 +350,11 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             itemD = sPop(&s);
             itemC = sPop(&s);
             sPop(&s);
-            if (itemC.type != l_E) return EXIT_INTERNAL_ERROR;
+            if (itemC.type != l_E) return EXIT_SYNTAX_ERROR;
             key semiresultType;
             lexType semiresultTypeL;
             void * semiresult = createSemiResult(itemC.typeVal, itemTop.typeVal, &semiresultType, &semiresultTypeL, itemD.type);
-            if (semiresult == NULL) return EXIT_INTERNAL_ERROR;
+         //   if (semiresult == NULL) return EXIT_INTERNAL_ERROR;
             switch (itemD.type)
             {
               case l_add:
@@ -407,25 +413,25 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
                 printDebug("Mensi nez\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_LESS, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
+                generateInstruction(I_LESS, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_greater:
                 printDebug("Vetsi nez\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_GREATER, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
+                generateInstruction(I_GREATER, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_gequal:
                 printDebug("Vetsi nebo rovno\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
+                generateInstruction(I_GREATER_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_lequal:
                 printDebug("Mensi nebo rovno\n");
                 if (itemTop.typeVal != itemC.typeVal)
                   return EXIT_TYPE_ERROR;
-                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemTop.data, itemC.data, semiresult, ilist);
+                generateInstruction(I_LESS_EQUAL, itemTop.typeKey, itemC.data, itemTop.data, semiresult, ilist);
                 break;
               case l_equal:
                 printDebug("Rovna se\n");
@@ -490,7 +496,10 @@ int declareList(struct input * in, btree * table, token * lex)
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS) return result;
   if (lex->type != l_id)
   {
-    if (lex->type == l_key) { printDebug("Blok je prazdny\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key && ((*(key *)lex->data) == k_begin || *(key *)lex->data == k_function)) { printDebug("Blok je prazdny\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key && ((*(key *)lex->data) == k_sort ||
+          *(key *)lex->data == k_find || *(key *)lex->data == k_length ||
+          *(key *)lex->data == k_readln || *(key *)lex->data == k_write || *(key *)lex->data == k_copy )) return EXIT_NOT_DEFINED_ERROR;
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -513,7 +522,10 @@ int declareListContent(struct input * in, btree * table, token * lex)
 
   if (lex->type != l_id)
   {
-    if (lex->type == l_key) { printDebug("Konec bloku promennych\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key && ((*(key *)lex->data) == k_begin || *(key *)lex->data == k_function)) { printDebug("Konec bloku promennych\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_key && ((*(key *)lex->data) == k_sort ||
+          *(key *)lex->data == k_find || *(key *)lex->data == k_length ||
+          *(key *)lex->data == k_readln || *(key *)lex->data == k_write || *(key *)lex->data == k_copy )) return EXIT_NOT_DEFINED_ERROR;
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -568,7 +580,11 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param)
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id)
   {
-    if (lex->type == l_rparenth) { printDebug("Konec bloku parametru\n"); return EXIT_SUCCESS;} // nedosel identifikator -> konec
+    if (lex->type == l_rparenth)
+    {
+      *param = NULL;
+      return EXIT_SUCCESS;
+    }
     return EXIT_SYNTAX_ERROR;
   }
 
@@ -998,9 +1014,10 @@ int parser(struct input * in, btree * table, tListOfInstr * ilist, stack * s)
             ((result = function(in, table, ilist, &lex, s)) != EXIT_SUCCESS) || // Kontrola funkci deklarace (nemusi byt nic deklarovano)
             ((result = body(in, table, ilist, &lex, s, NULL)) != EXIT_SUCCESS)) { break; } // Hlavni program begin
 
-        if ((lex.type == l_enddot) ||
+         if (((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
+           (lex.type != l_enddot) ||
            ((result = fillToken(in, &lex)) != EXIT_SUCCESS) ||
-           (lex.type == l_eof)) { result = EXIT_SYNTAX_ERROR; break; } // na konci programu musi byt . a pak EOF
+           (lex.type != l_eof)) { result = EXIT_SYNTAX_ERROR; break; } // na konci programu musi byt . a pak EOF
 
           //generateInstruction(I_END, NULL, NULL, NULL); // instrukce?? + ilist
         break;
