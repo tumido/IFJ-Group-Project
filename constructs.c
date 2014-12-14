@@ -46,7 +46,13 @@ int embededFuncWrite(struct input * in, btree * table, tListOfInstr * ilist, tok
     {
       data = lex->data;
       switch(lex->type)
-      { case l_int: type = k_int; break; case l_real: type = k_real; break; case l_str: type = k_string; break; default: return EXIT_INTERNAL_ERROR;}
+      {
+        case l_int: type = k_int; break;
+        case l_real: type = k_real; break;
+        case l_str: type = k_string; break;
+        case l_key: type = k_bool; break;
+        default: return EXIT_INTERNAL_ERROR;
+      }
       lex->type = l_int;
       isOrd = true;
       lex->data = NULL;

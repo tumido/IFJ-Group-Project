@@ -1,4 +1,4 @@
-var s:string;
+VAR s:string;
     b:integer;
     i:real;
 begin
@@ -12,6 +12,6 @@ begin
     write('jsem ve whilu b = ', b, ''#10'')
   end;
   i := 3 * 2.0;
-  write(''#10'test scitani: i := 1 + 1; i =', i, ''#10'');
+  write(''#10'test scitani: i := 1 + 1; i =', i, ''#10'', true);
   write('konec while'#10'')
 end.

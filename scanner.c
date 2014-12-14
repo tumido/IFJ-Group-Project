@@ -99,6 +99,19 @@ int strToDouble(token * lex)
   return EXIT_SUCCESS;
 }
 
+char * lower(char * str)
+{
+  int counter = 0;
+
+  while (str[counter])
+  {
+    str[counter] = tolower(str[counter]);
+    counter++;
+  }
+  return str;
+}
+
+
 /*   Kontrola klicovych slov
  * ---------------------------------------------------------------------
  * - kontroluje token, pokud je to identifikator, zda-li neni klicovym
@@ -252,8 +265,10 @@ int fillToken(struct input * in, token * lex)
     else if (in->newline) in->newline = false;
   }
   // doslo-li k problemu behem nacitani vypisu hlaseni
+  if (lex->type == l_id) ((string *)lex->data)->str = lower(((string *)lex->data)->str);
+
   if (retVal == EXIT_LEXICAL_ERROR) { printErr("LEXICAL ERROR on line %d (excluding blank lines): What did you mean by \"%s%c\" ? Expected %s.\n", in->line, ((string *) lex->data)->str, z, expected);}
-  else if (lex->type == l_int) { strToInt(lex); }
+  if (lex->type == l_int) { strToInt(lex); }
   else if (lex->type == l_real) { strToDouble(lex); }
   else if (lex->type == l_id) { keyWordCheck(lex); }
   return retVal;

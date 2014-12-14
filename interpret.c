@@ -66,6 +66,9 @@ int interpret(tListOfInstr * ilist)
             printf("%g", *(double *)i->addr1); break;
           case k_string:
             printf("%s", ((string *)i->addr1)->str); break;
+          case k_bool:
+            if (*(bool *)i->addr1 == true) printf("TRUE");
+            else printf("FALSE");
           default:
             return EXIT_TYPE_ERROR;
         }
