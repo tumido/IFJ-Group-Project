@@ -52,35 +52,32 @@ int bigger(int a, int b)
   else return a; // jsou stejne, je jedno, co vratim, tak treba a
 }
 
-void computeJumps(int charJump[], char *pattern, int pLenght)
+void computeJumps(char *pattern, int pLenght, int charJump[])
 {
   for (int i = 0; i < SIZE; i++) charJump[i] = pLenght;
   for (int i = 0; i < pLenght - 1; i++) charJump[(int)pattern[i]] = pLenght - i - 1;
 }
 
-void computeMatchJump(int matchJump[], char *pattern, int pLenght)
+void computeMatchJump(char *pattern, int pLenght, int matchJump[])
 {
   int pp = pLenght; // pattern possition
   int pp2 = pLenght + 1; 
   int backup[pLenght + 1]; // zalohovaci pole
 
-  for (pp = 0; pp < pLenght + 1; pp++) // inicializace - vynulovani poli
+  for (pp = 0; pp <= pLenght; pp++) // inicializace - vynulovani poli
   {
     backup[pp] = 0;
     matchJump[pp] = 0;
   }
 
-  //hledame opakujici-se podretezce v patternu
-  while (pp > 0)
+  while (pp > 0) // vyhledavame opakujici-se podretezce ve vzorku
   {
     backup[pp] = pp2;
     while ((pp2 <= pLenght) && (pattern[pp - 1] != pattern[pp2 - 1]))
     {
-      
       if (matchJump[pp2] == 0) matchJump[pp2] = pp2 - pp;
       pp2 = backup[pp2];
     }
-
     pp--;
     pp2--;
   }
@@ -103,8 +100,8 @@ int findSubString (char *pattern, char *text)
   int pp = pLenght - 1; // pattern position
 
   // volani pomocnych funkci
-  computeJumps(charJump, pattern, pLenght);
-  computeMatchJump(matchJump, pattern, pLenght);
+  computeJumps(pattern, pLenght, charJump);
+  computeMatchJump(pattern, pLenght, matchJump);
 
   while (tp <= tLenght - pLenght) // dokud jsme v textu, hledame odzadu shodne znaky
   {
@@ -119,5 +116,3 @@ int findSubString (char *pattern, char *text)
   }
   return -1; // nenalezeno
 }
-
-// !! syntaxe by mi mela overit, ze vzor && text nejsou prazdne retezce !!

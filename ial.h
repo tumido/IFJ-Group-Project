@@ -51,15 +51,15 @@ int bigger(int a, int b);
  * - pomocna funkce
  * - stanoveni hodnot pole charJump, ktere urcuje posuv vzorku
  */
-void computeJumps(int charJump[], char *pattern, int pLenght);
+void computeJumps(char *pattern, int pLenght, int charJump[]);
 
 /*
  * compute match jump
  * - pomocna funkce
  * - funkce pro posunuti v ramci vzorku
- * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
+ * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku vicekrat)
  */
-void computeMatchJump(int matchJump[], char *pattern, int pLenght);
+void computeMatchJump(char *pattern, int pLenght, int matchJump[]);
 
 /*
  * findSubString
