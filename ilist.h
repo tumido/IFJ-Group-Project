@@ -2,7 +2,7 @@
  * =====================================================================
  *          Verze:  1.0
  *      Vytvoreno:  30/12/2014 18:15:58 PM
- *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *         Autori:  Tomas Coufal, Roman Halik, Yurij Hladyuk, Jakub Jochlik
  *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
  *        Projekt:  IFJ
  * =====================================================================

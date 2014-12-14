@@ -2,7 +2,7 @@
  * =====================================================================
  *          Verze:  1.EXIT_SUCCESS
  *      Vytvoreno:  11/12/2EXIT_SUCCESS14 EXIT_SUCCESS4:21:52 PM
- *         Autori:  Tomáš Coufal, Roman Halík, Yurij Hladyuk, Jakub Jochlík
+ *         Autori:  Tomas Coufal, Roman Halik, Yurij Hladyuk, Jakub Jochlik
  *          Login:  xcoufa09, xhalik01, xhlady00, xjochl00
  *        Projekt:  IFJ
  * =====================================================================
