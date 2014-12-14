@@ -363,7 +363,6 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
     if ((result = fillToken(in,&tmp)) != EXIT_SUCCESS){ return result; }
     if (tmp.type == l_lparenth) result = callFunction(in, table, ilist, lex, &tmp, loc, s);
     else result = evalExpression(in, table, ilist, lex, &tmp, loc->data, loc->type);
-    tokenFree(&tmp);
   }
   else result = evalExpression(in, table, ilist, lex, NULL, loc->data, loc->type); // jinak (je to hodnota, cokoliv) volan evalExpression
   loc->defined = true;

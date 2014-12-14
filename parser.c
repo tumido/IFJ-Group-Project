@@ -87,28 +87,55 @@ int retIndex (lexType typ)
  return j;
 }
 
-void * createSemiResult(lexType typeA, lexType * typeB, key * retType)
+void * createSemiResult(lexType typeA, lexType typeB, key * retType, lexType * retTypeL, lexType op)
 {
-  void * data = NULL;
-  if (typeA == l_real || *typeB == l_real)
+  void * data;
+  if (op == l_div)
   {
+    if ((typeA != l_int || typeA != l_real) && (typeB != l_int || typeB != l_real))
+      return NULL;
     if ((data = malloc(sizeof(double))) == NULL)
       return NULL;
     *retType = k_real;
-    *typeB = l_real;
+    *retTypeL = l_real;
+    return data;
   }
-  else if (typeA == l_int && *typeB == l_int)
-  {
-    if ((data = malloc(sizeof(int))) == NULL)
-      return NULL;
-    *retType = k_int;
-  }
-  else if (typeA == l_bool && *typeB == l_bool)
+  if ((op == l_not || op == l_equal || op == l_less || op == l_lequal || op == l_greater || op == l_gequal) && (typeA == typeB))
   {
     if ((data = malloc(sizeof(bool))) == NULL)
       return NULL;
     *retType = k_bool;
+    *retTypeL = l_bool;
+    return data;
   }
+
+  if (typeA == l_real || typeB == l_real)
+  {
+    if ((data = malloc(sizeof(double))) == NULL)
+      return NULL;
+    *retType = k_real;
+    *retTypeL = l_real;
+    return data;
+  }
+
+  if (typeA == l_int && typeB == l_int)
+  {
+    if ((data = malloc(sizeof(int))) == NULL)
+      return NULL;
+    *retType = k_int;
+    *retTypeL = l_int;
+    return data;
+  }
+
+  if (typeA == l_bool && typeB == l_bool)
+  {
+    if ((data = malloc(sizeof(bool))) == NULL)
+      return NULL;
+    *retType = k_bool;
+    *retTypeL = l_bool;
+    return data;
+  } else
+    return NULL;
   return data;
 }
 
@@ -118,6 +145,7 @@ void * createSemiResult(lexType typeA, lexType * typeB, key * retType)
  */
 int defineToken(token * lex, sData * item, btree * table)
 {
+  printDebug("Identifikuji token");
   struct node * nd;
   switch (lex->type)
   {
@@ -125,14 +153,14 @@ int defineToken(token * lex, sData * item, btree * table)
     case l_real:
     case l_str:
       printDebug("Token je ordinalni hodnota\n");
-      item->type = item->typeVal = lex->type;
+      item->typeVal = item ->type = lex->type;
       item->data = lex->data;
       lex->data = NULL;
       break;
     case l_id:
-      printDebug("Token je id\n");
-      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL) || nd->defined == false)
+      if (((nd = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL))
         return EXIT_NOT_DEFINED_ERROR;
+      printDebug("Token je id typu %d\n", nd->type);
       switch(nd->type)
       {
         case k_int: item->type = item->typeVal = l_int; break;
@@ -189,32 +217,29 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   printDebug("Inicializuji zasobnik a vkladam zarazku\n");
   printDebug("Zpracovavam prvni lexem\n");
   printDebug("Zkontroluji, jestli mam dva lexemy nebo jeden\n");
-  defineToken(lex,&itemAct,table);
-  sPush(&s,itemAct);
+  if ((result = defineToken(lex,&itemAct,table)) != EXIT_SUCCESS) return result;
   itemTop=sTop(&s);
-  if (nextLex != NULL)
-  {
-    printDebug("Mam dva lexemy\n");
-    defineToken(nextLex,&itemAct,table);
-    tokenFree(nextLex);
-    nextLex = NULL;
-  } else
-  {
-    if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
-    defineToken(lex, &itemAct, table);
-  }
   do
   {
+    printDebug("itemTop.type = %d; itemAct.type = %d\n", itemTop.type, itemAct.type);
     switch (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)])
     {
       case Err:
-        printDebug("Hovno\n");
         return EXIT_SYNTAX_ERROR;
       case Straight:
         printDebug("Pouziva pravidlo =\n");
         sPush(&s,itemAct);
         itemTop=sTop(&s);
-        defineToken(lex, &itemAct, table);
+        if (nextLex != NULL)
+        {
+          if ((result = defineToken(nextLex,&itemAct,table)) != EXIT_SUCCESS) return result;
+          tokenFree(nextLex);
+          nextLex = NULL;
+        } else
+        {
+          if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
+          if ((result = defineToken(lex,&itemAct,table)) != EXIT_SUCCESS) return result;
+        }
         break;
       case Left:
         printDebug("Pouzivam leve pravidlo\n");
@@ -231,16 +256,17 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
           sPush(&s, itemC);
           printDebug("Pridavam \"<\"\n");
         }
+        sPush(&s, itemAct);
         itemTop=sTop(&s);
         if (nextLex != NULL)
         {
-          defineToken(nextLex,&itemAct,table);
+          if ((result = defineToken(nextLex,&itemAct,table)) != EXIT_SUCCESS) return result;
           tokenFree(nextLex);
           nextLex = NULL;
         } else
         {
           if ((result = fillToken(in, lex)) != EXIT_SUCCESS) return result;
-          defineToken(lex, &itemAct, table);
+          if ((result = defineToken(lex,&itemAct,table)) != EXIT_SUCCESS) return result;
         }
         break;
       case Right:
@@ -250,12 +276,12 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
         {
           case l_id:
           case l_str:
+          case l_bool:
           case l_int:
           case l_real:
-          case l_bool:
             itemD = sPop(&s);
             itemC = sPop(&s);
-            if (itemC.type != l_left && itemC.type != l_eof) return EXIT_INTERNAL_ERROR;
+            if (itemC.type != l_left) return EXIT_INTERNAL_ERROR;
             itemD.type = l_E;
             itemTop = sTop(&s);
             sPush(&s, itemD);
@@ -286,57 +312,90 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
             itemTop = sPop(&s);
             itemD = sPop(&s);
             itemC = sPop(&s);
+            sPop(&s);
             if (itemC.type != l_E) return EXIT_INTERNAL_ERROR;
             key semiresultType;
-            void * semiresult = createSemiResult(itemC.type, &itemTop.type, &semiresultType);
+            lexType semiresultTypeL;
+            void * semiresult = createSemiResult(itemC.typeVal, itemTop.typeVal, &semiresultType, &semiresultTypeL, itemD.type);
             if (semiresult == NULL) return EXIT_INTERNAL_ERROR;
             switch (itemD.type)
             {
               case l_add:
                 printDebug("Scitani\n");
-                generateInstruction(I_ADD, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_ADD, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
+                    ((itemTop.typeVal==l_str) && (itemC.typeVal== l_str)) || ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
+                    ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_mul:
                 printDebug("Nasobeni\n");
-                generateInstruction(I_MUL, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_MUL, semiresultType, itemTop.data, itemC.data, semiresult, ilist);
+                if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
+                      ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
+                    ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_div:
                 printDebug("Deleni\n");
-                generateInstruction(I_DIV, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_DIV, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
+                      ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
+                    ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_sub:
                 printDebug("Odcitani\n");
-                generateInstruction(I_SUB, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_SUB, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (!(((itemTop.typeVal==l_int) && (itemC.typeVal == l_int)) || ((itemTop.typeVal==l_real) && (itemC.typeVal== l_real)) ||
+                      ((itemTop.typeVal==l_int) && (itemC.typeVal == l_real)) ||
+                    ((itemTop.typeVal==l_real) && (itemC.typeVal == l_int))))
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_less:
                 printDebug("Mensi nez\n");
-                generateInstruction(I_LESS, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_LESS, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_greater:
                 printDebug("Vetsi nez\n");
-                generateInstruction(I_GREATER, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_GREATER, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_gequal:
                 printDebug("Vetsi nebo rovno\n");
-                generateInstruction(I_GREATER_EQUAL, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_GREATER_EQUAL, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_lequal:
                 printDebug("Mensi nebo rovno\n");
-                generateInstruction(I_LESS_EQUAL, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_LESS_EQUAL, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_equal:
                 printDebug("Rovna se\n");
-                generateInstruction(I_EQUAL, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_EQUAL, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  return EXIT_TYPE_ERROR;
                 break;
               case l_not:
                 printDebug("Nerovna se\n");
-                generateInstruction(I_NOT_EQUAL, semiresultType, itemD.data, itemTop.data, semiresult, ilist);
+                generateInstruction(I_NOT_EQUAL, semiresultType, itemC.data, itemTop.data, semiresult, ilist);
+                if (itemTop.typeVal != itemC.typeVal)
+                  {printDebug("top: %d, ret: %d\n", itemTop.typeVal, itemC.typeVal); return EXIT_TYPE_ERROR;}
                 break;
               default:
                 break;
             }
             generateInstruction(I_CLEAR, k_int, semiresult, NULL, NULL, ilist);
-            itemTop.data = semiresult;
+            itemC.data = semiresult;
+            itemC.typeVal = semiresultTypeL;
+            itemTop=sTop(&s);
+            sPush(&s,itemC);
             break;
           default:
             break;
@@ -345,11 +404,12 @@ int evalExpression(struct input * in, btree * table, tListOfInstr * ilist, token
   }while (prTable[retIndex(itemTop.type)][retIndex(itemAct.type)]!= EE);
   itemTop=sTop(&s);
 
-  if (((itemTop.typeVal==l_int) && (retType== k_int)) || ((itemTop.typeVal==l_real) && (retType== k_real)) ||
-      ((itemTop.typeVal==l_str) && (retType== k_string)) || ((itemTop.typeVal==l_bool) && (retType== k_bool)))
-    generateInstruction(I_ASSIGN, retType, itemTop.data, NULL, retVal, ilist);
-  else return EXIT_TYPE_ERROR;
-
+  if (!(((itemTop.typeVal == l_int) && (retType == k_int)) ||
+      ((itemTop.typeVal == l_str) && (retType == k_string)) ||
+      ((itemTop.typeVal == l_real) && (retType == k_real)) ||
+      ((itemTop.typeVal == l_bool) && (retType == k_bool))))
+    return EXIT_TYPE_ERROR;
+  generateInstruction(I_ASSIGN, retType, itemTop.data, NULL, retVal, ilist);
   printDebug("Vracim se z analyzy\n");
   return EXIT_SUCCESS;
 }
@@ -688,6 +748,7 @@ int paramsCall(struct input * in, btree * table, tListOfInstr * ilist, token * l
     return EXIT_INTERNAL_ERROR;
   }
   generateInstruction(I_ASSIGN,param->type, data, NULL, paramNode->data, ilist);
+  paramNode->defined = true;
   if (isOrd) generateInstruction(I_CLEAR, param->type, data, NULL, NULL, ilist);
 
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
