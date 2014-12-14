@@ -7,23 +7,25 @@
  *        Projekt:  IFJ
  * =====================================================================
  */
-#include "ial.h"
-#include "io.h"
+//#include "ial.h"
+//#include "io.h"
+#define SIZE 255
 
 /*
- * -----------------------------------------------------------------------------
  * Funkce shellSort
  * -----------------------------------------------------------------------------
  * - provadi shellovo razeni 'n' prvku v poli
  * - implemetace podle slajdu prof. Hoznika
+ * - zatim neotestovano
+ * - strana 162
+ * 
+ * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
 void shellSort(char *array, int n)
 {
-  int i = 0;
-  int j = 0;
-  int step = n / 2; // prvni krok je polovina delky pole
+  int step, i, j;
   char tmp;
-  
+  step = n / 2; // prvni krok je polovina delky pole
   
   while (step > 0) // cykli, pokud je krok vetsi/roven 1
   {
@@ -31,7 +33,7 @@ void shellSort(char *array, int n)
     {
       j = i - step + 1;
 
-      while ((j >= 0) && (array[j] > array[j + step])) // bubble pruchod
+      while ((j >= 1) && (array[j] > array[j + step])) // bubble pruchod
       {
         tmp = array[j];
         array[j] = array[j + step];
@@ -43,107 +45,6 @@ void shellSort(char *array, int n)
   }
 }
 
-/*
- * -----------------------------------------------------------------------------
- * Boyer-Mooreuv algoritmus
- * -----------------------------------------------------------------------------
- * - vyhledava podretezec zadane delky 'n' v retezci 's'
- * - implementovano pomoci boyer-mooreova algoritmu v opore:
- *   - prochazi text zleva doprava a porovnava vzor s textem zprava doleva
- *   - jestlize znak na aktualni pozici ve vzorku neni (pozna na zaklade tabulky
- *     spatnych znaku), preskoci na index vetsi o delku vzorku
- *   - jestlize znak na akutalni pozici ve vzorku je, porovnava nasledujici znaky
- *     zprava doleva
- *   - pro zabezpeceni rozeznani opakujicich se posloupnosti znaku ve vzoru slouzi
- *     'compute march jumps'
- */
-
-/*
- * smaller
- * -----------------------------------------------------------------------------
- * - funkce vrati mensi ze dvou integeru
- */
-int smaller(int a, int b)
-{
-  if(a < b) return a;
-  else if (a > b) return b;
-  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
-}
-
-/*
- * bigger
- * -----------------------------------------------------------------------------
- * - funkce vrati mensi ze dvou integeru
- */
-int bigger(int a, int b)
-{
-  if(a < b) return b;
-  else if (a > b) return a;
-  else return a; // pripad kdy a = b, je tedy uplne jedno, co vratime, tak treba 'a'
-}
-
-int charJump[];
-
-/*
- * compute jumps
- * -----------------------------------------------------------------------------
- * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
- */
-void computeJumps(char *pattern, int patternLenght, int charJump[])
-{
-  int i;
-
-  for (i = 0; i < SIZE; ++i) charJump[i] = patternLenght;
-  for (i = 0; i < patternLenght - 1; ++i) charJump[pattern[i]] = patternLenght - 1 - i;
-}
-
-/*
- * compute match jump
- * -----------------------------------------------------------------------------
- * - funkce pro posunuti v ramci vzorku
- * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
- */
-void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
-{
-  int k, q, qq;
-  int m = patternLenght;
-  int backup[];
-
-  for(k = 0; k < m; k++)
-  {
-    matchJump[k] = 2 * m - k;
-    k = m;
-    q = m + 1;
-
-    while (k > 0)
-    {
-      backup[k] = q;
-
-      while ((q < m) && (pattern[k] != pattern[q]))
-      {
-        matchJump[q] = smaller(matchJump[q], m - k);
-        q = backup[q];
-      }
-
-      k--;
-      q--;
-    }
-
-    for (k = 0; k < q; k++) matchJump[k] = smaller(matchJump[k], m + q - k);
-
-    qq = backup[q];
-
-    while (q < m)
-    {
-      while (q < qq)
-      {
-        matchJump[q] = smaller(matchJump[q], qq - q + m);
-        q = q + 1;
-      }
-      qq = backup[qq];
-    }
-  }
-}
 
 /*
  * findSubString
@@ -152,36 +53,107 @@ void computeMatchJump(char *pattern, int patternLenght, int matchJump[])
  * - vraci index prvniho vyskytu zadaneho podretezce
  * - v pripade nenalezeni, vraci -1
  */
-int findSubString(char *pattern, char *text,  int charJump[], int matchJump[])
+int findSubString(char *pattern, char *text)
 {
-  int j, k; // j - index to textu, k - index do vzorku
   int patternLenght = strlen(pattern);
-  
-  j = patternLenght;
-  k = patternLenght;
-  
-  // volani pomocnych funkci
-  computeJumps(char *pattern, int patternLenght, int charJump[]);
-  computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
+  int textLenght = strlen(text);
+  int charJump[SIZE];
 
-  while ((j < SIZE) && (k > 0))
-  {
-    if(text[j] == pattern[k])
-    {
-      j--;
-      k--;
-    }
-    else
-    {
-      j = j + bigger(charJump[text[j]], matchJump[k]); // vybereme vetsi = vyhodnejsi posun
-      k = patternLenght;
-    }
-  }
+ // computeJumps(pattern, patternLenght, textLenght, charJump);
 
-  if (k == 0) return (j + 1); // nasla se shoda
-  else return -1; // nenasla se shoda
-}
+  int i = 0;
+  int a = patternLenght;
+  int b = patternLenght;
+  int lenghtFind = 0;
+  int f = 0;
+  int g = 0;
+  int count = 0;
+  int shift=0;
+
+  while(i < textLenght)
+  { 
 
 /*
- * - oba dva algoritmy jsou treba otestovat, nejlepe nekym povolanym..
+  - skocit o delku patternu
+  - zkontrolovat ostatni znaky patternu
+    - shoda, posunu o pozici od prvni shody
+      - zkontroluji ostatni znaky s Ackovymi vsemy
+         - shoda - koncim a vracim index
+         - neshoda - skacu o tolik, kolikaty byl shodny prvek
+    - neshoda, posunu se o pattern od minula
+  
  */
+
+    // uz na zacatku jsem skocil o pattern - porovnam prvky
+    for(f = 0; f < patternLenght; f++)
+    {
+      printf("\n---- porovnavam v patternu\n");
+      printf("text: %c\n", text[a-1]);
+      printf("vzor: %c\n", pattern[b-1-f]);
+       
+      
+
+      if(text[a-1] == pattern[b-1-f])
+      {
+        printf("shoda\n");
+        // shoda f-teho prvku vzorku, musim posunout o f a proverit ostatni
+        // bezva, ted musim projit ty ostatni, a pokud si nejsou rovny, tak shiftuji o delku patternu
+        shift = a; // ulozim acko, abych vedel, odkud mam pokracovat
+        // projdu ostatni znaky a ukladam si pocet o neuspesnych nalezenych
+          // lepe receno pri prvnim spatnem rovnou koncim a posouvam o shift + patternlenght-poradi spatneho
+        // no a pokud je vsechno dobre, vracim
+        
+        for(g = 0; g < patternLenght; g++)
+        {
+          printf("-- porovnavam zbyvajici pismena posunuteho patternu\n");
+          printf("text: %c\n", text[a-1]);
+          printf("vzor: %c\n", pattern[b-1]);
+          //printf("a: %d, b: %d, count: %d\n", a, b, count);
+
+          if (text[a-1] == pattern[b-1]) // nasel jsem shodu, kontroluji prechozi znaky
+          {
+            printf("............... nalezena shoda ....................\n");
+            //printf("a: %d, b: %d, count: %d\n", a, b, count);
+            //printf("...................................................\n");
+            a--;
+            b--;
+            lenghtFind++; 
+            //printf("lenghtFind: %d\n", lenghtFind);
+            if(lenghtFind == patternLenght) return a + 1; // nalezeno
+          }
+          else
+          {
+            printf("nenalezeno, shiftuju\n");
+            a = shift + patternLenght - g;
+          }
+
+          
+        } 
+      }
+      else 
+      {
+        printf("neshoda\n");
+        count++;
+
+        if(count == patternLenght)
+        {
+          a = a + patternLenght;
+          printf(" -> posun o pattern\n");
+          count = 0; // a pocitame od znovu..
+        } 
+      }
+    }
+    
+    i++; 
+  }
+  return -1;
+}
+
+int main(int argc, char *argv[])
+{ 
+  char pattern[SIZE] = "gf";
+  char text[SIZE] = "efgaaagf";
+  printf("%d\n", findSubString(pattern, text));
+  
+  system("PAUSE");
+}
