@@ -8,25 +8,19 @@
  * =====================================================================
  */
 #include "ial.h"
-//#include "io.h"
-#define SIZE 255
+#include "io.h"
 
 /*
- * Funkce shellSort
+ * Algoritmus shell sort
  * -----------------------------------------------------------------------------
  * - provadi shellovo razeni 'n' prvku v poli
- * - implemetace podle slajdu prof. Hoznika
- * - zatim neotestovano
- * - strana 162
- * 
- * - serazene znaky budu rovnou vypisovat na stdout, nebo je nekam ulozim, ha?
  */ 
 void shellSort(char *array, int n)
 {
   int step, i, j;
   char tmp;
   step = n / 2; // prvni krok je polovina delky pole
-  
+
   while (step > 0) // cykli, pokud je krok vetsi/roven 1
   {
     for (i = step; i < n - 1; i++)
@@ -45,135 +39,85 @@ void shellSort(char *array, int n)
   }
 }
 
-
 /*
- * findSubString
+ * Boyer-Mooreuv algoritmus
  * -----------------------------------------------------------------------------
- * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
- * - vraci index prvniho vyskytu zadaneho podretezce
- * - v pripade nenalezeni, vraci -1
- */
-
-/**
- * Zjisteni posuvu vzorku na zaklade posledniho vyskytu pismene - do pole jumpArray[]
- * ulozi index posledniho vyskytu pismene
- *
- * @param jumpArray ukazatel na pole, kam se ulozi vypoctena hodnota posunu
- * @param patCont ukazatel na obsah hledaneho retezce
- * @param patLen delka hledaneho retezce
- */
-static void charJump(int jumpArray[], char *patCont, int patLen) {
-    int i;
-
-       for (i = 0; i < SIZE; i++) {
-           jumpArray[i] = patLen;
-       }
-       for (i = 0; i < patLen - 1; i++) {
-           jumpArray[(int) patCont[i]] = patLen - i - 1;
-       }
-}
-
-/**
- * Vypocteni posuvu vzorku, kdy bereme v uvahu i opakujici se podretezce v patternu
- *
- * @param matchJumpArray ukazatel na pole, kam se ulozi vypoctena hodnota posunu
- * @param patCont ukazatel na obsah hledaneho retezce
- * @param patLen delka hledaneho retezce
- */
-static void matchJump(int matchJumpArray[], char *patCont, int patLen) {
-    int patPos,patPos2;
-    int backupArray[patLen+1];
-
-    //inicializujeme pole
-    for (patPos = 0; patPos < patLen+1; patPos++) {
-        backupArray[patPos] = 0;
-        matchJumpArray[patPos] = 0;
-    }
-
-    patPos = patLen;
-    patPos2 = patLen+1;
-
-    backupArray[patPos] = patPos2;
-
-    //hledame opakovane podretezce v patternu
-    while (patPos > 0) {
-        while ((patPos2 <= patLen) && (patCont[patPos-1] != patCont[patPos2-1])) {
-            if (matchJumpArray[patPos2] == 0) matchJumpArray[patPos2] = patPos2-patPos;
-            patPos2 = backupArray[patPos2];
-        }
-        patPos--;
-        patPos2--;
-        backupArray[patPos] = patPos2;
-    }
-
-    patPos2 = backupArray[0];
-
-    for (patPos = 0; patPos <= patLen; patPos++) {
-        if (matchJumpArray[patPos] == 0) matchJumpArray[patPos] = patPos2;
-        if (patPos == patPos2) patPos2 = backupArray[patPos2];
-    }
-}
-
-/**
- * Vyhleda vzorek v retezci pomoci tzv. Boyer-Moorova vyhledavaciho algoritmu.
- *
- * @param  source   vstupni retezec, ve kterem se bude vyhledavat
- * @param  pattern  vyhledavany vzorek
- * @return          vraci pozici prvniho prvku prvniho nalezeneho vzorku ve
- *                  vstupnim retezci nebo -1 pokud dany vzorek nenalezne
- */
-int boyerMoore (char *pattern, char *source)
+ * - vyhledava prvni nalezeny podretezec v zadanem retezci
+ * - vraci pozici podretezce (idexovano od 1) nebo -1 v pripade nenalezeni
+ */ 
+int bigger(int a, int b)
 {
-    int result = -1;
-    int jumpArray[SIZE], matchJumpArray[pattern->length+1];
-
-    if (lenghtString(pattern) == 0) {  //pokud je pattern prazdny retezec
-        return 0;
-    }
-
-    //ulozime si delku a ukazatel na obsah source do promennych
-    int srcLen = strlen(source);
-    char *srcCont = valueString(source); // toto predelat, navod dole
-
-    //totez pro pattern
-    int patLen = strlen(pattern);
-    char *patCont = valueString(pattern); // toto predelat, navod dole
-
-    //inicializujeme si pole pro posuv patternu
-    charJump(jumpArray, patCont, patLen);
-    matchJump(matchJumpArray, patCont, patLen);
-
-    if ((srcLen < patLen) || (patLen <= 0) || (srcLen <= 0)) return result;
-    else {
-        int srcPos = 0;  //source position
-        int patPos = patLen-1;  //pattern position
-
-        while (srcPos <= srcLen - patLen) {  //dokud budeme v source, tak...
-            while (srcCont[srcPos+patPos] == patCont[patPos]) {  //hledame odzadu stejne znaky
-                if (patPos == 0) return srcPos;
-                patPos--;
-            }
-            //posuneme pattern vuci textu dale podle vysledku - vybereme vetsi mozny posun
-            srcPos += ((jumpArray[(int) srcCont[srcPos+patLen-1]] > matchJumpArray[patPos+1]) ? jumpArray[(int) srcCont[srcPos+patLen-1]] : matchJumpArray[patPos+1]);
-
-            patPos = patLen-1;  //presuneme se na konec pattern
-        }
-    }
-
-    return result;
+  if (a > b) return a;
+  else if (a < b) return b;
+  else return a; // jsou stejne, je jedno, co vratim, tak treba a
 }
 
-/**
- * Vraci vlastni hodnotu stringu, abstrakce nad strukturou string
- *
- * @param string ukazatel na string
- * @return ukazatel na retezec charu
+void computeJumps(int charJump[], char *pattern, int pLenght)
+{
+  for (int i = 0; i < SIZE; i++) charJump[i] = pLenght;
+  for (int i = 0; i < pLenght - 1; i++) charJump[(int)pattern[i]] = pLenght - i - 1;
+}
 
-char *valueString(TString *string) {
-    if (string == NULL || string->content == NULL) {
-        return "";
+void computeMatchJump(int matchJump[], char *pattern, int pLenght)
+{
+  int pp = pLenght; // pattern possition
+  int pp2 = pLenght + 1; 
+  int backup[pLenght + 1]; // zalohovaci pole
+
+  for (pp = 0; pp < pLenght + 1; pp++) // inicializace - vynulovani poli
+  {
+    backup[pp] = 0;
+    matchJump[pp] = 0;
+  }
+
+  //hledame opakujici-se podretezce v patternu
+  while (pp > 0)
+  {
+    backup[pp] = pp2;
+    while ((pp2 <= pLenght) && (pattern[pp - 1] != pattern[pp2 - 1]))
+    {
+      
+      if (matchJump[pp2] == 0) matchJump[pp2] = pp2 - pp;
+      pp2 = backup[pp2];
     }
 
-    return string->content;
+    pp--;
+    pp2--;
+  }
+
+  pp2 = backup[0];
+
+  for (pp = 0; pp <= pLenght; pp++)
+  {
+    if (matchJump[pp] == 0) matchJump[pp] = pp2;
+    if (pp == pp2) pp2 = backup[pp2];
+  }
 }
- */
+
+int findSubString (char *pattern, char *text)
+{
+  int tLenght = strlen(text); // delka textu
+  int pLenght = strlen(pattern); //delka patternu
+  int charJump[SIZE], matchJump[pLenght + 1];
+  int tp = 0; // text position
+  int pp = pLenght - 1; // pattern position
+
+  // volani pomocnych funkci
+  computeJumps(charJump, pattern, pLenght);
+  computeMatchJump(matchJump, pattern, pLenght);
+
+  while (tp <= tLenght - pLenght) // dokud jsme v textu, hledame odzadu shodne znaky
+  {
+    while (text[tp + pp] == pattern[pp]) // dokud se znaky rovnaji
+    {
+      if (pp == 0) return tp + 1; // nalezeno, +1 jest korekce indexovani
+      pp--; // jeste jsme neprohledali vse, pokracujeme
+    }
+
+    tp += bigger(charJump[(int) text[tp+pLenght - 1]], matchJump[pp + 1]); // vybereme vetsi posun
+    pp = pLenght - 1; // presun na vychozi pozici v patternu
+  }
+  return -1; // nenalezeno
+}
+
+// !! syntaxe by mi mela overit, ze vzor && text nejsou prazdne retezce !!
