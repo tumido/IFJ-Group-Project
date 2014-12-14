@@ -7,7 +7,7 @@
  *        Projekt:  IFJ
  * =====================================================================
  */
-//#include "ial.h"
+#include "ial.h"
 //#include "io.h"
 #define SIZE 255
 
@@ -57,7 +57,6 @@ int findSubString(char *pattern, char *text)
 {
   int patternLenght = strlen(pattern);
   int textLenght = strlen(text);
-  int charJump[SIZE];
 
  // computeJumps(pattern, patternLenght, textLenght, charJump);
 
@@ -139,13 +138,4 @@ int findSubString(char *pattern, char *text)
     i++; 
   }
   return -1; // nenalezeno
-}
-
-int main(int argc, char *argv[])
-{ 
-  char pattern[SIZE] = "dad";
-  char text[SIZE] = "asdasdadsdddd";
-  printf("%d\n", findSubString(pattern, text));
-  
-  system("PAUSE");
 }

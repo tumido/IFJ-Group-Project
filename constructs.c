@@ -92,6 +92,7 @@ int embededFuncReadln(struct input * in, btree * table, tListOfInstr * ilist, to
   }
   // volam instrukci
   generateInstruction(I_READ, loc->type, NULL, NULL, loc->data, ilist);
+  loc->defined = true;
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   return result;
 }
@@ -259,7 +260,7 @@ int embededFuncFind(struct input * in, btree * table, tListOfInstr * ilist, toke
   {
     if ((what = SymbolTableSearch(table, ((string *)lex->data)->str)) == NULL)
       return EXIT_NOT_DEFINED_ERROR;
-    if (what->type != k_int) return EXIT_TYPE_ERROR;
+    if (what->type != k_string) return EXIT_TYPE_ERROR;
     substr = what->data;
   }
   else if (lex->type == l_str) // nebo int
@@ -279,6 +280,7 @@ int embededFuncFind(struct input * in, btree * table, tListOfInstr * ilist, toke
   }
   // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
   generateInstruction(I_FIND, k_string, data, substr, loc->data, ilist);
+  loc->defined = true;
   if (isOrd1) generateInstruction(I_CLEAR , k_string, data, NULL, NULL, ilist);
   if (isOrd2) generateInstruction(I_CLEAR , k_string, substr, NULL, NULL, ilist);
   return result;
@@ -321,6 +323,7 @@ int embededFuncSort(struct input * in, btree * table, tListOfInstr * ilist, toke
   }
   // volam instrukci (pokud jsem si hral s ordinalni hodnotou, musim ji uklidit)
   generateInstruction(I_SORT, k_string, data, NULL, loc->data, ilist);
+  loc->defined = true;
   if (isOrd) generateInstruction(I_CLEAR , k_string, data, NULL, NULL, ilist);
   return result;
 }
@@ -363,6 +366,7 @@ int embededAssign(struct input * in, btree * table, tListOfInstr * ilist, token 
     tokenFree(&tmp);
   }
   else result = evalExpression(in, table, ilist, lex, NULL, loc->data, loc->type); // jinak (je to hodnota, cokoliv) volan evalExpression
+  loc->defined = true;
   return result;
 }
 

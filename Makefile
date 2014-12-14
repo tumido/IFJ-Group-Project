@@ -19,7 +19,7 @@
 CC = clang #gcc
 CFLAGS = -std=c99 -pedantic -Wall -Werror -g
 ARCHIVE = xcoufa09
-LIBS = io.o scanner.o ilist.o parser.o btree.o parstack.o constructs.o interpret.o stack.o
+LIBS = io.o scanner.o ilist.o parser.o btree.o parstack.o constructs.o interpret.o stack.o ial.o
 
 #    Pravidla pro jednotlive programy
 #  ---------------------------------------------------------------------

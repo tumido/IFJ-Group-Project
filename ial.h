@@ -12,9 +12,10 @@
 #define IAL_INCLUDED
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "strings.h"
 // maximalni delka radky zpracovavaneho retezce
-#define SIZE 255 
+#define SIZE 255
 
 /*
  * Funkce vykonavajici radici algoritmus shell sort
@@ -22,24 +23,11 @@
 void shellSort(char *array, int n);
 
 /*
- * compute jumps
- * - stanoveni hodnot pole charJump, ktere urcuji posuv vzorku
- */
-void computeJumps(char *pattern, int patternLenght, int charJump[]);
-
-/*
- * compute match jump
- * - funkce pro posunuti v ramci vzorku 
- * - (situace, kdy se nalezeny podretezec vyskytuje ve vzorku dvakrat)
- */
-void computeMatchJump(char *pattern, int patternLenght, int matchJump[]);
-
-/*
  * findSubString
  * - hlavni ridici funkce celeho algoritmu, spousti pomocne funkce
  * - vraci index prvniho vyskytu zadaneho podretezce, nebo by alespon mela..
  */
-int findSubString(char *pattern, char *text,  int charJump[], int matchJump[]);
+int findSubString(char *pattern, char *text);
 
 /*
  * smaller

@@ -208,8 +208,9 @@ int interpret(tListOfInstr * ilist)
         strncpy(&((string *)i->addr3)->str[*((struct srange *)i->addr2)->start], ((string *)i->addr1)->str, *((struct srange *)i->addr2)->length);
         ((string *)i->addr3)->length = *((struct srange *)i->addr2)->length;
         break;
-//      case I_LENGHT: // neni potreba resi se assignem
-      case I_FIND: // nejsdriv spravte ial.c
+      case I_FIND:
+        *(int *)i->addr3 = findSubString((char *)i->addr2, (char *)i->addr1);
+        break;
       case I_SORT:
         if (((string *)i->addr1)->length <= 1) return EXIT_INTERNAL_ERROR; //zkopirovat string
         else
@@ -222,7 +223,7 @@ int interpret(tListOfInstr * ilist)
           // zkopiruju string a seradim ho
           ((string *)i->addr3)->length = ((string *)i->addr1)->length;
           strcpy(((string *)i->addr3)->str, ((string *)i->addr1)->str);
-//          shellSort(((string *)i->addr3)->str, ((string *)i->addr3)->length);
+          shellSort(((string *)i->addr3)->str, ((string *)i->addr3)->length);
         }
         break;
       case I_TABLE_BACKUP:
