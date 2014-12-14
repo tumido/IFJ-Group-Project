@@ -24,6 +24,7 @@ typedef struct
 {
     lexType type; // tady si ulozim typ hodnoty
     lexType typeVal;
+    key typeKey;
     void * data;
 }sData;
 

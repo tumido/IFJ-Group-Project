@@ -17,7 +17,7 @@ void sInit (Stack *s)
 void sPush (Stack *s, sData item)
 {
     if (s-> top == MaxStackSize)
-    printf ("Chyba! Preteceni zasobniku\n");
+    printErr("Chyba! Preteceni zasobniku\n");
     else
     {
       s->top++;

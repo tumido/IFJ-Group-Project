@@ -1,15 +1,15 @@
 var s:string;
-    b:boolean;
+    b:integer;
     i:real;
 begin
-  b := true;
+  b := 5;
   i := 113242.123;
   write('ach jo, i bz melo mit hodnotu 113242, je to tak? i = ', i);
-  while b do
+  while b > 0 do
   begin
-    b := false;
+    b := b - 1;
     write('prirazeni vstupni podminky');
-    write('jsem ve whilu')
+    write('jsem ve whilu b = ', b, ''#10'')
   end;
   i := 3 * 2.0;
   write(''#10'test scitani: i := 1 + 1; i =', i, ''#10'');
