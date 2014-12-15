@@ -572,7 +572,7 @@ int declareListContent(struct input * in, btree * table, token * lex)
  *   <paramsList> -> "id" ":" "type" ";" <paramsList>
  *   <paramsList> -> "id" ":" "type"
  */
-int paramsList(struct input * in, token * lex, struct funcParam ** param)
+int paramsList(struct input * in, token * lex, struct funcParam ** param, bool defined)
 {
   printDebug("Vytvarim promennou\n");
   int result;
@@ -580,7 +580,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param)
   if ((result = fillToken(in,lex)) != EXIT_SUCCESS){ return result; }
   if (lex->type != l_id)
   {
-    if (lex->type == l_rparenth)
+    if (lex->type == l_rparenth && defined == false)
     {
       *param = NULL;
       return EXIT_SUCCESS;
@@ -615,7 +615,7 @@ int paramsList(struct input * in, token * lex, struct funcParam ** param)
   if (lex->type == l_rparenth) return EXIT_SUCCESS; // je to zavorka -> konec
   else if (lex->type != l_endl) return EXIT_SYNTAX_ERROR; // musi to byt strednik
 
-  return paramsList(in, lex, &((*param)->next));
+  return paramsList(in, lex, &((*param)->next), true);
 }
 
 /*   Deklarace funkce
@@ -653,7 +653,7 @@ int function(struct input * in, btree * table, tListOfInstr * ilist, token * lex
 
   //zpracuju parametry
   struct funcParam * firstParam = NULL;
-  if ((result = paramsList(in, lex, &firstParam)) != EXIT_SUCCESS) return result;
+  if ((result = paramsList(in, lex, &firstParam, false)) != EXIT_SUCCESS) return result;
   printDebug("Parametry funkce zpracovany\n");
 
   struct funcParam * paramDecl, * paramDef;

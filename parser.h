@@ -80,7 +80,7 @@ int declareListContent(struct input * in, btree * table, token * lex);
  *   <paramsList> -> "id" ":" "type" ";" <paramsList>
  *   <paramsList> -> "id" ":" "type"
  */
-int paramsList(struct input * in, token * lex, struct funcParam ** param);
+int paramsList(struct input * in, token * lex, struct funcParam ** param, bool d);
 
 /*   Deklarace funkce
  * ---------------------------------------------------------------------
