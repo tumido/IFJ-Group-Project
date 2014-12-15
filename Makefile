@@ -17,7 +17,7 @@
 #    Deklarace promenych
 #  ---------------------------------------------------------------------
 CC = clang #gcc
-CFLAGS = -std=c99 -pedantic -Wall -Werror -g
+CFLAGS = -std=c99 -pedantic -Wall -Werror
 ARCHIVE = xcoufa09
 LIBS = io.o scanner.o ilist.o parser.o btree.o parstack.o constructs.o interpret.o stack.o ial.o
 
@@ -39,6 +39,4 @@ clean:
 	rm -vf *.o *.a *.so *.zip ifj14
 
 zip:
-	oowriter -convert-to pdf:writer_pdf_Export Dokumentace.docx
-	mv {D,d}okumentace.pdf
 	zip $(ARCHIVE).zip *.c *.h rozdeleni Makefile dokumentace.pdf
